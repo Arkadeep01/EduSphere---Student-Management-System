@@ -62,10 +62,10 @@
   --card-foreground: oklch(0.18 0.04 256);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.04 256);
-  /* Indigo primary */
-  --primary: oklch(0.48 0.18 265);
+
+  --primary: oklch(0.58 0.15 165);
   --primary-foreground: oklch(0.99 0.005 250);
-  /* Slate secondary */
+
   --secondary: oklch(0.96 0.01 250);
   --secondary-foreground: oklch(0.25 0.04 256);
   --muted: oklch(0.97 0.005 250);
@@ -78,19 +78,19 @@
   --success-foreground: oklch(0.99 0.005 250);
   --warning: oklch(0.75 0.16 75);
   --warning-foreground: oklch(0.2 0.04 256);
-  --info: oklch(0.65 0.13 230);
+  --info: oklch(0.68 0.12 210);
   --info-foreground: oklch(0.99 0.005 250);
-  /* EduSphere brand orange (from logo) */
-  --brand: oklch(0.7 0.17 50);
+
+  --brand: oklch(0.68 0.12 210);
   --brand-foreground: oklch(0.99 0.005 250);
   --border: oklch(0.92 0.01 250);
   --input: oklch(0.92 0.01 250);
-  --ring: oklch(0.48 0.18 265);
-  --chart-1: oklch(0.48 0.18 265);
-  --chart-2: oklch(0.65 0.13 230);
-  --chart-3: oklch(0.7 0.17 50);
-  --chart-4: oklch(0.62 0.16 155);
-  --chart-5: oklch(0.75 0.16 75);
+  --ring: oklch(0.58 0.15 165);
+  --chart-1: oklch(0.58 0.15 165);
+  --chart-2: oklch(0.68 0.12 210);
+  --chart-3: oklch(0.72 0.14 190);
+  --chart-4: oklch(0.65 0.14 175);
+  --chart-5: oklch(0.75 0.12 220);
   --sidebar: oklch(0.99 0.005 250);
   --sidebar-foreground: oklch(0.25 0.04 256);
   --sidebar-primary: oklch(0.48 0.18 265);
@@ -99,9 +99,9 @@
   --sidebar-accent-foreground: oklch(0.25 0.04 256);
   --sidebar-border: oklch(0.92 0.01 250);
   --sidebar-ring: oklch(0.48 0.18 265);
-  --gradient-brand: linear-gradient(135deg, oklch(0.48 0.18 265), oklch(0.65 0.13 230) 60%, oklch(0.7 0.17 50));
-  --gradient-hero: radial-gradient(ellipse at top left, oklch(0.48 0.18 265 / 0.15), transparent 50%), radial-gradient(ellipse at bottom right, oklch(0.7 0.17 50 / 0.12), transparent 50%);
-  --shadow-elegant: 0 10px 40px -10px oklch(0.48 0.18 265 / 0.25);
+  --gradient-brand: linear-gradient(135deg, oklch(0.58 0.15 165), oklch(0.68 0.12 210));
+  --gradient-hero: radial-gradient(ellipse at top left, oklch(0.58 0.15 165 / 0.18), transparent 50%), radial-gradient(ellipse at bottom right, oklch(0.68 0.12 210 / 0.15), transparent 50%);
+  --shadow-elegant: 0 10px 40px -10px oklch(0.58 0.15 165 / 0.25);
   --shadow-card: 0 1px 3px oklch(0 0 0 / 0.04), 0 1px 2px oklch(0 0 0 / 0.06);
 }
 
@@ -112,7 +112,7 @@
   --card-foreground: oklch(0.98 0.005 250);
   --popover: oklch(0.18 0.025 256);
   --popover-foreground: oklch(0.98 0.005 250);
-  --primary: oklch(0.7 0.15 265);
+  --primary: oklch(0.72 0.13 165);
   --primary-foreground: oklch(0.14 0.02 256);
   --secondary: oklch(0.24 0.03 256);
   --secondary-foreground: oklch(0.98 0.005 250);
@@ -126,22 +126,22 @@
   --success-foreground: oklch(0.14 0.02 256);
   --warning: oklch(0.8 0.15 75);
   --warning-foreground: oklch(0.14 0.02 256);
-  --info: oklch(0.72 0.13 230);
+  --info: oklch(0.78 0.11 210);
   --info-foreground: oklch(0.14 0.02 256);
-  --brand: oklch(0.75 0.17 50);
+  --brand: oklch(0.78 0.11 210);
   --brand-foreground: oklch(0.14 0.02 256);
   --border: oklch(1 0 0 / 0.08);
   --input: oklch(1 0 0 / 0.1);
-  --ring: oklch(0.7 0.15 265);
+  --ring: oklch(0.72 0.13 165);
   --sidebar: oklch(0.16 0.022 256);
   --sidebar-foreground: oklch(0.92 0.01 250);
-  --sidebar-primary: oklch(0.7 0.15 265);
+  --sidebar-primary: oklch(0.72 0.13 165);
   --sidebar-primary-foreground: oklch(0.14 0.02 256);
   --sidebar-accent: oklch(0.22 0.03 256);
   --sidebar-accent-foreground: oklch(0.98 0.005 250);
   --sidebar-border: oklch(1 0 0 / 0.06);
   --sidebar-ring: oklch(0.7 0.15 265);
-  --gradient-hero: radial-gradient(ellipse at top left, oklch(0.7 0.15 265 / 0.2), transparent 50%), radial-gradient(ellipse at bottom right, oklch(0.75 0.17 50 / 0.15), transparent 50%);
+  --gradient-hero: radial-gradient(ellipse at top left, oklch(0.72 0.13 165 / 0.22), transparent 50%), radial-gradient(ellipse at bottom right, oklch(0.78 0.11 210 / 0.18), transparent 50%);
   --shadow-elegant: 0 10px 40px -10px oklch(0 0 0 / 0.6);
   --shadow-card: 0 1px 3px oklch(0 0 0 / 0.3);
 }

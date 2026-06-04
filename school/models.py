@@ -13,3 +13,9 @@ class Notification(models.Model):
 
     def __str__(self):
         return self.message
+
+
+def create_notification(user, message):
+    """Helper to create a Notification for a given user."""
+    if user and user.is_authenticated:
+        Notification.objects.create(user=user, message=message)

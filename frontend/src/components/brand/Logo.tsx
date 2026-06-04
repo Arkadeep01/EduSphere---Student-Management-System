@@ -1,5 +1,5 @@
-import logoAsset from "@/assets/favicon-edusphere.png";
-import faviconAsset from "@/assets/eduSphere.png";
+import logoAsset from "/favicon-edusphere.png";
+import faviconAsset from "/favicon-edusphere.png";
 
 export const LOGO_URL = logoAsset;
 export const ICON_URL = faviconAsset;
