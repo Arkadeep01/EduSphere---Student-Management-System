@@ -25,7 +25,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-xl">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 max-w-7xl">
           <Link to="/"><Logo /></Link>
           <nav className="hidden lg:flex items-center gap-1">
             {nav.map(n => (
@@ -54,7 +54,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
         </div>
         {open && (
           <div className="lg:hidden border-t bg-background">
-            <nav className="container mx-auto flex flex-col p-4 gap-1">
+            <nav className="container mx-auto flex flex-col p-4 gap-1 max-w-7xl">
               {nav.map(n => (
                 <Link key={n.to} to={n.to} onClick={() => setOpen(false)}
                   className={cn("px-3 py-2 rounded-md text-sm font-medium",
@@ -73,7 +73,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
       </main>
 
       <footer className="border-t bg-muted/30 mt-20">
-        <div className="container mx-auto px-4 py-12 grid gap-8 md:grid-cols-4">
+        <div className="container mx-auto px-4 py-12 grid gap-8 md:grid-cols-4 max-w-7xl">
           <div>
             <Logo />
             <p className="mt-3 text-sm text-muted-foreground max-w-xs">

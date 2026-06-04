@@ -14,6 +14,14 @@ def dashboard(request):
     return render(request, "students/student-dashboard.html")
 
 
+def admin_dashboard(request):
+    return render(request, "Home/admin-dashboard.html")
+
+
+def teacher_dashboard(request):
+    return render(request, "teachers/teacher-dashboard.html")
+
+
 
 def mark_notification_as_read(request):
     if request.method == 'POST':
