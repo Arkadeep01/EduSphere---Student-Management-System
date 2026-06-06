@@ -158,3 +158,21 @@ export const testimonials = [
   { name: "Mr. Rajan K.", role: "Teacher", quote: "Managing assignments and tracking 120 students used to take hours. Now it takes minutes.", initials: "RK" },
   { name: "Aarav S.", role: "Student, Grade 10", quote: "I love seeing my progress visualised. It actually motivates me to do better.", initials: "AS" },
 ];
+
+
+export const faqs = [
+  ["What are the admission requirements?", "We accept applications for grades 1-12. Each level has age requirements and an entrance assessment."],
+  ["What is the fee structure?", "Annual fees range from $2,400 to $9,600 depending on grade. Scholarships are available."],
+  ["Do you offer transport?", "Yes, with over 20 routes covering most neighborhoods in the metro area."],
+  ["What extracurriculars are available?", "Over 30 clubs spanning robotics, music, sports, debate, and the arts."],
+  ["Is there boarding?", "We offer hostel facilities for grades 9-12. Limited seats — early application encouraged."],
+  ["How can parents track progress?", "Through the EduSphere parent portal with real-time grades, attendance and announcements."],
+];
+
+export const feedbacks = [
+  { quote: "EduSphere completely transformed how my daughter approaches learning. The teachers genuinely care and the curriculum is world-class.", author: "Priya Mehta", role: "Parent · Grade 8 student", initials: "PM" },
+  { quote: "The parent portal is a game-changer. Attendance, grades and teacher feedback all in one place — no more chasing information.", author: "Rajesh Kumar", role: "Parent · Grade 5 student", initials: "RK" },
+  { quote: "I joined the robotics club in Grade 9 and it changed my career path. Now I'm headed to engineering college on a full scholarship.", author: "Aanya Singh", role: "Alumni · Class of 2025", initials: "AS" },
+  { quote: "Boarding facilities are excellent and the support staff treat students like family. My son has thrived beyond all our expectations.", author: "Deepa Nair", role: "Parent · Grade 11 boarding", initials: "DN" },
+  { quote: "From smart classrooms to STEM labs every facility is designed to make learning exciting. EduSphere sets the gold standard.", author: "Vikram Bose", role: "Academic Advisor", initials: "VB" },
+];
