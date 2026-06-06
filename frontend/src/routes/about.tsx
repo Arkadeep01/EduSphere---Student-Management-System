@@ -47,3 +47,4 @@ export const Route = createFileRoute("/about")({
     </PublicLayout>
   ),
 });
+

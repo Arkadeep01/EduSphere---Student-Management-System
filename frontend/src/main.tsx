@@ -8,3 +8,16 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>,
 )
+
+
+// import ReactDOM from "react-dom/client";
+
+// function App() {
+//   return (
+//     <div style={{ padding: 50 }}>
+//       <input type="text" placeholder="test - type here" />
+//     </div>
+//   );
+// }
+
+// ReactDOM.createRoot(document.getElementById("root")!).render(<App />);

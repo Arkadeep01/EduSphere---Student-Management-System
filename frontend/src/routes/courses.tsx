@@ -19,7 +19,6 @@ function CoursesPage() {
     <PublicLayout>
       <section className="bg-hero-glow py-16">
         <div className="container mx-auto px-4 max-w-3xl text-center">
-          <Badge variant="outline" className="mb-4 border-primary/30 text-primary">Curriculum</Badge>
           <h1 className="text-4xl md:text-5xl font-bold">Courses that <span className="text-gradient-brand">spark curiosity</span></h1>
           <p className="mt-4 text-muted-foreground">From core academics to creative arts — find a path that fits.</p>
           <div className="relative mt-8 max-w-md mx-auto">
@@ -28,10 +27,10 @@ function CoursesPage() {
           </div>
         </div>
       </section>
-      <section className="py-16 container mx-auto px-4">
+      <section className="py-12 container mx-auto px-10">
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map(s => (
-            <Card key={s.id} className="hover-lift overflow-hidden">
+            <Card key={s.id}  className="hover-lift overflow-hidden p-0 gap-0">
               <div className={`h-32 bg-gradient-to-br ${s.color} flex items-center justify-center`}>
                 <BookOpen className="h-12 w-12 text-white/80" />
               </div>

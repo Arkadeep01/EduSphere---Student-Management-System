@@ -24,7 +24,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b bg-background/80 ">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 max-w-7xl">
           <Link to="/"><Logo /></Link>
           <nav className="hidden lg:flex items-center gap-1">

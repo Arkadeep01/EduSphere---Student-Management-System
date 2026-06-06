@@ -2,15 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PublicLayout } from "@/components/layouts/PublicLayout";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-
-const faqs = [
-  ["What are the admission requirements?", "We accept applications for grades 1-12. Each level has age requirements and an entrance assessment."],
-  ["What is the fee structure?", "Annual fees range from $2,400 to $9,600 depending on grade. Scholarships are available."],
-  ["Do you offer transport?", "Yes, with over 20 routes covering most neighborhoods in the metro area."],
-  ["What extracurriculars are available?", "Over 30 clubs spanning robotics, music, sports, debate, and the arts."],
-  ["Is there boarding?", "We offer hostel facilities for grades 9-12. Limited seats — early application encouraged."],
-  ["How can parents track progress?", "Through the EduSphere parent portal with real-time grades, attendance and announcements."],
-];
+import { faqs } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/faq")({
   head: () => ({ meta: [{ title: "FAQ — EduSphere" }, { name: "description", content: "Answers to common questions." }] }),

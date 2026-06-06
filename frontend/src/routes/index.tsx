@@ -4,12 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  GraduationCap, BookOpen, Users, ArrowRight,
-  Sparkles, Calendar, MapPin, Star, Quote, Trophy
-} from "lucide-react";
-import { useEffect, useState } from "react";
-import { stats, teachers, students, events, testimonials, galleryImages } from "@/lib/mock-data";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { GraduationCap, BookOpen, Users, ArrowRight, ChevronLeft, ChevronRight, Sparkles, Calendar, MapPin, Star, Quote, Trophy } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { stats, teachers, students, events, testimonials, galleryImages, faqs, feedbacks } from "@/lib/mock-data";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -42,7 +41,106 @@ function Counter({ end, suffix = "" }: { end: number; suffix?: string }) {
   return <span>{n.toLocaleString()}{suffix}</span>;
 }
 
+function FeedbackSlider() {
+  const [idx, setIdx] = useState(0);
+  const [flipping, setFlipping] = useState(false);
+  const [dir, setDir] = useState<1 | -1>(1);
+
+  const go = (d: 1 | -1) => {
+    if (flipping) return;
+    setDir(d);
+    setFlipping(true);
+    setTimeout(() => {
+      setIdx(p => (p + d + feedbacks.length) % feedbacks.length);
+      setFlipping(false);
+    }, 300);
+  };
+
+  useEffect(() => {
+    const t = setInterval(() => go(1), 5000);
+    return () => clearInterval(t);
+  }, [flipping]);
+
+  const fb = feedbacks[idx];
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div style={{ perspective: "900px" }}>
+        <div
+          style={{
+            transformStyle: "preserve-3d",
+            transition: "transform 0.30s cubic-bezier(0.4,0,0.2,1)",
+            transform: flipping ? `rotateY(${dir === 1 ? -90 : 90}deg)` : "rotateY(0deg)",
+          }}
+        >
+          <Card>
+            <CardContent className="p-6 flex flex-col gap-4" style={{ minHeight: "200px" }}>
+              <Quote className="h-7 w-7 text-primary/30" />
+              <p className="text-sm leading-relaxed flex-1">"{fb.quote}"</p>
+              <div className="flex items-center gap-3 pt-3 border-t">
+                <Avatar className="h-10 w-10">
+                  <AvatarFallback className="bg-gradient-brand text-primary-foreground text-xs font-semibold">
+                    {fb.initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-semibold text-sm">{fb.author}</p>
+                  <p className="text-xs text-muted-foreground">{fb.role}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="flex gap-2 items-center">
+          {feedbacks.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                if (i === idx) return;
+                setDir(i > idx ? 1 : -1);
+                setFlipping(true);
+                setTimeout(() => { setIdx(i); setFlipping(false); }, 300);
+              }}
+              className="rounded-full transition-all duration-300"
+              style={{
+                width: i === idx ? "24px" : "8px",
+                height: "8px",
+                background: i === idx ? "hsl(var(--primary))" : "hsl(var(--border))",
+              }}
+              aria-label={`Feedback ${i + 1}`}
+            />
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={() => go(-1)} aria-label="Previous">
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button size="icon" className="h-9 w-9 rounded-full" onClick={() => go(1)} aria-label="Next">
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 export function HomePage() {
+  const faqRef = useRef<HTMLElement>(null);
+  const [faqVisible, setFaqVisible] = useState(false);
+  useEffect(() => {
+    const el = faqRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setFaqVisible(true); obs.disconnect(); } },
+      { threshold: 0.20 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
   return (
     <>
       {/* Hero */}
@@ -423,6 +521,88 @@ export function HomePage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-20" ref={faqRef}>
+        <div className="container mx-auto px-4 max-w-6xl">
+
+          <div
+            className="flex items-end justify-between mb-10"
+            style={{
+              transition: "opacity 0.6s ease, transform 0.6s ease",
+              opacity: faqVisible ? 1 : 0,
+              transform: faqVisible ? "translateY(0)" : "translateY(24px)",
+            }}
+          >
+            <div>
+              <Badge variant="secondary" className="mb-3">Got Questions?</Badge>
+              <h2 className="text-3xl md:text-4xl font-bold">Frequently Asked Questions</h2>
+              <p className="mt-2 text-muted-foreground">Everything you need to know about joining EduSphere.</p>
+            </div>
+            <Button asChild variant="ghost">
+              <Link to={"/faq" as any}>View all <ArrowRight className="ml-1 h-4 w-4" /></Link>
+            </Button>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-12 items-start">
+
+            {/* LEFT — accordion + student image */}
+            <div
+              style={{
+                transition: "opacity 0.65s ease 100ms, transform 0.65s ease 100ms",
+                opacity: faqVisible ? 1 : 0,
+                transform: faqVisible ? "translateX(0)" : "translateX(-32px)",
+              }}
+            >
+              <Accordion type="single" collapsible className="space-y-2">
+                {faqs.map(([q, a], i) => (
+                  <AccordionItem key={i} value={`faq-${i}`} className="border rounded-lg px-4">
+                    <AccordionTrigger className="text-left">{q}</AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground">{a}</AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+
+              <div className="relative mt-8 rounded-2xl overflow-hidden h-52 bg-muted">
+                <div className="absolute inset-0 z-10 flex flex-col justify-center px-6 pointer-events-none">
+                  <p className="text-xs uppercase tracking-widest text-primary/60 font-semibold mb-1">Student Life</p>
+                  <p className="text-2xl font-bold leading-tight">
+                    Shaping futures,<br />one student at a time.
+                  </p>
+                </div>
+                <img
+                  src="/featuredStudent.avif"
+                  alt="EduSphere student"
+                  className="absolute bottom-0 right-0 h-full w-44 object-cover object-top"
+                  onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+                <div className="absolute bottom-4 left-6 z-10">
+                  <Button size="sm">
+                    <Link to={"/faq" as any}>Read More</Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT — feedback flip slider */}
+            <div
+              style={{
+                transition: "opacity 0.65s ease 200ms, transform 0.65s ease 200ms",
+                opacity: faqVisible ? 1 : 0,
+                transform: faqVisible ? "translateX(0)" : "translateX(32px)",
+              }}
+            >
+              <div className="mb-5">
+                <p className="text-sm font-semibold text-primary uppercase tracking-widest mb-1">Community Voices</p>
+                <h3 className="text-2xl font-bold">What our community says</h3>
+                <p className="text-muted-foreground text-sm mt-1">Real stories from students, parents &amp; educators.</p>
+              </div>
+              <FeedbackSlider />
+            </div>
+
           </div>
         </div>
       </section>
