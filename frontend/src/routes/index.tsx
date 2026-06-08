@@ -164,9 +164,15 @@ export function HomePage() {
               to create progress through technology and education.
             </p>
 
-            <Button className="mt-5">
-              <Link to={"/courses" as any}>Read Courses</Link>
-            </Button>
+            <div className="flex gap-4">
+              <Button className="mt-5">
+                <Link to={"/courses" as any}>Read Courses</Link>
+              </Button>
+              <Button className="mt-5">
+                <Link to={"/guidelines" as any}>Guidelines</Link>
+              </Button>
+            </div>
+
           </div>
         </div>
       </section>
@@ -205,12 +211,12 @@ export function HomePage() {
             <div className="p-8">
               <Users className="h-10 w-10 text-primary mb-4" />
               <h3 className="font-semibold text-lg">
-                Student Services
+                Student Facilites
               </h3>
               <p className="text-muted-foreground mt-2">
-                Scholarships, placements and support.
+                Library, Laboratories and support.
               </p>
-              <Link to={"/services" as any}>
+              <Link to={"/facilities" as any}>
                 Learn More →
               </Link>
             </div>

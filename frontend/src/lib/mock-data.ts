@@ -50,23 +50,55 @@ export const students = Array.from({ length: 24 }, (_, i) => ({
   status: i % 7 === 0 ? "Pending" : "Active",
 }));
 
-export const teachers = Array.from({ length: 16 }, (_, i) => ({
-  id: `TCH${200 + i}`,
-  name: ["Dr. Anika Rao", "Prof. James Miller", "Ms. Elena Cruz", "Mr. David Park", "Dr. Sarah Khan", "Mr. Tom Wilson", "Ms. Rina Gupta", "Mr. Hiro Tanaka"][i % 8],
-  subject: ["Mathematics", "Physics", "English", "Biology", "Chemistry", "History", "Computer Science", "Art"][i % 8],
-  classes: 3 + (i % 4),
-  email: `teacher${i + 1}@edusphere.edu`,
-  experience: 2 + (i % 18),
-  rating: (4.2 + (i % 8) / 10).toFixed(1),
-}));
+export const teachers = [
+  { id: "TCH201", name: "Dr. Anika Rao", subject: "Mathematics", classes: 5, email: "anika.rao@edusphere.edu", experience: 14, rating: "4.9" },
+  { id: "TCH202", name: "Mr. Rajesh Sharma", subject: "Mathematics", classes: 4, email: "rajesh.sharma@edusphere.edu", experience: 11, rating: "4.8" },
+  { id: "TCH203", name: "Prof. James Miller", subject: "Physics", classes: 4, email: "james.miller@edusphere.edu", experience: 18, rating: "4.8" },
+  { id: "TCH204", name: "Dr. Vivek Roy", subject: "Physics", classes: 3, email: "vivek.roy@edusphere.edu", experience: 12, rating: "4.7" },
+  { id: "TCH205", name: "Ms. Elena Cruz", subject: "English Literature", classes: 5, email: "elena.cruz@edusphere.edu", experience: 11, rating: "4.7" },
+  { id: "TCH206", name: "Mrs. Pooja Das", subject: "English Literature", classes: 4, email: "pooja.das@edusphere.edu", experience: 9, rating: "4.8" },
+  { id: "TCH207", name: "Dr. Sarah Khan", subject: "Biology", classes: 4, email: "sarah.khan@edusphere.edu", experience: 16, rating: "4.9" },
+  { id: "TCH208", name: "Mrs. Sneha Gupta", subject: "Biology", classes: 4, email: "sneha.gupta@edusphere.edu", experience: 10, rating: "4.8" },
+  { id: "TCH209", name: "Mr. David Park", subject: "Chemistry", classes: 4, email: "david.park@edusphere.edu", experience: 12, rating: "4.8" },
+  { id: "TCH210", name: "Dr. Amit Verma", subject: "Chemistry", classes: 4, email: "amit.verma@edusphere.edu", experience: 13, rating: "4.8" },
+  { id: "TCH211", name: "Ms. Rina Gupta", subject: "Computer Science", classes: 6, email: "rina.gupta@edusphere.edu", experience: 10, rating: "4.9" },
+  { id: "TCH212", name: "Mr. Abhishek Sen", subject: "Computer Science", classes: 5, email: "abhishek.sen@edusphere.edu", experience: 8, rating: "4.7" },
+  { id: "TCH213", name: "Mrs. Priya Sen", subject: "Business Studies", classes: 4, email: "priya.sen@edusphere.edu", experience: 13, rating: "4.8" },
+  { id: "TCH214", name: "Mr. Arindam Roy", subject: "Business Studies", classes: 4, email: "arindam.roy@edusphere.edu", experience: 11, rating: "4.7" },
+  { id: "TCH215", name: "Dr. Arjun Mehta", subject: "Research Methodology", classes: 3, email: "arjun.mehta@edusphere.edu", experience: 17, rating: "4.9" },
+  { id: "TCH216", name: "Mr. Rohit Das", subject: "Information Technology", classes: 5, email: "rohit.das@edusphere.edu", experience: 8, rating: "4.7" },
+  { id: "TCH217", name: "Mrs. Nandini Roy", subject: "Economics", classes: 4, email: "nandini.roy@edusphere.edu", experience: 15, rating: "4.8" },
+  { id: "TCH218", name: "Mr. Saurav Bhattacharya", subject: "Economics", classes: 3, email: "saurav.bhattacharya@edusphere.edu", experience: 9, rating: "4.7" },
+  { id: "TCH219", name: "Mr. Bikash Goon", subject: "Painting & Visual Arts", classes: 3, email: "bikash.goon@edusphere.edu", experience: 9, rating: "4.7" },
+  { id: "TCH220", name: "Ms. Ayesha Kapoor", subject: "Painting & Visual Arts", classes: 2, email: "ayesha.kapoor@edusphere.edu", experience: 7, rating: "4.8" },
+  { id: "TCH221", name: "Mr. Tom Wilson", subject: "History", classes: 5, email: "tom.wilson@edusphere.edu", experience: 14, rating: "4.8" },
+  { id: "TCH222", name: "Mrs. Aditi Sharma", subject: "Geography", classes: 4, email: "aditi.sharma@edusphere.edu", experience: 12, rating: "4.8" },
+  { id: "TCH223", name: "Mr. Vikram Bose", subject: "Physical Education", classes: 8, email: "vikram.bose@edusphere.edu", experience: 11, rating: "4.9" },
+  { id: "TCH224", name: "Mrs. Meera Chatterjee", subject: "Environmental Studies", classes: 4, email: "meera.chatterjee@edusphere.edu", experience: 13, rating: "4.8" },
+  { id: "TCH225", name: "Mrs. Shreya Dutta", subject: "Primary Section", classes: 6, email: "shreya.dutta@edusphere.edu", experience: 15, rating: "4.9" },
+  { id: "TCH226", name: "Mrs. Rupa Ghosh", subject: "Primary Section", classes: 5, email: "rupa.ghosh@edusphere.edu", experience: 12, rating: "4.8" },
+  { id: "TCH227", name: "Mrs. Ananya Pal", subject: "Primary Section", classes: 5, email: "ananya.pal@edusphere.edu", experience: 10, rating: "4.8" },
+  { id: "TCH228", name: "Mr. Kunal Chakraborty", subject: "Music", classes: 4, email: "kunal.chakraborty@edusphere.edu", experience: 9, rating: "4.7" },
+];
 
 export const subjects = [
-  { id: "MATH101", name: "Mathematics", code: "MATH101", teacher: "Dr. Anika Rao", progress: 68, color: "from-indigo-500 to-blue-500" },
-  { id: "PHY201", name: "Physics", code: "PHY201", teacher: "Prof. James Miller", progress: 54, color: "from-blue-500 to-cyan-500" },
-  { id: "ENG110", name: "English Literature", code: "ENG110", teacher: "Ms. Elena Cruz", progress: 82, color: "from-purple-500 to-indigo-500" },
-  { id: "BIO150", name: "Biology", code: "BIO150", teacher: "Dr. Sarah Khan", progress: 41, color: "from-green-500 to-emerald-500" },
-  { id: "CHM120", name: "Chemistry", code: "CHM120", teacher: "Mr. David Park", progress: 73, color: "from-orange-500 to-red-500" },
-  { id: "CS210", name: "Computer Science", code: "CS210", teacher: "Ms. Rina Gupta", progress: 90, color: "from-violet-500 to-purple-500" },
+  { id: "MATH101", name: "Mathematics", code: "MATH101", teacher: "Dr. Anika Rao", progress: 68, category: "core", color: "from-indigo-500 to-blue-500" },
+  { id: "PHY201", name: "Physics", code: "PHY201", teacher: "Prof. James Miller", progress: 54, category: "core", color: "from-blue-500 to-cyan-500" },
+  { id: "ENG110", name: "English Literature", code: "ENG110", teacher: "Ms. Elena Cruz", progress: 82, category: "core", color: "from-purple-500 to-indigo-500" },
+  { id: "BIO150", name: "Biology", code: "BIO150", teacher: "Dr. Sarah Khan", progress: 41, category: "core", color: "from-green-500 to-emerald-500" },
+  { id: "CHM120", name: "Chemistry", code: "CHM120", teacher: "Mr. David Park", progress: 73, category: "core", color: "from-orange-500 to-red-500" },
+  { id: "CS210", name: "Computer Science", code: "CS210", teacher: "Ms. Rina Gupta", progress: 90, category: "core", color: "from-violet-500 to-purple-500" },
+
+  { id: "BST301", name: "Business Studies", code: "BST301", teacher: "Mrs. Priya Sen", progress: 65, category: "specialized", color: "from-amber-500 to-yellow-500" },
+  { id: "RES320", name: "Research Methodology", code: "RES320", teacher: "Dr. Arjun Mehta", progress: 58, category: "specialized", color: "from-slate-500 to-gray-700" },
+  { id: "ICT220", name: "Information Technology", code: "ICT220", teacher: "Mr. Rohit Das", progress: 87, color: "from-cyan-500 to-sky-500" },
+  { id: "ECO250", name: "Economics", code: "ECO250", teacher: "Mrs. Nandini Roy", progress: 71, category: "specialized", color: "from-emerald-500 to-lime-500" },
+  { id: "PG0440", name: "Painting", code: "PG0440", teacher: "Mr. Bikash Gon", progress: 56, category: "specialized", color: "from-purple-500 to-indigo-500" },
+  { id: "ICT220", name: "Information Technology", code: "ICT220", teacher: "Mr. Rohit Das", progress: 87, category: "specialized", color: "from-cyan-500 to-sky-500" },
+
+  { id: "HIS180", name: "History", code: "HIS180", teacher: "Mr. Tom Wilson", progress: 63, category: "enrichment", color: "from-stone-500 to-amber-700" },
+  { id: "GEO210", name: "Geography", code: "GEO210", teacher: "Mrs. Aditi Sharma", progress: 67, category: "enrichment", color: "from-teal-500 to-cyan-500" },
+  { id: "ART440", name: "Painting & Visual Arts", code: "ART440", teacher: "Mr. Bikash Goon", progress: 56, category: "enrichment", color: "from-pink-500 to-rose-500" },
 ];
 
 export const assignments = [
@@ -136,22 +168,62 @@ export const announcements = [
   { id: "an3", title: "New CS lab inaugurated", date: "2026-05-25", priority: "low" },
 ];
 
-export const galleryImages = Array.from({ length: 9 }, (_, i) => ({
-  id: i,
-  // gradient placeholders (deterministic)
-  gradient: [
-    "from-indigo-400 to-blue-500",
-    "from-blue-400 to-cyan-500",
-    "from-purple-400 to-indigo-500",
-    "from-orange-400 to-pink-500",
-    "from-emerald-400 to-teal-500",
-    "from-rose-400 to-orange-500",
-    "from-violet-400 to-purple-500",
-    "from-cyan-400 to-blue-500",
-    "from-amber-400 to-orange-500",
-  ][i],
-  label: ["Annual Day", "Science Fair", "Sports Meet", "Art Exhibition", "Graduation", "Field Trip", "Music Night", "Lab Session", "Library"][i],
-}));
+export const galleryImages = [
+  {
+    id: 1,
+    label: "Annual Day",
+    image: "/gallery/annual-day.avif",
+    height: "h-[260px]",
+  },
+  {
+    id: 2,
+    label: "Science Fair",
+    image: "/gallery/science-fair.jpg",
+    height: "h-[420px]",
+  },
+  {
+    id: 3,
+    label: "Sports Meet",
+    image: "/gallery/sports-meet.avif",
+    height: "h-[320px]",
+  },
+  {
+    id: 4,
+    label: "Art Exhibition",
+    image: "/gallery/art-exhibition.avif",
+    height: "h-[380px]",
+  },
+  {
+    id: 5,
+    label: "Graduation",
+    image: "/gallery/graduation.avif",
+    height: "h-[280px]",
+  },
+  {
+    id: 6,
+    label: "Field Trip",
+    image: "/gallery/field-trip.jpg",
+    height: "h-[460px]",
+  },
+  {
+    id: 7,
+    label: "Music Night",
+    image: "/gallery/music-night.avif",
+    height: "h-[300px]",
+  },
+  {
+    id: 8,
+    label: "Lab Session",
+    image: "/gallery/lab-session.avif",
+    height: "h-[360px]",
+  },
+  {
+    id: 9,
+    label: "Library",
+    image: "/gallery/library.jpg",
+    height: "h-[260px]",
+  },
+];
 
 export const testimonials = [
   { name: "Priya M.", role: "Parent", quote: "EduSphere transformed how we engage with our daughter's education. Real-time updates and crystal-clear insights.", initials: "PM" },
@@ -176,3 +248,213 @@ export const feedbacks = [
   { quote: "Boarding facilities are excellent and the support staff treat students like family. My son has thrived beyond all our expectations.", author: "Deepa Nair", role: "Parent · Grade 11 boarding", initials: "DN" },
   { quote: "From smart classrooms to STEM labs every facility is designed to make learning exciting. EduSphere sets the gold standard.", author: "Vikram Bose", role: "Academic Advisor", initials: "VB" },
 ];
+
+export const Notifications = [
+  " Annual Sports Day on July 15 — Register Now!",
+  " Board Exam Results: 98.7% pass rate — Congratulations Class XII!",
+  " EduSphere wins State Science Olympiad 2025",
+  " Admission Open for 2025–26 Academic Year",
+  " Cultural Fest 'Utsav 2025' — 20th June",
+  " New Computer Lab Inauguration on 10th July",
+  " Green Campus Drive — Join our Tree Plantation Week",
+  " Chess Tournament Finals — 25th June in Main Hall",
+];
+
+export const LEADERSHIP = [
+  {
+    name: "Dr. Ananya Bose",
+    role: "Director",
+    dept: "Higher Secondary",
+    image: "https://i.pravatar.cc/300?img=47",
+    quote: "Education is the passport to the future.",
+    exp: "28 yrs",
+  },
+  {
+    name: "Mr. Subhash Chandra Roy",
+    role: "Principal",
+    dept: "EduSphere High School",
+    image: "https://i.pravatar.cc/300?img=51",
+    quote: "Every child is a unique story waiting to be told.",
+    exp: "21 yrs",
+  },
+  {
+    name: "Mrs. Priya Ghosh",
+    role: "Administrator",
+    dept: "Academic Affairs",
+    image: "https://i.pravatar.cc/300?img=49",
+    quote: "Structure and care are the roots of excellence.",
+    exp: "15 yrs",
+  },
+];
+
+export const TOP_STUDENTS: Record<
+  number,
+  { name: string; rank: number; score: string; image: string }[]
+> = Object.fromEntries(
+  Array.from({ length: 12 }, (_, i) => {
+    const cls = i + 1;
+    return [
+      cls,
+      [
+        {
+          name: ["Riya Sen", "Arnav Das", "Priya Pal", "Sayan Roy", "Neha Basu", "Rahul Dev", "Anisha Mitra", "Kabir Ghosh", "Pooja Sharma", "Debjit Nag", "Sohini Dey", "Ayan Mukherjee"][i],
+          rank: 1,
+          score: `${97 - i}%`,
+          image: `https://i.pravatar.cc/100?img=${10 + i * 3}`,
+        },
+        {
+          name: ["Moana Dey", "Tanisha Roy", "Vikram Sen", "Ayesha Khan", "Rohan Das", "Simran Kaur", "Aditya Pal", "Tanya Bose", "Nikhil Saha", "Ishita Roy", "Arnab Sen", "Meera Joshi"][i],
+          rank: 2,
+          score: `${95 - i}%`,
+          image: `https://i.pravatar.cc/100?img=${20 + i * 2}`,
+        },
+        {
+          name: ["Sourish Bose", "Ritika Ghosh", "Aarav Singh", "Diya Sharma", "Kiran Mehta", "Farhan Ali", "Shreya Das", "Abir Chatterjee", "Pallavi Roy", "Jeet Mondal", "Rimi Dutta", "Suvo Biswas"][i],
+          rank: 3,
+          score: `${93 - i}%`,
+          image: `https://i.pravatar.cc/100?img=${30 + i * 2}`,
+        },
+      ],
+    ];
+  })
+);
+
+export const RANK_STYLES = [
+  { bg: "bg-amber-400", text: "text-amber-900", icon: "🥇", label: "1st" },
+  { bg: "bg-slate-300", text: "text-slate-800", icon: "🥈", label: "2nd" },
+  { bg: "bg-orange-300", text: "text-orange-900", icon: "🥉", label: "3rd" },
+];
+
+
+export const schoolPhilosophy = {
+  purpose: {
+    title: "Our Mission",
+
+    intro:
+      "At EduSphere, we develop purpose-driven, tech-savvy K–12 leaders by combining advanced educational technology with intentional character development, creating learners who excel academically while contributing positively to society.",
+
+    points: [
+      {
+        title: "Holistic Growth",
+        description:
+          "Our learning ecosystem extends beyond academics to nurture discipline, self-awareness, accountability, and emotional intelligence.",
+      },
+      {
+        title: "Ethical Leadership",
+        description:
+          "Students are encouraged to develop integrity, respect, responsibility, and a strong commitment to serving their communities.",
+      },
+      {
+        title: "Future-Ready Learning",
+        description:
+          "Technology, innovation, and critical thinking are integrated into every stage of learning to prepare students for a rapidly evolving world.",
+      },
+      {
+        title: "Timeless Values",
+        description:
+          "Inspired by enduring wisdom traditions, we cultivate devotion to duty, character, and universal human values that transcend cultures and generations.",
+      },
+    ],
+  },
+
+  pillars: {
+    title: "Our Pillars",
+
+    intro:
+      "At EduSphere, we develop purpose-driven, tech-savvy K–12 leaders by integrating advanced educational technology with intentional character development. Our learning ecosystem cultivates analytical minds, ethical leadership, and a commitment to lifelong growth.",
+
+    pillars: [
+      "Preserving Heritage",
+      "Holistic Discipline",
+      "Devotion to Duty"
+    ],
+  },
+
+  approach: {
+    title: "Our Approach",
+    description:
+      "We provide a holistic learning environment where academic achievement, creativity, discipline, innovation, and character development work together to prepare students for lifelong success.",
+  },
+
+  foundations: {
+    title: "Our Foundations",
+    description:
+      "The principles that shape our culture, guide our decisions, and inspire every student to become their best self.",
+    items: [
+      "Character",
+      "Leadership",
+      "Respect",
+      "Integrity",
+      "Service",
+      "Excellence",
+      "Innovation",
+      "Discipline",
+      "Compassion",
+    ],
+  },
+};
+
+
+export const facilities = {
+  laboratories: {
+    title: "Advanced Laboratories",
+    description:
+      "Students gain practical exposure through modern Physics, Chemistry, Biology, Mathematics, Geography, and Computer laboratories equipped with contemporary learning resources and experimental tools.",
+    labs: [
+      "Physics Laboratory",
+      "Chemistry Laboratory",
+      "Biology Laboratory",
+      "Mathematics Laboratory",
+      "Geography Laboratory",
+      "Computer Laboratory",
+    ],
+  },
+
+  library: {
+    title: "Knowledge Resource Centre",
+    description:
+      "Our library houses thousands of books, journals, reference materials, magazines, and digital learning resources. The peaceful reading environment encourages research, independent learning, and intellectual curiosity among students.",
+  },
+
+  houses: [
+    {
+      name: "Nivedita House",
+      motto: "Perseverance",
+      color: "from-emerald-500 to-teal-500",
+    },
+    {
+      name: "Matangini House",
+      motto: "Dedication",
+      color: "from-amber-500 to-orange-500",
+    },
+    {
+      name: "Vivekananda House",
+      motto: "Cheerfulness",
+      color: "from-indigo-500 to-blue-500",
+    },
+    {
+      name: "Netaji House",
+      motto: "Courage",
+      color: "from-rose-500 to-red-500",
+    },
+  ],
+
+  transport: {
+    title: "Safe School Transport",
+    description:
+      "Dedicated transport services are available across major routes. Student safety remains our highest priority through structured boarding procedures, supervised travel, and designated pickup points.",
+    points: [
+      "Trained Drivers",
+      "Designated Bus Stops",
+      "Supervised Boarding",
+      "Student Safety Protocols",
+      "Parent Coordination",
+    ],
+  },
+
+  canteen: {
+    title: "Healthy Vegetarian Canteen",
+    description:
+      "The school maintains a vegetarian kitchen focused on balanced nutrition and hygienic food preparation. Students enjoy healthy meals prepared according to high quality standards.",
+  },
+};

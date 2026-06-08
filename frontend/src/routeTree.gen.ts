@@ -10,8 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TeachersRouteImport } from './routes/teachers'
+import { Route as GuidelinesRouteImport } from './routes/guidelines'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as FacilitiesRouteImport } from './routes/facilities'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -24,6 +26,11 @@ const TeachersRoute = TeachersRouteImport.update({
   path: '/teachers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuidelinesRoute = GuidelinesRouteImport.update({
+  id: '/guidelines',
+  path: '/guidelines',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GalleryRoute = GalleryRouteImport.update({
   id: '/gallery',
   path: '/gallery',
@@ -32,6 +39,11 @@ const GalleryRoute = GalleryRouteImport.update({
 const FaqRoute = FaqRouteImport.update({
   id: '/faq',
   path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FacilitiesRoute = FacilitiesRouteImport.update({
+  id: '/facilities',
+  path: '/facilities',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsRoute = EventsRouteImport.update({
@@ -72,8 +84,10 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/courses': typeof CoursesRoute
   '/events': typeof EventsRoute
+  '/facilities': typeof FacilitiesRoute
   '/faq': typeof FaqRoute
   '/gallery': typeof GalleryRoute
+  '/guidelines': typeof GuidelinesRoute
   '/teachers': typeof TeachersRoute
 }
 export interface FileRoutesByTo {
@@ -83,8 +97,10 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/courses': typeof CoursesRoute
   '/events': typeof EventsRoute
+  '/facilities': typeof FacilitiesRoute
   '/faq': typeof FaqRoute
   '/gallery': typeof GalleryRoute
+  '/guidelines': typeof GuidelinesRoute
   '/teachers': typeof TeachersRoute
 }
 export interface FileRoutesById {
@@ -95,8 +111,10 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/courses': typeof CoursesRoute
   '/events': typeof EventsRoute
+  '/facilities': typeof FacilitiesRoute
   '/faq': typeof FaqRoute
   '/gallery': typeof GalleryRoute
+  '/guidelines': typeof GuidelinesRoute
   '/teachers': typeof TeachersRoute
 }
 export interface FileRouteTypes {
@@ -108,8 +126,10 @@ export interface FileRouteTypes {
     | '/contact'
     | '/courses'
     | '/events'
+    | '/facilities'
     | '/faq'
     | '/gallery'
+    | '/guidelines'
     | '/teachers'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -119,8 +139,10 @@ export interface FileRouteTypes {
     | '/contact'
     | '/courses'
     | '/events'
+    | '/facilities'
     | '/faq'
     | '/gallery'
+    | '/guidelines'
     | '/teachers'
   id:
     | '__root__'
@@ -130,8 +152,10 @@ export interface FileRouteTypes {
     | '/contact'
     | '/courses'
     | '/events'
+    | '/facilities'
     | '/faq'
     | '/gallery'
+    | '/guidelines'
     | '/teachers'
   fileRoutesById: FileRoutesById
 }
@@ -142,8 +166,10 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   CoursesRoute: typeof CoursesRoute
   EventsRoute: typeof EventsRoute
+  FacilitiesRoute: typeof FacilitiesRoute
   FaqRoute: typeof FaqRoute
   GalleryRoute: typeof GalleryRoute
+  GuidelinesRoute: typeof GuidelinesRoute
   TeachersRoute: typeof TeachersRoute
 }
 
@@ -154,6 +180,13 @@ declare module '@tanstack/react-router' {
       path: '/teachers'
       fullPath: '/teachers'
       preLoaderRoute: typeof TeachersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guidelines': {
+      id: '/guidelines'
+      path: '/guidelines'
+      fullPath: '/guidelines'
+      preLoaderRoute: typeof GuidelinesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gallery': {
@@ -168,6 +201,13 @@ declare module '@tanstack/react-router' {
       path: '/faq'
       fullPath: '/faq'
       preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/facilities': {
+      id: '/facilities'
+      path: '/facilities'
+      fullPath: '/facilities'
+      preLoaderRoute: typeof FacilitiesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events': {
@@ -222,8 +262,10 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   CoursesRoute: CoursesRoute,
   EventsRoute: EventsRoute,
+  FacilitiesRoute: FacilitiesRoute,
   FaqRoute: FaqRoute,
   GalleryRoute: GalleryRoute,
+  GuidelinesRoute: GuidelinesRoute,
   TeachersRoute: TeachersRoute,
 }
 export const routeTree = rootRouteImport
