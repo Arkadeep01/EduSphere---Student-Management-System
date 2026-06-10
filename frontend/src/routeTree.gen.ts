@@ -18,6 +18,7 @@ import { Route as EventsRouteImport } from './routes/events'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AdmissionsRouteImport } from './routes/admissions'
+import { Route as AdmissionFormsRouteImport } from './routes/admissionForms'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -66,6 +67,11 @@ const AdmissionsRoute = AdmissionsRouteImport.update({
   path: '/admissions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdmissionFormsRoute = AdmissionFormsRouteImport.update({
+  id: '/admissionForms',
+  path: '/admissionForms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
@@ -80,6 +86,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admissionForms': typeof AdmissionFormsRoute
   '/admissions': typeof AdmissionsRoute
   '/contact': typeof ContactRoute
   '/courses': typeof CoursesRoute
@@ -93,6 +100,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admissionForms': typeof AdmissionFormsRoute
   '/admissions': typeof AdmissionsRoute
   '/contact': typeof ContactRoute
   '/courses': typeof CoursesRoute
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admissionForms': typeof AdmissionFormsRoute
   '/admissions': typeof AdmissionsRoute
   '/contact': typeof ContactRoute
   '/courses': typeof CoursesRoute
@@ -122,6 +131,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/admissionForms'
     | '/admissions'
     | '/contact'
     | '/courses'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/admissionForms'
     | '/admissions'
     | '/contact'
     | '/courses'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/admissionForms'
     | '/admissions'
     | '/contact'
     | '/courses'
@@ -162,6 +174,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AdmissionFormsRoute: typeof AdmissionFormsRoute
   AdmissionsRoute: typeof AdmissionsRoute
   ContactRoute: typeof ContactRoute
   CoursesRoute: typeof CoursesRoute
@@ -238,6 +251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdmissionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admissionForms': {
+      id: '/admissionForms'
+      path: '/admissionForms'
+      fullPath: '/admissionForms'
+      preLoaderRoute: typeof AdmissionFormsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/about': {
       id: '/about'
       path: '/about'
@@ -258,6 +278,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AdmissionFormsRoute: AdmissionFormsRoute,
   AdmissionsRoute: AdmissionsRoute,
   ContactRoute: ContactRoute,
   CoursesRoute: CoursesRoute,

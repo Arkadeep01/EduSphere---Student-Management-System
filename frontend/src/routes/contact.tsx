@@ -10,6 +10,7 @@ import { Mail, MapPin, Phone, Send, Check, Quote, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Map, MapMarker, MarkerContent } from "@/components/ui/map";
 import { motion, AnimatePresence } from "framer-motion";
+import { FadeIn } from "@/components/brand/animations";
 
 export function SchoolMap() {
   return (
@@ -94,6 +95,7 @@ function ConfettiBurst() {
     </div>
   );
 }
+
 export const Route = createFileRoute("/contact")({
   head: () => ({ meta: [{ title: "Contact — EduSphere" }, { name: "description", content: "Get in touch with our admissions and support teams." }] }),
   component: ContactPage,
@@ -107,20 +109,15 @@ function ContactPage() {
     e: React.FormEvent
   ) => {
     e.preventDefault();
-
     setSending(true);
-
     await new Promise(
       resolve => setTimeout(resolve, 700)
     );
-
     setSending(false);
     setSent(true);
-
     toast.success(
       "Message sent successfully!"
     );
-
     setTimeout(() => {
       setSent(false);
     }, 2000);
@@ -130,12 +127,16 @@ function ContactPage() {
     <PublicLayout>
       <section className="bg-hero-glow py-16">
         <div className="container mx-auto px-4 text-center max-w-3xl">
-          <h1 className="text-4xl md:text-5xl font-bold mb04">
-            We're here tp <span className="text-gradient-brand">help you grow</span>
-          </h1>
-          <p className="mt-3 text-gray-600 dark:text-gray-300 text-lg md:text-base max-w-2xl mx-auto text-sm">
-            Have questions about our courses, admissions, or campus resources? Get in touch with out support team and start shaping your learning journey today.
-          </p>
+          <FadeIn direction="up" delay={0}>
+            <h1 className="text-4xl md:text-5xl font-bold mb04">
+              We're here tp <span className="text-gradient-brand">help you grow</span>
+            </h1>
+          </FadeIn>
+          <FadeIn direction="up" delay={0.15}>
+            <p className="mt-3 text-gray-600 dark:text-gray-300 text-lg md:text-base max-w-2xl mx-auto text-sm">
+              Have questions about our courses, admissions, or campus resources? Get in touch with out support team and start shaping your learning journey today.
+            </p>
+          </FadeIn>
         </div>
       </section>
 
@@ -143,83 +144,76 @@ function ContactPage() {
       <section className="py-16 container mx-auto px-10 py-20">
         <section className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Left */}
-          <div className="bg-white rounded-3xl border p-10">
-            <span className="uppercase text-primary font-semibold tracking-widest">
-              EduSphere Information
-            </span>
+          <FadeIn direction="left">
+            <div className="bg-white rounded-3xl border p-10 dark:bg-card">
+              <span className="uppercase text-primary font-semibold tracking-widest">
+                EduSphere Information
+              </span>
 
-            <h2 className="text-4xl font-bold mt-3 mb-8">
-              Stay Connected With Us
-            </h2>
+              <h2 className="text-4xl font-bold mt-3 mb-8">
+                Stay Connected With Us
+              </h2>
 
-            <div className="space-y-8">
-              <div className="flex gap-4">
-                <MapPin className="text-primary" />
+              <div className="space-y-8 text-left">
+                <div className="flex gap-4">
+                  <MapPin className="text-primary shrink-0" />
+                  <div>
+                    <h3 className="font-semibold">Location</h3>
+                    <p className="text-muted-foreground">
+                      Sri Krishna Mission School
+                      <br />
+                      Agartala, Tripura (West)
+                    </p>
+                  </div>
+                </div>
 
-                <div>
-                  <h3 className="font-semibold">Location</h3>
+                <div className="flex gap-4">
+                  <Mail className="text-primary shrink-0" />
+                  <div>
+                    <h3 className="font-semibold">Email</h3>
+                    <p className="text-muted-foreground">
+                      contact@edusphere.edu
+                    </p>
+                  </div>
+                </div>
 
-                  <p className="text-muted-foreground">
-                    Sri Krishna Mission School
-                    <br />
-                    Agartala, Tripura (West)
-                  </p>
+                <div className="flex gap-4">
+                  <Phone className="text-primary shrink-0" />
+                  <div>
+                    <h3 className="font-semibold">Phone</h3>
+                    <p className="text-muted-foreground">
+                      +91 98765 43210
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex gap-4">
-                <Mail className="text-primary" />
-
-                <div>
-                  <h3 className="font-semibold">Email</h3>
-
-                  <p className="text-muted-foreground">
-                    contact@edusphere.edu
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <Phone className="text-primary" />
-
-                <div>
-                  <h3 className="font-semibold">Phone</h3>
-
-                  <p className="text-muted-foreground">
-                    +91 98765 43210
-                  </p>
-                </div>
+              <div className="mt-10 rounded-2xl bg-primary text-white p-8 text-left">
+                <h3 className="text-2xl font-bold">
+                  25+ Years of Excellence
+                </h3>
+                <p className="mt-3 text-white/90">
+                  Empowering future leaders through innovation,
+                  academic excellence, and holistic growth.
+                </p>
               </div>
             </div>
-
-            <div className="mt-10 rounded-2xl bg-primary text-white p-8">
-              <h3 className="text-2xl font-bold">
-                25+ Years of Excellence
-              </h3>
-
-              <p className="mt-3 text-white/90">
-                Empowering future leaders through innovation,
-                academic excellence, and holistic growth.
-              </p>
-            </div>
-          </div>
+          </FadeIn>
 
           {/* Right */}
-          <div className="relative">
+          <FadeIn direction="right" delay={0.2} className="relative">
             <img
               src="/campus.avif"
               alt="Campus"
               className="rounded-3xl object-cover w-full h-[500px]"
             />
 
-            <div className="absolute top-30 -left-10 bg-slate-800 text-white rounded-2xl p-6 max-w-xs shadow-3xl border-[0.25rem] border-white">
-              <Quote className="h-8 w-8 text-cyan-400 mb-3 " />
-
-              <p className="text-sm leading-relaxed text-sm">
+            <div className="absolute top-30 -left-10 bg-slate-800 text-white rounded-2xl p-6 max-w-xs shadow-3xl border-[0.25rem] border-white text-left">
+              <Quote className="h-8 w-8 text-cyan-400 mb-3" />
+              <p className="text-sm leading-relaxed">
                 EduSphere continues to inspire generations of learners with a
                 commitment to innovation and academic excellence.
               </p>
-
               <div className="mt-4">
                 <h4 className="font-semibold">Director's Message</h4>
                 <span className="text-xs text-slate-400">
@@ -227,24 +221,22 @@ function ContactPage() {
                 </span>
               </div>
             </div>
-          </div>
+          </FadeIn>
         </section>
       </section>
-
-
 
       {/* Map and Contact Form */}
       <section className="container mx-auto px-6 py-20">
         <div className="relative">
           <div className="grid lg:grid-cols-2 gap-10">
             {/* Map */}
-            <div className="overflow-hidden rounded-[40px] h-[450px] md:h-[550px] lg:h-[650px] shadow-[0_20px_60px_rgba(0,0,0,0.12)]">
+            <FadeIn direction="left" className="overflow-hidden rounded-[40px] h-[450px] md:h-[550px] lg:h-[650px] shadow-[0_20px_60px_rgba(0,0,0,0.12)]">
               <SchoolMap />
-            </div>
+            </FadeIn>
 
             {/* Contact Card */}
-            <div className="lg:absolute right-95 lg:top-1/2 lg:-translate-y-1/2 w-full lg:left-[45%] lg:w-[200px] xl:w-[700px]  mt-8 lg:mt-0 z-20">
-              <Card className="border-0 overflow-hidden bg-card/95  shadow-[0_20px_80px_rgba(0,0,0,0.18)] rounded-[32px]">
+            <FadeIn direction="right" className="lg:absolute right-95 lg:top-1/2 lg:-translate-y-1/2 w-full lg:left-[45%] lg:w-[200px] xl:w-[700px] mt-8 lg:mt-0 z-20">
+              <Card className="border-0 overflow-hidden bg-card/95 shadow-[0_20px_80px_rgba(0,0,0,0.18)] rounded-[32px] text-left">
                 <CardContent className="p-6 md:p-8 lg:p-10">
                   <form className="space-y-4" onSubmit={handleSubmit}>
                     <h3 className="text-xl font-bold">Send a message</h3>
@@ -254,19 +246,18 @@ function ContactPage() {
                     </div>
                     <div className="space-y-2"><Label>Subject</Label><Input required /></div>
                     <div className="space-y-2"><Label>Message</Label><Textarea rows={5} required /></div>
-                    <motion.div className="relative">
+                    <div className="relative">
                       <Button
                         type="submit"
                         disabled={sending || sent}
-                        className="relative overflow-hidden w-full h-12 bg-gradient-brand border-0 transition-all duration-300"
+                        className="relative overflow-hidden w-full h-12 bg-gradient-brand border-0 transition-all duration-300 cursor-pointer"
                       >
                         <AnimatePresence mode="wait">
-
                           {/* Idle */}
                           {!sending && !sent && (
                             <motion.span
                               key="idle"
-                              className="flex items-center gap-2"
+                              className="flex items-center justify-center gap-2"
                               initial={{ opacity: 0, y: 8 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -8 }}
@@ -281,7 +272,7 @@ function ContactPage() {
                           {sending && (
                             <motion.span
                               key="sending"
-                              className="flex items-center gap-2"
+                              className="flex items-center justify-center gap-2"
                               initial={{ opacity: 0, y: 8 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -8 }}
@@ -302,7 +293,7 @@ function ContactPage() {
                           {sent && (
                             <motion.span
                               key="sent"
-                              className="flex items-center gap-2"
+                              className="flex items-center justify-center gap-2"
                               initial={{ opacity: 0, scale: 0.8 }}
                               animate={{ opacity: 1, scale: 1 }}
                               exit={{ opacity: 0 }}
@@ -312,17 +303,16 @@ function ContactPage() {
                               Message Sent!
                             </motion.span>
                           )}
-
                         </AnimatePresence>
                       </Button>
 
                       {/* Confetti burst */}
                       {sent && <ConfettiBurst />}
-                    </motion.div>
+                    </div>
                   </form>
                 </CardContent>
               </Card>
-            </div>
+            </FadeIn>
           </div>
         </div>
       </section>

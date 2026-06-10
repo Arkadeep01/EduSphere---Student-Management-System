@@ -12,6 +12,7 @@ import {
   Monitor,
   Atom,
 } from "lucide-react";
+import { FadeIn, StaggerContainer, StaggerItem } from "@/components/brand/animations";
 
 export const Route = createFileRoute("/facilities")({
   head: () => ({
@@ -34,30 +35,32 @@ export const Route = createFileRoute("/facilities")({
 
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <Badge
-                variant="outline"
-                className="mb-4 border-primary/30 text-primary"
-              >
-                Facilities
-              </Badge>
+            <FadeIn direction="left">
+              <div>
+                <Badge
+                  variant="outline"
+                  className="mb-4 border-primary/30 text-primary"
+                >
+                  Facilities
+                </Badge>
 
-              <h1 className="text-4xl md:text-5xl font-bold">
-                Designed for Learning,
-                <span className="text-gradient-brand">
-                  Growth & Discovery
-                </span>
-              </h1>
+                <h1 className="text-4xl md:text-5xl font-bold">
+                  Designed for Learning,
+                  <span className="text-gradient-brand">
+                    Growth & Discovery
+                  </span>
+                </h1>
 
-              <p className="mt-6 text-lg text-muted-foreground">
-                EduSphere provides modern learning environments, advanced
-                laboratories, extensive library resources, safe transport
-                facilities, and holistic co-curricular opportunities to help
-                students excel inside and outside the classroom.
-              </p>
-            </div>
+                <p className="mt-6 text-lg text-muted-foreground">
+                  EduSphere provides modern learning environments, advanced
+                  laboratories, extensive library resources, safe transport
+                  facilities, and holistic co-curricular opportunities to help
+                  students excel inside and outside the classroom.
+                </p>
+              </div>
+            </FadeIn>
 
-            <div className="relative">
+            <FadeIn direction="right" delay={0.2} className="relative">
               <img
                 src="facilities/hero.jpg"
                 alt="Facilities"
@@ -70,78 +73,83 @@ export const Route = createFileRoute("/facilities")({
                   Specialized Labs
                 </p>
               </div>
-            </div>
+            </FadeIn>
           </div>
         </div>
       </section>
 
-      {/*  */}
+      {/* Facilities grids */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-6">
+          <StaggerContainer className="grid md:grid-cols-2 gap-6">
+            <StaggerItem>
+              <Card className="rounded-[32px] overflow-hidden hover-lift h-full">
+                <CardContent className="p-8">
+                  <Microscope className="h-10 w-10 text-primary mb-4" />
+                  <h3 className="text-2xl font-bold">
+                    Advanced Laboratories
+                  </h3>
+                  <p className="mt-3 text-muted-foreground">
+                    Physics, Chemistry, Biology, Mathematics, Geography and
+                    Computer laboratories equipped with modern instruments,
+                    charts and learning aids.
+                  </p>
+                </CardContent>
+              </Card>
+            </StaggerItem>
 
-            <Card className="rounded-[32px] overflow-hidden hover-lift">
-              <CardContent className="p-8">
-                <Microscope className="h-10 w-10 text-primary mb-4" />
-                <h3 className="text-2xl font-bold">
-                  Advanced Laboratories
-                </h3>
-                <p className="mt-3 text-muted-foreground">
-                  Physics, Chemistry, Biology, Mathematics, Geography and
-                  Computer laboratories equipped with modern instruments,
-                  charts and learning aids.
-                </p>
-              </CardContent>
-            </Card>
+            <StaggerItem>
+              <Card className="rounded-[32px] overflow-hidden hover-lift h-full">
+                <CardContent className="p-8">
+                  <BookOpen className="h-10 w-10 text-primary mb-4" />
+                  <h3 className="text-2xl font-bold">
+                    Knowledge Resource Centre
+                  </h3>
+                  <p className="mt-3 text-muted-foreground">
+                    Thousands of books, journals, magazines and reference
+                    materials supporting independent learning and research.
+                  </p>
+                </CardContent>
+              </Card>
+            </StaggerItem>
 
-            <Card className="rounded-[32px] overflow-hidden hover-lift">
-              <CardContent className="p-8">
-                <BookOpen className="h-10 w-10 text-primary mb-4" />
-                <h3 className="text-2xl font-bold">
-                  Knowledge Resource Centre
-                </h3>
-                <p className="mt-3 text-muted-foreground">
-                  Thousands of books, journals, magazines and reference
-                  materials supporting independent learning and research.
-                </p>
-              </CardContent>
-            </Card>
+            <StaggerItem>
+              <Card className="rounded-[32px] overflow-hidden hover-lift h-full">
+                <CardContent className="p-8">
+                  <Bus className="h-10 w-10 text-primary mb-4" />
+                  <h3 className="text-2xl font-bold">
+                    Safe School Transport
+                  </h3>
+                  <p className="mt-3 text-muted-foreground">
+                    Structured routes, supervised boarding procedures and
+                    student-focused transport management.
+                  </p>
+                </CardContent>
+              </Card>
+            </StaggerItem>
 
-            <Card className="rounded-[32px] overflow-hidden hover-lift">
-              <CardContent className="p-8">
-                <Bus className="h-10 w-10 text-primary mb-4" />
-                <h3 className="text-2xl font-bold">
-                  Safe School Transport
-                </h3>
-                <p className="mt-3 text-muted-foreground">
-                  Structured routes, supervised boarding procedures and
-                  student-focused transport management.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-[32px] overflow-hidden hover-lift">
-              <CardContent className="p-8">
-                <UtensilsCrossed className="h-10 w-10 text-primary mb-4" />
-                <h3 className="text-2xl font-bold">
-                  Healthy Vegetarian Canteen
-                </h3>
-                <p className="mt-3 text-muted-foreground">
-                  Nutritious vegetarian meals prepared under hygienic
-                  conditions with balanced dietary principles.
-                </p>
-              </CardContent>
-            </Card>
-
-          </div>
+            <StaggerItem>
+              <Card className="rounded-[32px] overflow-hidden hover-lift h-full">
+                <CardContent className="p-8">
+                  <UtensilsCrossed className="h-10 w-10 text-primary mb-4" />
+                  <h3 className="text-2xl font-bold">
+                    Healthy Vegetarian Canteen
+                  </h3>
+                  <p className="mt-3 text-muted-foreground">
+                    Nutritious vegetarian meals prepared under hygienic
+                    conditions with balanced dietary principles.
+                  </p>
+                </CardContent>
+              </Card>
+            </StaggerItem>
+          </StaggerContainer>
         </div>
       </section>
 
-
-      {/* Laborities */}
+      {/* Laboratories */}
       <section className="py-20 bg-muted/20">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-14">
+          <FadeIn className="text-center mb-14">
             <Badge variant="outline" className="border-primary/30 text-primary mb-4">
               Learning Spaces
             </Badge>
@@ -154,9 +162,9 @@ export const Route = createFileRoute("/facilities")({
               Hands-on learning environments designed to transform theoretical
               concepts into practical understanding.
             </p>
-          </div>
+          </FadeIn>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
+          <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
             {[
               { icon: Atom, label: "Physics" },
               { icon: FlaskConical, label: "Chemistry" },
@@ -166,33 +174,31 @@ export const Route = createFileRoute("/facilities")({
               { icon: BookOpen, label: "Geography" },
             ].map((lab) => {
               const Icon = lab.icon;
-
               return (
-                <Card
-                  key={lab.label}
-                  className="group rounded-3xl hover:-translate-y-2 transition-all duration-300"
-                >
-                  <CardContent className="p-6 text-center">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 group-hover:bg-primary group-hover:text-white transition-all">
-                      <Icon className="h-8 w-8 text-primary group-hover:text-white" />
-                    </div>
+                <StaggerItem key={lab.label}>
+                  <Card
+                    className="group rounded-3xl hover-lift h-full"
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 group-hover:bg-primary group-hover:text-white transition-all">
+                        <Icon className="h-8 w-8 text-primary group-hover:text-white" />
+                      </div>
 
-                    <h3 className="font-semibold">{lab.label}</h3>
-                  </CardContent>
-                </Card>
+                      <h3 className="font-semibold">{lab.label}</h3>
+                    </CardContent>
+                  </Card>
+                </StaggerItem>
               );
             })}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
-
 
       {/* Library */}
       <section className="py-24">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-
-            <div className="relative">
+            <FadeIn direction="left" className="relative">
               <div className="absolute -top-6 -left-6 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
 
               <img
@@ -200,31 +206,32 @@ export const Route = createFileRoute("/facilities")({
                 alt="Library"
                 className="relative rounded-[40px] shadow-2xl h-[500px] w-full object-cover"
               />
-            </div>
+            </FadeIn>
 
-            <div>
-              <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
-                Library
-              </Badge>
+            <FadeIn direction="right">
+              <div>
+                <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
+                  Library
+                </Badge>
 
-              <h2 className="text-4xl font-bold mb-5">
-                Knowledge Resource Centre
-              </h2>
+                <h2 className="text-4xl font-bold mb-5">
+                  Knowledge Resource Centre
+                </h2>
 
-              <p className="text-muted-foreground leading-relaxed">
-                Our library serves as a gateway to lifelong learning, offering an
-                extensive collection of books, academic references, journals,
-                magazines, and digital resources.
-              </p>
+                <p className="text-muted-foreground leading-relaxed">
+                  Our library serves as a gateway to lifelong learning, offering an
+                  extensive collection of books, academic references, journals,
+                  magazines, and digital resources.
+                </p>
 
-              <p className="mt-4 text-muted-foreground leading-relaxed">
-                Designed to support research, critical thinking, and independent
-                study, the library provides a calm and inspiring environment where
-                students can explore ideas, expand knowledge, and cultivate a love
-                for reading.
-              </p>
-            </div>
-
+                <p className="mt-4 text-muted-foreground leading-relaxed">
+                  Designed to support research, critical thinking, and independent
+                  study, the library provides a calm and inspiring environment where
+                  students can explore ideas, expand knowledge, and cultivate a love
+                  for reading.
+                </p>
+              </div>
+            </FadeIn>
           </div>
         </div>
       </section>
@@ -232,8 +239,7 @@ export const Route = createFileRoute("/facilities")({
       {/* House System */}
       <section className="py-20 bg-muted/20">
         <div className="container mx-auto px-4">
-
-          <div className="text-center mb-14">
+          <FadeIn className="text-center mb-14">
             <Badge variant="outline" className="border-primary/30 text-primary mb-4">
               House System
             </Badge>
@@ -241,9 +247,9 @@ export const Route = createFileRoute("/facilities")({
             <h2 className="text-4xl font-bold">
               Building Leadership Through Team Spirit
             </h2>
-          </div>
+          </FadeIn>
 
-          <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
+          <StaggerContainer className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
             {[
               {
                 name: "Nivedita House",
@@ -266,109 +272,107 @@ export const Route = createFileRoute("/facilities")({
                 color: "from-rose-500 to-red-500",
               },
             ].map((house) => (
-              <Card
-                key={house.name}
-                className={`overflow-hidden border-0 bg-gradient-to-br ${house.color} text-white rounded-[32px]`}
-              >
-                <CardContent className="p-8 text-center">
-                  <h3 className="text-2xl font-bold">
-                    {house.name}
-                  </h3>
+              <StaggerItem key={house.name}>
+                <Card
+                  className={`overflow-hidden border-0 bg-gradient-to-br ${house.color} text-white rounded-[32px] hover-lift h-full`}
+                >
+                  <CardContent className="p-8 text-center flex flex-col justify-center h-full">
+                    <h3 className="text-2xl font-bold">
+                      {house.name}
+                    </h3>
 
-                  <p className="mt-3 text-white/90">
-                    {house.motto}
-                  </p>
-                </CardContent>
-              </Card>
+                    <p className="mt-3 text-white/90">
+                      {house.motto}
+                    </p>
+                  </CardContent>
+                </Card>
+              </StaggerItem>
             ))}
-          </div>
-
+          </StaggerContainer>
         </div>
       </section>
-
 
       {/* Transportation */}
       <section className="py-24">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <FadeIn direction="left">
+              <div>
+                <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
+                  Transport
+                </Badge>
 
-            <div>
-              <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
-                Transport
-              </Badge>
+                <h2 className="text-4xl font-bold mb-5">
+                  Safe School Transportation
+                </h2>
 
-              <h2 className="text-4xl font-bold mb-5">
-                Safe School Transportation
-              </h2>
+                <p className="text-muted-foreground leading-relaxed mb-8">
+                  Dedicated transport services are available across major routes with
+                  safety-focused boarding procedures and responsible supervision.
+                </p>
 
-              <p className="text-muted-foreground leading-relaxed mb-8">
-                Dedicated transport services are available across major routes with
-                safety-focused boarding procedures and responsible supervision.
-              </p>
-
-              <div className="grid sm:grid-cols-2 gap-4">
-                {[
-                  "Trained Drivers",
-                  "Designated Bus Stops",
-                  "Supervised Boarding",
-                  "Student Safety Protocols",
-                  "Parent Coordination",
-                ].map((point) => (
-                  <div
-                    key={point}
-                    className="rounded-2xl border bg-background p-4 font-medium"
-                  >
-                    ✓ {point}
-                  </div>
-                ))}
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {[
+                    "Trained Drivers",
+                    "Designated Bus Stops",
+                    "Supervised Boarding",
+                    "Student Safety Protocols",
+                    "Parent Coordination",
+                  ].map((point) => (
+                    <div
+                      key={point}
+                      className="rounded-2xl border bg-background p-4 font-medium"
+                    >
+                      ✓ {point}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            </FadeIn>
 
-            <img
-              src="facilities/transport.avif"
-              alt="Transport"
-              className="rounded-[40px] shadow-2xl h-[500px] w-full object-cover"
-            />
-
+            <FadeIn direction="right" delay={0.2}>
+              <img
+                src="facilities/transport.avif"
+                alt="Transport"
+                className="rounded-[40px] shadow-2xl h-[500px] w-full object-cover"
+              />
+            </FadeIn>
           </div>
         </div>
       </section>
 
-
       {/* Canteen */}
       <section className="py-24">
         <div className="container mx-auto px-4">
+          <FadeIn>
+            <div className="relative overflow-hidden rounded-[40px] h-[500px]">
+              <img
+                src="facilities/canteen.avif"
+                alt="Canteen"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
 
-          <div className="relative overflow-hidden rounded-[40px] h-[500px]">
-            <img
-              src="facilities/canteen.avif"
-              alt="Canteen"
-              className="absolute inset-0 h-full w-full object-cover"
-            />
+              <div className="absolute inset-0 bg-black/50" />
 
-            <div className="absolute inset-0 bg-black/50" />
+              <div className="absolute inset-0 flex items-center">
+                <div className="max-w-xl p-10 text-white text-left">
+                  <Badge className="mb-4 bg-white/20 border-0 text-white">
+                    School Canteen
+                  </Badge>
 
-            <div className="absolute inset-0 flex items-center">
-              <div className="max-w-xl p-10 text-white">
+                  <h2 className="text-5xl font-bold mb-5">
+                    Healthy Vegetarian Dining
+                  </h2>
 
-                <Badge className="mb-4 bg-white/20 border-0 text-white">
-                  School Canteen
-                </Badge>
-
-                <h2 className="text-5xl font-bold mb-5">
-                  Healthy Vegetarian Dining
-                </h2>
-
-                <p className="text-white/90 leading-relaxed">
-                  Our canteen promotes balanced nutrition through carefully prepared
-                  vegetarian meals. Every meal is designed to support student health,
-                  energy, and overall well-being in a hygienic environment.
-                </p>
-
+                  <p className="text-white/90 leading-relaxed">
+                    Our canteen promotes balanced nutrition through carefully prepared
+                    vegetarian meals. Every meal is designed to support student health,
+                    energy, and overall well-being in a hygienic environment.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-
+          </FadeIn>
         </div>
       </section>
     </PublicLayout>

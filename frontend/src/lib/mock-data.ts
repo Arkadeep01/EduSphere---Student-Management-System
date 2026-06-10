@@ -458,3 +458,65 @@ export const facilities = {
       "The school maintains a vegetarian kitchen focused on balanced nutrition and hygienic food preparation. Students enjoy healthy meals prepared according to high quality standards.",
   },
 };
+
+
+
+export const documentsList = [
+  "Completed application form",
+  "High school / secondary school mark sheets (10th & 12th)",
+  "Bachelor's degree certificate & transcripts (for PG programs)",
+  "Valid government-issued photo ID (Passport / Driver's License / National ID)",
+  "Passport-size photographs (4 copies, white background)",
+  "Character certificate from last attended institution",
+  "Migration certificate (if applicable)",
+  "Proof of address (Utility bill / Bank statement)",
+  "Category certificate (SC/ST/OBC/PWD if applicable)",
+  "Income certificate for scholarship applicants",
+];
+
+export const importantDates = [
+  { event: "Application Opens", date: "January 15, 2026" },
+  { event: "Early Bird Deadline", date: "March 31, 2026" },
+  { event: "Final Application Deadline", date: "May 15, 2026" },
+  { event: "Entrance Examination", date: "June 10–15, 2026" },
+  { event: "Interview Round", date: "June 25–30, 2026" },
+  { event: "Result Declaration", date: "July 10, 2026" },
+  { event: "Admission Confirmation", date: "July 25, 2026" },
+  { event: "Academic Session Begins", date: "August 15, 2026" },
+];
+
+export const admissionInfo = [
+  {
+    title: "Eligibility",
+    icon: "eligibility",
+    color: "emerald",
+    items: [
+      "Minimum 60% in qualifying examination",
+      "Age: 17–25 years (as of August 2026)",
+      "Valid entrance exam score required",
+      "English proficiency for international students",
+    ],
+  },
+  {
+    title: "Fee Structure",
+    icon: "fees",
+    color: "blue",
+    items: [
+      "Tuition: $8,500 / semester",
+      "Library & Lab: $400 / year",
+      "Hostel (optional): $2,400 / year",
+      "Scholarships available for top 10% scorers",
+    ],
+  },
+  {
+    title: "Reservation Policy",
+    icon: "reservation",
+    color: "violet",
+    items: [
+      "SC: 15% seats reserved",
+      "ST: 7.5% seats reserved",
+      "OBC: 27% seats reserved",
+      "PWD: 5% horizontal reservation",
+    ],
+  },
+];
