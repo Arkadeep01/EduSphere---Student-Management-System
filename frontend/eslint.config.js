@@ -18,5 +18,16 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    settings: {
+      react: {
+        version: '18',
+      },
+    },
+    rules: {
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowConstantExport: true, extraHOCs: ['createFileRoute', 'createRootRoute', 'createRoute'] },
+      ],
+    },
   },
 ])

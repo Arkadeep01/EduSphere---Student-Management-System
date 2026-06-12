@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-import { AuthProvider } from "../lib/auth";
+import { AuthProvider } from "../context/AuthContext";
 import { Toaster } from "../components/ui/sonner";
 
 function NotFoundComponent() {

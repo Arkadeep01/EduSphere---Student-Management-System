@@ -6,7 +6,8 @@ import {
   LogOut, Menu, Bell, Search, Sun, Moon, ChevronDown, Home as FileCheck, Layers, Clock, Award
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
-import { useAuth, useTheme } from "@/lib/auth";
+import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { notifications, type Role } from "@/lib/mock-data";
 
-interface NavItem { label: string; to: any; icon: typeof LayoutDashboard; }
+interface NavItem { label: string; to: string; icon: typeof LayoutDashboard; }
 
 const navByRole: Record<Role, NavItem[]> = {
   admin: [
@@ -57,7 +58,7 @@ const navByRole: Record<Role, NavItem[]> = {
   ],
 };
 
-export function DashboardLayout({ role }: { role: Role }) {
+export function  DashboardLayout({ role }: { role: Role }) {
   const { user, logout } = useAuth();
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
@@ -69,7 +70,7 @@ export function DashboardLayout({ role }: { role: Role }) {
 
   const handleLogout = () => {
     logout();
-    navigate({ to: "/login" as any });
+    navigate({ to: "/login" });
   };
 
   const roleLabels = { admin: "Administrator", teacher: "Teacher", student: "Student" };
@@ -170,22 +171,21 @@ export function DashboardLayout({ role }: { role: Role }) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="gap-2 pl-2">
                   <Avatar className="h-7 w-7">
-                    <AvatarFallback className="bg-gradient-brand text-white text-xs">{user?.avatarInitials ?? "U"}</AvatarFallback>
+                    <AvatarFallback className="bg-gradient-brand text-white text-xs">{user ? (user.first_name?.[0]?.toUpperCase() || '') + (user.last_name?.[0]?.toUpperCase() || '') || user.email[0].toUpperCase() : "U"}</AvatarFallback>
                   </Avatar>
-                  <span className="hidden sm:inline text-sm font-medium">{user?.name}</span>
+                  <span className="hidden sm:inline text-sm font-medium">{user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email : ''}</span>
                   <ChevronDown className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>
                   <div>
-                    <p className="font-medium">{user?.name}</p>
+                    <p className="font-medium">{user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email : ''}</p>
                     <p className="text-xs text-muted-foreground">{user?.email}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild><Link to={`/${role}/profile` as any}><User className="mr-2 h-4 w-4" />Profile</Link></DropdownMenuItem>
-                {role === "admin" && <DropdownMenuItem asChild><Link to={"/admin/settings" as any}><Settings className="mr-2 h-4 w-4" />Settings</Link></DropdownMenuItem>}
+                {/* <DropdownMenuItem asChild><Link to={`/${role}/profile`}><User className="mr-2 h-4 w-4" />Profile</Link></DropdownMenuItem> */}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive"><LogOut className="mr-2 h-4 w-4" />Sign out</DropdownMenuItem>
               </DropdownMenuContent>
