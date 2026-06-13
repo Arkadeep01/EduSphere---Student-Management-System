@@ -116,7 +116,7 @@ function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@edusphere.edu"
+                  placeholder={`${role}@edusphere.edu`}
                   required
                 />
               </div>
@@ -142,6 +142,7 @@ function LoginPage() {
                     )}
                   </button>
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">Demo: {role}@edusphere.edu / {role}123</p>
               </div>
               {error && (
                 <p className="text-sm text-destructive">{error}</p>
@@ -168,6 +169,12 @@ function LoginPage() {
                 </span>
               </div>
             </div>
+            <div><Link
+                to="/forgot-password"
+                className="text-primary hover:underline font-medium"
+              >
+                Sign up
+              </Link></div>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"

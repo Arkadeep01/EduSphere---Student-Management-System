@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, FileText, ClipboardCheck, Users, BookOpen, CreditCard, Clock, Calendar, CheckCircle2, ChevronRight } from "lucide-react";
-import { documentsList, importantDates, admissionInfo } from "@/lib/mock-data";
+import { documentsList, importantDates, admissionInfo, quickInfo } from "@/lib/mock-data";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/brand/animations";
 
 export const admissionSteps = [
@@ -24,7 +24,7 @@ export const admissionSteps = [
     icon: <CreditCard className="h-6 w-6" />,
     title: "Application Fee",
     description:
-      "Pay the non-refundable application fee of $50 through our secure online payment gateway.",
+      "Pay the non-refundable application fee of ₹50 through our secure online payment gateway.",
   },
   {
     icon: <BookOpen className="h-6 w-6" />,
@@ -43,29 +43,6 @@ export const admissionSteps = [
     title: "Final Admission",
     description:
       "Receive your admission letter and complete enrollment by paying the first semester tuition fee.",
-  },
-];
-
-export const quickInfo = [
-  {
-    icon: <Clock className="h-5 w-5" />,
-    label: "Processing Time",
-    value: "2–3 Weeks",
-  },
-  {
-    icon: <CreditCard className="h-5 w-5" />,
-    label: "Application Fee",
-    value: "$50 (Non-refundable)",
-  },
-  {
-    icon: <Users className="h-5 w-5" />,
-    label: "Intake Capacity",
-    value: "240 Students",
-  },
-  {
-    icon: <BookOpen className="h-5 w-5" />,
-    label: "Programs Offered",
-    value: "12 Courses",
   },
 ];
 
@@ -110,7 +87,7 @@ function AdmissionsPage() {
 
           <FadeIn direction="up" delay={0.45}>
             <Button size="lg" className="mt-10 bg-gradient-brand border-0">
-              <Link to={"/admissionForms" as any}>
+              <Link to={"/admissionForms"}>
                 Apply For Admission
               </Link>
             </Button>
@@ -126,7 +103,10 @@ function AdmissionsPage() {
               <StaggerItem key={item.label}>
                 <div className="text-center group">
                   <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                    {item.icon}
+                    {item.icon === "clock" && <Clock className="h-5 w-5" />}
+                    {item.icon === "card" && <CreditCard className="h-5 w-5" />}
+                    {item.icon === "users" && <Users className="h-5 w-5" />}
+                    {item.icon === "book" && <BookOpen className="h-5 w-5" />}
                   </div>
                   <h3 className="text-3xl font-bold text-primary mt-3">
                     {item.value}

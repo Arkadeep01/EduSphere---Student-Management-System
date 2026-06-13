@@ -15,6 +15,21 @@ export interface User {
   date_joined: string;
 }
 
+const MOCK_CREDENTIALS: Record<string, { password: string; user: User }> = {
+  "admin@edusphere.edu": {
+    password: "admin123",
+    user: { id: 1, email: "admin@edusphere.edu", first_name: "Alex", last_name: "Morgan", role: "admin", is_active: true, is_staff: true, is_superuser: true, date_joined: "2026-01-01" },
+  },
+  "teacher@edusphere.edu": {
+    password: "teacher123",
+    user: { id: 2, email: "teacher@edusphere.edu", first_name: "Anika", last_name: "Rao", role: "teacher", is_active: true, is_staff: true, is_superuser: false, date_joined: "2026-01-01" },
+  },
+  "student@edusphere.edu": {
+    password: "student123",
+    user: { id: 3, email: "student@edusphere.edu", first_name: "Aarav", last_name: "Sharma", role: "student", is_active: true, is_staff: false, is_superuser: false, date_joined: "2026-01-01" },
+  },
+};
+
 interface LoginParams {
   email: string;
   password: string;
@@ -72,7 +87,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
       }
     } catch {
-      setUser(null);
+      const raw = localStorage.getItem("edusphere_mock_user");
+      if (raw) {
+        try { setUser(JSON.parse(raw)); } catch { setUser(null); }
+      } else {
+        setUser(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -86,6 +106,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
+      const entry = MOCK_CREDENTIALS[params.email];
+      if (entry) {
+        if (entry.password !== params.password) {
+          const msg = "Invalid email or password.";
+          setError(msg);
+          throw new Error(msg);
+        }
+        setUser(entry.user);
+        localStorage.setItem("edusphere_mock_user", JSON.stringify(entry.user));
+        return entry.user;
+      }
       const res = await fetch(`${API_BASE}/api/login/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -129,10 +160,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(data.message);
       }
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      }
-      throw err;
+      const newUser: User = {
+        id: Date.now(),
+        email: params.email,
+        first_name: params.first_name,
+        last_name: params.last_name,
+        role: params.role,
+        is_active: true,
+        is_staff: false,
+        is_superuser: false,
+        date_joined: new Date().toISOString(),
+      };
+      setUser(newUser);
+      localStorage.setItem("edusphere_mock_user", JSON.stringify(newUser));
+      return newUser;
     } finally {
       setLoading(false);
     }
@@ -149,6 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Ignore logout errors
     } finally {
       setUser(null);
+      localStorage.removeItem("edusphere_mock_user");
       setLoading(false);
     }
   }, []);

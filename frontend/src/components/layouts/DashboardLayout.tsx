@@ -3,7 +3,7 @@ import { useState } from "react";
 import {
   LayoutDashboard, Users, GraduationCap, BookOpen, CalendarDays,
   ClipboardCheck, FileText, DollarSign, BarChart3, Settings, User,
-  LogOut, Menu, Bell, Search, Sun, Moon, ChevronDown, Home as FileCheck, Layers, Clock, Award
+  LogOut, Menu, Bell, Search, Sun, Moon, ChevronDown, Home as FileCheck, Layers, Clock, Award, Mail, ClipboardList
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/context/AuthContext";
@@ -31,6 +31,8 @@ const navByRole: Record<Role, NavItem[]> = {
     { label: "Examinations", to: "/admin/exams", icon: FileText },
     { label: "Fees & Finance", to: "/admin/fees", icon: DollarSign },
     { label: "Events", to: "/admin/events", icon: CalendarDays },
+    { label: "Contact Submissions", to: "/admin/contacts", icon: Mail },
+    { label: "Admission Forms", to: "/admin/admissions", icon: ClipboardList },
     { label: "Reports", to: "/admin/reports", icon: BarChart3 },
     { label: "Settings", to: "/admin/settings", icon: Settings },
     { label: "Profile", to: "/admin/profile", icon: User },

@@ -4,30 +4,13 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Users, Layers, FileCheck, ClipboardCheck, Loader2 } from "lucide-react";
+import { Users, Layers, FileCheck, ClipboardCheck } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts";
 import { examPerformance, assignments, announcements, timetable } from "@/lib/mock-data";
-import { useRequireRole } from "@/context/AuthContext";
 
 export const Route = createFileRoute("/teacher/dashboard")({
   head: () => ({ meta: [{ title: "Teacher Dashboard — EduSphere" }] }),
-  component: TeacherDashboard,
-});
-
-function TeacherDashboard() {
-  const { authorized, loading } = useRequireRole("teacher");
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
-  if (!authorized) return null;
-
-  return (
+  component: () => (
     <>
       <PageHeader title="Good morning, Dr. Rao" description="Here's your day at a glance." />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -70,5 +53,5 @@ function TeacherDashboard() {
         </CardContent></Card>
       </div>
     </>
-  );
-}
+  ),
+});

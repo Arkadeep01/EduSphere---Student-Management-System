@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ClipboardCheck, Award, FileCheck, FileText, BookOpen, DollarSign, Loader2 } from "lucide-react";
+// import { results, assignments, subjects, holidays, timetable, announcements } from "@/lib/mock-data";
 import { results, subjects, holidays, timetable, announcements } from "@/lib/mock-data";
 import { useRequireRole } from "@/context/AuthContext";
+import { ProfileView } from "@/components/dashboard/ProfileView";
 
 export const Route = createFileRoute("/student/dashboard")({
   head: () => ({ meta: [{ title: "Student Dashboard — EduSphere" }] }),
@@ -29,6 +31,7 @@ function StudentDashboard() {
   return (
     <>
       <PageHeader title="Hey Aarav 👋" description="Here's your learning snapshot today." />
+      <ProfileView />
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard label="Attendance" value="94%" icon={ClipboardCheck} accent="success" />
         <StatCard label="Current GPA" value="3.82" icon={Award} trend="0.12 vs last term" trendUp accent="primary" />
