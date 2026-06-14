@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -7,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, MoreHorizontal, Mail, Eye, Trash2 } from "lucide-react";
+import { Search, MoreHorizontal, Eye, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { contactSubmissions } from "@/lib/mock-data";
 import { toast } from "sonner";
@@ -19,13 +18,10 @@ function AdminContactsComponent() {
     (s.name.toLowerCase().includes(q.toLowerCase()) || s.email.toLowerCase().includes(q.toLowerCase()) || s.subject.toLowerCase().includes(q.toLowerCase()))
     && (statusFilter === "all" || s.status === statusFilter)
   );
-  const total = contactSubmissions.length;
-  const unread = contactSubmissions.filter(s => s.status === "unread").length;
+
 
   return (
     <>
-      <PageHeader title="Contact Submissions" description={`${unread} unread · ${total} total`}
-        actions={<Button size="sm" variant="outline"><Mail className="mr-2 h-4 w-4" />Mark All Read</Button>} />
       <Card><CardContent className="p-4">
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search by name, email or subject..." className="pl-9" value={q} onChange={e => setQ(e.target.value)} /></div>

@@ -50,12 +50,12 @@ export function StaggerContainer({
       className={className}
       initial="hidden"
       whileInView="show"
-      viewport={{ once: true }}
+      viewport={{ once: true, margin: "-50px" }}
       variants={{
         hidden: {},
         show: {
           transition: {
-            staggerChildren: 0.15,
+            staggerChildren: 0.1,
           },
         },
       }}
@@ -79,15 +79,82 @@ export function StaggerItem({
         hidden: {
           opacity: 0,
           y: 30,
+          scale: 0.95,
         },
         show: {
           opacity: 1,
           y: 0,
+          scale: 1,
         },
       }}
       transition={{
-        duration: 0.5,
+        duration: 0.4,
+        ease: "easeOut",
       }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+export function HoverLift({
+  children,
+  className = "",
+  lift = 4,
+}: {
+  children: ReactNode;
+  className?: string;
+  lift?: number;
+}) {
+  return (
+    <motion.div
+      className={className}
+      whileHover={{
+        y: -lift,
+        boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+        transition: { duration: 0.2, ease: "easeOut" },
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+export function HoverScale({
+  children,
+  className = "",
+  scale = 1.02,
+}: {
+  children: ReactNode;
+  className?: string;
+  scale?: number;
+}) {
+  return (
+    <motion.div
+      className={className}
+      whileHover={{
+        scale,
+        transition: { duration: 0.2, ease: "easeOut" },
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+export function PageWrapper({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <motion.div
+      className={className}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
     >
       {children}
     </motion.div>

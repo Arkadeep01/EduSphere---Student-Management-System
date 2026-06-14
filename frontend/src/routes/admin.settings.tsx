@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -12,7 +11,6 @@ export const Route = createFileRoute("/admin/settings")({
   head: () => ({ meta: [{ title: "Settings — Admin" }] }),
   component: () => (
     <>
-      <PageHeader title="Settings" description="Configure your school instance" />
       <Tabs defaultValue="general">
         <TabsList><TabsTrigger value="general">General</TabsTrigger><TabsTrigger value="branding">Branding</TabsTrigger><TabsTrigger value="notifications">Notifications</TabsTrigger><TabsTrigger value="security">Security</TabsTrigger></TabsList>
         <TabsContent value="general"><Card><CardContent className="p-6 space-y-4 max-w-2xl">

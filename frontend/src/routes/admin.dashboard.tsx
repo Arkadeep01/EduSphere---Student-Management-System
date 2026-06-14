@@ -1,11 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { StatCard } from "@/components/dashboard/StatCard";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Users, GraduationCap, Layers, DollarSign, AlertCircle, TrendingUp, Calendar, Plus, FileText, Loader2 } from "lucide-react";
+import { Users, GraduationCap, Layers, DollarSign, AlertCircle, TrendingUp, Calendar, FileText, Loader2 } from "lucide-react";
 import { stats, studentGrowth, attendanceData, examPerformance, notifications, announcements, events } from "@/lib/mock-data";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, AreaChart, Area, CartesianGrid } from "recharts";
 import { useRequireRole } from "@/context/AuthContext";
@@ -30,16 +28,6 @@ function AdminDashboard() {
 
   return (
     <>
-      <PageHeader
-        title="Welcome back, Alex"
-        description="Here's what's happening at your school today."
-        actions={
-          <>
-            <Button variant="outline" size="sm"><FileText className="mr-2 h-4 w-4" />Export</Button>
-            <Button size="sm" className="bg-gradient-brand border-0"><Plus className="mr-2 h-4 w-4" />Quick action</Button>
-          </>
-        }
-      />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Students" value={stats.students.toLocaleString()} icon={Users} trend="12% vs last month" trendUp accent="primary" />

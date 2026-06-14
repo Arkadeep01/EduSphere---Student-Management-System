@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -34,7 +33,6 @@ function AdminAdmissionsComponent() {
 
   return (
     <>
-      <PageHeader title="Admission Forms" description={`${admissionSubmissions.length} submissions received`} />
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Card><CardContent className="p-4">

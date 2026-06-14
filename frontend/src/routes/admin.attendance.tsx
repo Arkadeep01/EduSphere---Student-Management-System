@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Users, UserCheck, UserX, TrendingUp } from "lucide-react";
@@ -10,7 +9,6 @@ export const Route = createFileRoute("/admin/attendance")({
   head: () => ({ meta: [{ title: "Attendance — Admin" }] }),
   component: () => (
     <>
-      <PageHeader title="Attendance" description="Today's school-wide attendance overview" />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Students" value="1,248" icon={Users} accent="primary" />
         <StatCard label="Present" value="1,180" icon={UserCheck} accent="success" />

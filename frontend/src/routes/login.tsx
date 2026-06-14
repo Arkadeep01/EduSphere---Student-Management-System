@@ -38,7 +38,7 @@ function LoginPage() {
     clearError();
     setSubmitting(true);
     try {
-      const user = await login({ email, password: pwd });
+      const user = await login({ email, password: pwd, portal: role });
       toast.success(`Welcome back, ${user.first_name || user.email}!`);
       const redirectMap: Record<string, string> = {
         admin: "/admin/dashboard",

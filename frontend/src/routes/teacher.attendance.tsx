@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/dashboard/PageHeader";
+import { PageWrapper } from "@/components/brand/animations";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -13,31 +14,48 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useState } from "react";
-import { students } from "@/lib/mock-data";
-import { toast } from "sonner";
-import { Save } from "lucide-react";
+import { students, teacherSubjectData, classStudents } from "@/lib/mock-data";
+
+
+const today = new Date().toISOString().split("T")[0];
 
 function AttendanceComponent() {
-  const list = students.slice(0, 10);
+  const [selectedClass, setSelectedClass] = useState(teacherSubjectData.classes[0]);
+  const [selectedDate, setSelectedDate] = useState(today);
+  const list = classStudents[selectedClass] || students.slice(0, 10);
   const [present, setPresent] = useState<Record<string, boolean>>(
     Object.fromEntries(list.map((s) => [s.id, true])),
   );
-  return (
-    <>
-      <PageHeader
-        title="Mark Attendance"
-        description="Class 10-A · Today"
-        actions={
-          <Button
-            size="sm"
-            className="bg-gradient-brand border-0"
-            onClick={() => toast.success("Attendance saved")}
-          >
-            <Save className="mr-2 h-4 w-4" />
-            Save
-          </Button>
-        }
-      />
+  const [saved, setSaved] = useState(false);
+
+  const presentCount = Object.values(present).filter(Boolean).length;
+  const absentCount = Object.values(present).filter((v) => !v).length;
+
+    return (
+      <PageWrapper>
+      <Card className="mb-4"><CardContent className="p-4">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Class:</span>
+            <Select value={selectedClass} onValueChange={v => { setSelectedClass(v); setSaved(false); }}>
+              <SelectTrigger className="w-28">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {teacherSubjectData.classes.map(cls => (
+                  <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Date:</span>
+            <input type="date" value={selectedDate} onChange={e => { setSelectedDate(e.target.value); setSaved(false); }} className="text-sm border rounded-lg px-3 py-1.5 bg-background" />
+          </div>
+          {saved && <Badge className="bg-success text-success-foreground">Saved</Badge>}
+        </div>
+      </CardContent></Card>
+
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -55,10 +73,7 @@ function AttendanceComponent() {
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
                         <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                          {s.name
-                            .split(" ")
-                            .map((x) => x[0])
-                            .join("")}
+                          {s.name.split(" ").map((x) => x[0]).join("")}
                         </AvatarFallback>
                       </Avatar>
                       <span className="font-medium">{s.name}</span>
@@ -70,19 +85,13 @@ function AttendanceComponent() {
                       size="sm"
                       variant={present[s.id] ? "default" : "outline"}
                       onClick={() => setPresent({ ...present, [s.id]: true })}
-                      className={
-                        present[s.id] ? "bg-success hover:bg-success/90" : ""
-                      }
-                    >
-                      Present
-                    </Button>
+                      className={present[s.id] ? "bg-success hover:bg-success/90" : ""}
+                    >Present</Button>
                     <Button
                       size="sm"
                       variant={!present[s.id] ? "destructive" : "outline"}
                       onClick={() => setPresent({ ...present, [s.id]: false })}
-                    >
-                      Absent
-                    </Button>
+                    >Absent</Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -90,15 +99,13 @@ function AttendanceComponent() {
           </Table>
         </CardContent>
       </Card>
+
       <div className="mt-4 flex gap-4 text-sm">
-        <Badge className="bg-success text-success-foreground">
-          {Object.values(present).filter(Boolean).length} Present
-        </Badge>
-        <Badge variant="destructive">
-          {Object.values(present).filter((v) => !v).length} Absent
-        </Badge>
+        <Badge className="bg-success text-success-foreground">{presentCount} Present</Badge>
+        <Badge variant="destructive">{absentCount} Absent</Badge>
+        <Badge variant="secondary">{list.length} Total</Badge>
       </div>
-    </>
+    </PageWrapper>
   );
 }
 

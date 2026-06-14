@@ -33,6 +33,7 @@ const MOCK_CREDENTIALS: Record<string, { password: string; user: User }> = {
 interface LoginParams {
   email: string;
   password: string;
+  portal?: string;
 }
 
 interface RegisterParams {
@@ -117,11 +118,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("edusphere_mock_user", JSON.stringify(entry.user));
         return entry.user;
       }
+      const body = { email: params.email, password: params.password, portal: params.portal || "" };
       const res = await fetch(`${API_BASE}/api/login/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(params),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (data.success) {

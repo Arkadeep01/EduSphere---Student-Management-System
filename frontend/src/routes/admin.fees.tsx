@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, TrendingUp, AlertCircle, Wallet } from "lucide-react";
@@ -18,7 +17,6 @@ export const Route = createFileRoute("/admin/fees")({
   head: () => ({ meta: [{ title: "Fees & Finance — Admin" }] }),
   component: () => (
     <>
-      <PageHeader title="Fees & Finance" description="Collections, pending payments, and reports" />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Collected" value="$284.5k" icon={DollarSign} trend="8.2%" trendUp accent="success" />
         <StatCard label="Pending" value="$18.4k" icon={AlertCircle} accent="warning" />

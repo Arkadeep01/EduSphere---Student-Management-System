@@ -1,17 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Calendar, MapPin, Clock } from "lucide-react";
+import { Calendar, MapPin, Clock } from "lucide-react";
 import { exams } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/admin/exams")({
   head: () => ({ meta: [{ title: "Examinations — Admin" }] }),
   component: () => (
     <>
-      <PageHeader title="Examinations" description="Schedule, results, and promotions" actions={<><Button variant="outline" size="sm">Publish Results</Button><Button size="sm" className="bg-gradient-brand border-0"><Plus className="mr-2 h-4 w-4" />Create Exam</Button></>} />
       <Card><CardContent className="p-0">
         <Table>
           <TableHeader><TableRow><TableHead>Exam</TableHead><TableHead>Date</TableHead><TableHead>Time</TableHead><TableHead>Room</TableHead><TableHead>Duration</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>

@@ -1,9 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Layers, Users, Plus } from "lucide-react";
+import { Layers, Users } from "lucide-react";
 
 const classes = ["10-A", "10-B", "10-C", "9-A", "9-B", "11-A", "11-B", "12-A", "8-A", "8-B", "7-A", "7-B"];
 
@@ -11,7 +9,6 @@ export const Route = createFileRoute("/admin/classes")({
   head: () => ({ meta: [{ title: "Classes — Admin" }] }),
   component: () => (
     <>
-      <PageHeader title="Classes & Sections" description={`${classes.length} active classes`} actions={<Button size="sm" className="bg-gradient-brand border-0"><Plus className="mr-2 h-4 w-4" />New class</Button>} />
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {classes.map((c, i) => (
           <Card key={c} className="hover-lift overflow-hidden">

@@ -1,17 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Star, Mail } from "lucide-react";
+import { Star, Mail } from "lucide-react";
 import { teachers } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/admin/teachers")({
   head: () => ({ meta: [{ title: "Teachers — Admin" }] }),
   component: () => (
     <>
-      <PageHeader title="Teachers" description={`Manage ${teachers.length} faculty members`} actions={<Button size="sm" className="bg-gradient-brand border-0"><Plus className="mr-2 h-4 w-4" />Add Teacher</Button>} />
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {teachers.map(t => (
           <Card key={t.id} className="hover-lift"><CardContent className="p-5">

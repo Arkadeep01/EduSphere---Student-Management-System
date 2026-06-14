@@ -1,16 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, MapPin } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
 import { events } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/admin/events")({
   head: () => ({ meta: [{ title: "Events — Admin" }] }),
   component: () => (
     <>
-      <PageHeader title="Events & Holidays" description="Manage school calendar" actions={<Button size="sm" className="bg-gradient-brand border-0"><Plus className="mr-2 h-4 w-4" />New Event</Button>} />
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {events.map(e => (
           <Card key={e.id} className="hover-lift overflow-hidden">

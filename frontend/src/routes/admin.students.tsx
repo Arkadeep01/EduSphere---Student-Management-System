@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, Plus, MoreHorizontal, Download, Filter } from "lucide-react";
+import { Search, MoreHorizontal, Filter } from "lucide-react";
 import { useState } from "react";
 import { students } from "@/lib/mock-data";
 
@@ -21,8 +20,6 @@ function AdminStudentsComponent() {
   );
   return (
       <>
-        <PageHeader title="Students" description={`${filtered.length} of ${students.length} students`}
-          actions={<><Button variant="outline" size="sm"><Download className="mr-2 h-4 w-4" />Export</Button><Button size="sm" className="bg-gradient-brand border-0"><Plus className="mr-2 h-4 w-4" />Add Student</Button></>} />
         <Card><CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
             <div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search by name or ID..." className="pl-9" value={q} onChange={e => setQ(e.target.value)} /></div>

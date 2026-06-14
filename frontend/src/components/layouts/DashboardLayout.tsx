@@ -3,14 +3,13 @@ import { useState } from "react";
 import {
   LayoutDashboard, Users, GraduationCap, BookOpen, CalendarDays,
   ClipboardCheck, FileText, DollarSign, BarChart3, Settings, User,
-  LogOut, Menu, Bell, Search, Sun, Moon, ChevronDown, Home as FileCheck, Layers, Clock, Award, Mail, ClipboardList
+  LogOut, Menu, Bell, Sun, Moon, ChevronDown, Home as FileCheck, Layers, Clock, Award, Mail, ClipboardList
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger
@@ -40,11 +39,12 @@ const navByRole: Record<Role, NavItem[]> = {
   teacher: [
     { label: "Dashboard", to: "/teacher/dashboard", icon: LayoutDashboard },
     { label: "My Classes", to: "/teacher/classes", icon: Layers },
-    { label: "My Subjects", to: "/teacher/subjects", icon: BookOpen },
+    { label: "My Subject", to: "/teacher/subjects", icon: BookOpen },
     { label: "Assignments", to: "/teacher/assignments", icon: FileCheck },
     { label: "Attendance", to: "/teacher/attendance", icon: ClipboardCheck },
     { label: "Exams", to: "/teacher/exams", icon: FileText },
     { label: "Timetable", to: "/teacher/timetable", icon: Clock },
+    { label: "Resources", to: "/teacher/resources", icon: BookOpen },
     { label: "Profile", to: "/teacher/profile", icon: User },
   ],
   student: [
@@ -56,6 +56,7 @@ const navByRole: Record<Role, NavItem[]> = {
     { label: "Results", to: "/student/results", icon: Award },
     { label: "Fees", to: "/student/fees", icon: DollarSign },
     { label: "Timetable", to: "/student/timetable", icon: Clock },
+    { label: "Notifications", to: "/student/notifications", icon: Bell },
     { label: "Profile", to: "/student/profile", icon: User },
   ],
 };
@@ -66,9 +67,23 @@ export function  DashboardLayout({ role }: { role: Role }) {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [search, setSearch] = useState("");
 
   const items = navByRole[role];
+
+  const pageTitleMap: Record<string, string> = {
+    "dashboard": "Dashboard",
+    "subjects": "Subjects",
+    "assignments": "Assignments",
+    "attendance": "Attendance",
+    "exams": "Exam Schedule",
+    "results": "Results",
+    "fees": "Fees",
+    "timetable": "Timetable",
+    "notifications": "Notifications",
+    "profile": "Profile",
+  };
+  const currentPage = pathname.split("/").pop() || "";
+  const pageTitle = pageTitleMap[currentPage] || currentPage.charAt(0).toUpperCase() + currentPage.slice(1);
 
   const handleLogout = () => {
     logout();
@@ -82,7 +97,7 @@ export function  DashboardLayout({ role }: { role: Role }) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-64 transform border-r bg-sidebar transition-transform lg:relative lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 w-64 transform border-r bg-sidebar transition-transform lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -126,21 +141,13 @@ export function  DashboardLayout({ role }: { role: Role }) {
       )}
 
       {/* Main */}
-      <div className="flex flex-1 flex-col min-w-0">
+      <div className="flex flex-1 flex-col min-w-0 lg:pl-64">
         {/* Topbar */}
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-background/80 backdrop-blur px-4 sm:px-6">
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search students, subjects, events..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 bg-muted/50 border-0"
-            />
-          </div>
+          <h1 className="text-xl font-bold">{pageTitle}</h1>
           <div className="ml-auto flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
               {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -195,7 +202,7 @@ export function  DashboardLayout({ role }: { role: Role }) {
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto" style={{ maxHeight: "calc(100vh - 4rem)" }}>
           <Outlet />
         </main>
       </div>

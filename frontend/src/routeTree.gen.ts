@@ -29,6 +29,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TeacherTimetableRouteImport } from './routes/teacher.timetable'
+import { Route as TeacherResourcesRouteImport } from './routes/teacher.resources'
 import { Route as TeacherSubjectsRouteImport } from './routes/teacher.subjects'
 import { Route as TeacherProfileRouteImport } from './routes/teacher.profile'
 import { Route as TeacherExamsRouteImport } from './routes/teacher.exams'
@@ -45,6 +46,7 @@ import { Route as StudentExamsRouteImport } from './routes/student.exams'
 import { Route as StudentDashboardRouteImport } from './routes/student.dashboard'
 import { Route as StudentAttendanceRouteImport } from './routes/student.attendance'
 import { Route as StudentAssignmentsRouteImport } from './routes/student.assignments'
+import { Route as StudentNotificationsRouteImport } from './routes/student.notifications'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminTeachersRouteImport } from './routes/admin.teachers'
 import { Route as AdminStudentsRouteImport } from './routes/admin.students'
@@ -153,6 +155,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TeacherResourcesRoute = TeacherResourcesRouteImport.update({
+  id: '/resources',
+  path: '/resources',
+  getParentRoute: () => TeacherRoute,
+} as any)
+
 const TeacherTimetableRoute = TeacherTimetableRouteImport.update({
   id: '/timetable',
   path: '/timetable',
@@ -233,6 +241,12 @@ const StudentAttendanceRoute = StudentAttendanceRouteImport.update({
   path: '/attendance',
   getParentRoute: () => StudentRoute,
 } as any)
+const StudentNotificationsRoute = StudentNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => StudentRoute,
+} as any)
+
 const StudentAssignmentsRoute = StudentAssignmentsRouteImport.update({
   id: '/assignments',
   path: '/assignments',
@@ -340,6 +354,7 @@ export interface FileRoutesByFullPath {
   '/student/results': typeof StudentResultsRoute
   '/student/subjects': typeof StudentSubjectsRoute
   '/student/timetable': typeof StudentTimetableRoute
+  '/student/notifications': typeof StudentNotificationsRoute
   '/teacher/assignments': typeof TeacherAssignmentsRoute
   '/teacher/attendance': typeof TeacherAttendanceRoute
   '/teacher/classes': typeof TeacherClassesRoute
@@ -348,6 +363,7 @@ export interface FileRoutesByFullPath {
   '/teacher/profile': typeof TeacherProfileRoute
   '/teacher/subjects': typeof TeacherSubjectsRoute
   '/teacher/timetable': typeof TeacherTimetableRoute
+  '/teacher/resources': typeof TeacherResourcesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -761,6 +777,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/teacher/resources': {
+      id: '/teacher/resources'
+      path: '/resources'
+      fullPath: '/teacher/resources'
+      preLoaderRoute: typeof TeacherResourcesRouteImport
+      parentRoute: typeof TeacherRoute
+    }
     '/teacher/timetable': {
       id: '/teacher/timetable'
       path: '/timetable'
@@ -816,6 +839,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/teacher/assignments'
       preLoaderRoute: typeof TeacherAssignmentsRouteImport
       parentRoute: typeof TeacherRoute
+    }
+    '/student/notifications': {
+      id: '/student/notifications'
+      path: '/notifications'
+      fullPath: '/student/notifications'
+      preLoaderRoute: typeof StudentNotificationsRouteImport
+      parentRoute: typeof StudentRoute
     }
     '/student/timetable': {
       id: '/student/timetable'
@@ -1019,6 +1049,7 @@ const StudentRouteChildren: StudentRouteChildren = {
   StudentResultsRoute: StudentResultsRoute,
   StudentSubjectsRoute: StudentSubjectsRoute,
   StudentTimetableRoute: StudentTimetableRoute,
+  StudentNotificationsRoute: StudentNotificationsRoute,
 }
 
 const StudentRouteWithChildren =
@@ -1044,6 +1075,7 @@ const TeacherRouteChildren: TeacherRouteChildren = {
   TeacherProfileRoute: TeacherProfileRoute,
   TeacherSubjectsRoute: TeacherSubjectsRoute,
   TeacherTimetableRoute: TeacherTimetableRoute,
+  TeacherResourcesRoute: TeacherResourcesRoute,
 }
 
 const TeacherRouteWithChildren =

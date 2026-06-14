@@ -27,6 +27,23 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
+from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
+import secrets
+
+class OTP(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='otps')
+    email = models.EmailField()
+    otp_code = models.CharField(max_length=6)
+    expires_at = models.DateTimeField()
+    is_verified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"OTP for {self.email}"
+
+
 class CustomUser(AbstractUser):
     username = models.CharField(_('username'), max_length=150, unique=True, blank=True, null=True)
     email = models.EmailField(_('email address'), unique=True)

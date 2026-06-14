@@ -1,24 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/dashboard/PageHeader";
+import { PageWrapper, StaggerContainer, StaggerItem } from "@/components/brand/animations";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DollarSign, CheckCircle2, AlertCircle, Download } from "lucide-react";
-import { fees } from "@/lib/mock-data";
+import { fees, feeBreakdown } from "@/lib/mock-data";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/student/fees")({
   head: () => ({ meta: [{ title: "Fees — Student" }] }),
   component: () => (
-    <>
-      <PageHeader title="Fees" description="Payment history and pending dues" />
-      <div className="grid grid-cols-3 gap-4">
-        <StatCard label="Total Paid" value="$4,800" icon={CheckCircle2} accent="success" />
-        <StatCard label="Pending" value="$2,400" icon={AlertCircle} accent="warning" />
-        <StatCard label="Annual Fee" value="$7,200" icon={DollarSign} accent="primary" />
-      </div>
+    <PageWrapper>
+      <StaggerContainer className="grid grid-cols-3 gap-4">
+        <StaggerItem><StatCard label="Total Paid" value={`$${feeBreakdown.paid.toLocaleString()}`} icon={CheckCircle2} accent="success" /></StaggerItem>
+        <StaggerItem><StatCard label="Pending" value={`$${feeBreakdown.pending.toLocaleString()}`} icon={AlertCircle} accent="warning" /></StaggerItem>
+        <StaggerItem><StatCard label="Annual Fee" value={`$${feeBreakdown.annual.toLocaleString()}`} icon={DollarSign} accent="primary" /></StaggerItem>
+      </StaggerContainer>
       <Card className="mt-6"><CardContent className="p-0">
         <Table>
           <TableHeader><TableRow><TableHead>Term</TableHead><TableHead>Amount</TableHead><TableHead>Due Date</TableHead><TableHead>Status</TableHead><TableHead></TableHead></TableRow></TableHeader>
@@ -33,6 +32,6 @@ export const Route = createFileRoute("/student/fees")({
           ))}</TableBody>
         </Table>
       </CardContent></Card>
-    </>
+    </PageWrapper>
   ),
 });

@@ -82,23 +82,22 @@ export const teachers = [
 ];
 
 export const subjects = [
-  { id: "MATH101", name: "Mathematics", code: "MATH101", teacher: "Dr. Anika Rao", progress: 68, category: "core", color: "from-indigo-500 to-blue-500" },
-  { id: "PHY201", name: "Physics", code: "PHY201", teacher: "Prof. James Miller", progress: 54, category: "core", color: "from-blue-500 to-cyan-500" },
-  { id: "ENG110", name: "English Literature", code: "ENG110", teacher: "Ms. Elena Cruz", progress: 82, category: "core", color: "from-purple-500 to-indigo-500" },
-  { id: "BIO150", name: "Biology", code: "BIO150", teacher: "Dr. Sarah Khan", progress: 41, category: "core", color: "from-green-500 to-emerald-500" },
-  { id: "CHM120", name: "Chemistry", code: "CHM120", teacher: "Mr. David Park", progress: 73, category: "core", color: "from-orange-500 to-red-500" },
-  { id: "CS210", name: "Computer Science", code: "CS210", teacher: "Ms. Rina Gupta", progress: 90, category: "core", color: "from-violet-500 to-purple-500" },
+  { id: "MATH101", name: "Mathematics", code: "MATH101", teacher: "Dr. Anika Rao", progress: 68, category: "core", color: "from-indigo-500 to-blue-500", description: "Study of numbers, quantities, shapes, and patterns. Covers algebra, geometry, trigonometry, and calculus." },
+  { id: "PHY201", name: "Physics", code: "PHY201", teacher: "Prof. James Miller", progress: 54, category: "core", color: "from-blue-500 to-cyan-500", description: "Fundamental science exploring matter, energy, motion, force, and the laws governing the universe." },
+  { id: "ENG110", name: "English Literature", code: "ENG110", teacher: "Ms. Elena Cruz", progress: 82, category: "core", color: "from-purple-500 to-indigo-500", description: "Study of prose, poetry, and drama from classic to contemporary English literature." },
+  { id: "BIO150", name: "Biology", code: "BIO150", teacher: "Dr. Sarah Khan", progress: 41, category: "core", color: "from-green-500 to-emerald-500", description: "Study of living organisms, cell biology, genetics, evolution, and ecosystems." },
+  { id: "CHM120", name: "Chemistry", code: "CHM120", teacher: "Mr. David Park", progress: 73, category: "core", color: "from-orange-500 to-red-500", description: "Study of matter, its properties, composition, and reactions including organic and inorganic chemistry." },
+  { id: "CS210", name: "Computer Science", code: "CS210", teacher: "Ms. Rina Gupta", progress: 90, category: "core", color: "from-violet-500 to-purple-500", description: "Study of computation, algorithms, programming, data structures, and software development." },
 
-  { id: "BST301", name: "Business Studies", code: "BST301", teacher: "Mrs. Priya Sen", progress: 65, category: "specialized", color: "from-amber-500 to-yellow-500" },
-  { id: "RES320", name: "Research Methodology", code: "RES320", teacher: "Dr. Arjun Mehta", progress: 58, category: "specialized", color: "from-slate-500 to-gray-700" },
-  { id: "ICT220", name: "Information Technology", code: "ICT220", teacher: "Mr. Rohit Das", progress: 87, color: "from-cyan-500 to-sky-500" },
-  { id: "ECO250", name: "Economics", code: "ECO250", teacher: "Mrs. Nandini Roy", progress: 71, category: "specialized", color: "from-emerald-500 to-lime-500" },
-  { id: "PG0440", name: "Painting", code: "PG0440", teacher: "Mr. Bikash Gon", progress: 56, category: "specialized", color: "from-purple-500 to-indigo-500" },
-  { id: "ICT220", name: "Information Technology", code: "ICT220", teacher: "Mr. Rohit Das", progress: 87, category: "specialized", color: "from-cyan-500 to-sky-500" },
+  { id: "BST301", name: "Business Studies", code: "BST301", teacher: "Mrs. Priya Sen", progress: 65, category: "specialized", color: "from-amber-500 to-yellow-500", description: "Introduction to business concepts, management principles, marketing, finance, and entrepreneurship." },
+  { id: "RES320", name: "Research Methodology", code: "RES320", teacher: "Dr. Arjun Mehta", progress: 58, category: "specialized", color: "from-slate-500 to-gray-700", description: "Systematic approach to research design, data collection, analysis methods, and academic writing." },
+  { id: "ECO250", name: "Economics", code: "ECO250", teacher: "Mrs. Nandini Roy", progress: 71, category: "specialized", color: "from-emerald-500 to-lime-500", description: "Study of resource allocation, market dynamics, supply and demand, and economic policy." },
+  { id: "PG0440", name: "Painting", code: "PG0440", teacher: "Mr. Bikash Gon", progress: 56, category: "specialized", color: "from-purple-500 to-indigo-500", description: "Exploration of visual art through various painting techniques, color theory, and creative expression." },
+  { id: "ICT220", name: "Information Technology", code: "ICT220", teacher: "Mr. Rohit Das", progress: 87, category: "specialized", color: "from-cyan-500 to-sky-500", description: "Study of computer systems, networks, databases, cybersecurity, and IT infrastructure management." },
 
-  { id: "HIS180", name: "History", code: "HIS180", teacher: "Mr. Tom Wilson", progress: 63, category: "enrichment", color: "from-stone-500 to-amber-700" },
-  { id: "GEO210", name: "Geography", code: "GEO210", teacher: "Mrs. Aditi Sharma", progress: 67, category: "enrichment", color: "from-teal-500 to-cyan-500" },
-  { id: "ART440", name: "Painting & Visual Arts", code: "ART440", teacher: "Mr. Bikash Goon", progress: 56, category: "enrichment", color: "from-pink-500 to-rose-500" },
+  { id: "HIS180", name: "History", code: "HIS180", teacher: "Mr. Tom Wilson", progress: 63, category: "enrichment", color: "from-stone-500 to-amber-700", description: "Study of past events, civilizations, world history, and their impact on the modern world." },
+  { id: "GEO210", name: "Geography", code: "GEO210", teacher: "Mrs. Aditi Sharma", progress: 67, category: "enrichment", color: "from-teal-500 to-cyan-500", description: "Study of Earth's landscapes, environments, populations, and the relationship between people and places." },
+  { id: "ART440", name: "Painting & Visual Arts", code: "ART440", teacher: "Mr. Bikash Goon", progress: 56, category: "enrichment", color: "from-pink-500 to-rose-500", description: "Advanced study of visual arts including drawing, painting, sculpture, and art history." },
 ];
 
 export const assignments = [
@@ -121,10 +120,13 @@ export const exams = [
 export const results = [
   { subject: "Mathematics", marks: 88, total: 100, grade: "A" },
   { subject: "Physics", marks: 76, total: 100, grade: "B+" },
-  { subject: "English", marks: 92, total: 100, grade: "A+" },
+  { subject: "English Literature", marks: 92, total: 100, grade: "A+" },
   { subject: "Biology", marks: 81, total: 100, grade: "A" },
   { subject: "Chemistry", marks: 79, total: 100, grade: "B+" },
   { subject: "Computer Science", marks: 95, total: 100, grade: "A+" },
+  { subject: "Business Studies", marks: 85, total: 100, grade: "A" },
+  { subject: "Information Technology", marks: 88, total: 100, grade: "A" },
+  { subject: "History", marks: 74, total: 100, grade: "B+" },
 ];
 
 export const events = [
@@ -692,4 +694,282 @@ export const admissionSubmissions = [
     submittedAt: "2026-06-15T11:30:00",
     status: "pending",
   },
+];
+
+// ──────────────────────────────────────────────
+// Enhanced Mock Data for Student & Teacher Pages
+// ──────────────────────────────────────────────
+
+export const coreSubjects = subjects.filter(s => s.category === "core");
+export const specializedSubjects = subjects.filter(s => s.category === "specialized");
+export const enrichedSubjects = subjects.filter(s => s.category === "enrichment");
+
+export const subjectSelection = {
+  core: coreSubjects.map(s => ({ ...s, status: "selected" as const })),
+  specialized: [
+    { id: "BST301", name: "Business Studies", code: "BST301", teacher: "Mrs. Priya Sen", progress: 0, category: "specialized" as const, color: "from-amber-500 to-yellow-500", description: "", status: "selected" as const },
+    { id: "ECO250", name: "Economics", code: "ECO250", teacher: "Mrs. Nandini Roy", progress: 0, category: "specialized" as const, color: "from-emerald-500 to-lime-500", description: "", status: "request_pending" as const },
+    { id: "ICT220", name: "Information Technology", code: "ICT220", teacher: "Mr. Rohit Das", progress: 0, category: "specialized" as const, color: "from-cyan-500 to-sky-500", description: "", status: "selected" as const },
+    { id: "RES320", name: "Research Methodology", code: "RES320", teacher: "Dr. Arjun Mehta", progress: 0, category: "specialized" as const, color: "from-slate-500 to-gray-700", description: "", status: "not_selected" as const },
+  ],
+  enriched: [
+    { id: "HIS180", name: "History", code: "HIS180", teacher: "Mr. Tom Wilson", progress: 0, category: "enrichment" as const, color: "from-stone-500 to-amber-700", description: "", status: "selected" as const },
+    { id: "ART440", name: "Painting & Visual Arts", code: "ART440", teacher: "Mr. Bikash Goon", progress: 0, category: "enrichment" as const, color: "from-pink-500 to-rose-500", description: "", status: "request_pending" as const },
+  ],
+};
+
+export const assignmentDetails = {
+  id: "A1",
+  title: "Quadratic Equations Problem Set",
+  subject: "Mathematics",
+  description: "Solve the following quadratic equations using factorization, completing the square, and the quadratic formula. Show all steps clearly. Submit as a single PDF.",
+  due: "2026-06-08",
+  status: "pending" as const,
+  totalMarks: 50,
+  attachments: ["quadratic_eqns.pdf", "reference_sheet.pdf"],
+  teacherRemarks: "",
+  marks: null as number | null,
+};
+
+export const submissionHistory = [
+  { id: "SH1", title: "Macbeth Character Essay", subject: "English", submitted: "2026-06-03", status: "graded" as const, marks: 42, total: 50, grade: "A", remarks: "Excellent analysis of Macbeth's character arc. Well-structured essay with strong textual evidence." },
+  { id: "SH2", title: "Periodic Table Quiz", subject: "Chemistry", submitted: "2026-06-02", status: "graded" as const, marks: 18, total: 20, grade: "A", remarks: "Good understanding of periodic trends. Review lanthanide series." },
+  { id: "SH3", title: "Cell Division Diagram", subject: "Biology", submitted: "2026-05-28", status: "graded" as const, marks: 38, total: 40, grade: "A+", remarks: "Excellent diagrams. Detailed annotations." },
+  { id: "SH4", title: "Newton's Laws Problem Set", subject: "Physics", submitted: "2026-05-25", status: "graded" as const, marks: 28, total: 30, grade: "A", remarks: "Good work. Review conservation of momentum problems." },
+];
+
+export const monthlyAttendance = [
+  { month: "Jan 2026", present: 22, absent: 1, late: 0, total: 23, percentage: 95.7 },
+  { month: "Feb 2026", present: 20, absent: 0, late: 1, total: 21, percentage: 95.2 },
+  { month: "Mar 2026", present: 18, absent: 2, late: 1, total: 21, percentage: 85.7 },
+  { month: "Apr 2026", present: 20, absent: 0, late: 0, total: 20, percentage: 100 },
+  { month: "May 2026", present: 21, absent: 1, late: 0, total: 22, percentage: 95.5 },
+  { month: "Jun 2026", present: 15, absent: 1, late: 1, total: 17, percentage: 88.2 },
+];
+
+export const rankings = {
+  classRank: 4,
+  sectionRank: 2,
+  totalStudents: 32,
+  topStudents: [
+    { rank: 1, name: "Riya Sen", gpa: "3.98", percentage: 97.5 },
+    { rank: 2, name: "Arnav Das", gpa: "3.95", percentage: 96.2 },
+    { rank: 3, name: "Priya Pal", gpa: "3.88", percentage: 94.8 },
+    { rank: 4, name: "Aarav Sharma", gpa: "3.82", percentage: 93.1 },
+    { rank: 5, name: "Neha Basu", gpa: "3.78", percentage: 92.4 },
+  ],
+};
+
+export const studentProfileData = {
+  personal: {
+    fullName: "Aarav Sharma",
+    username: "aarav.sharma",
+    email: "aarav.sharma@edusphere.edu",
+    phone: "+91 98765 43210",
+    dateOfBirth: "2008-04-15",
+    gender: "Male",
+    bloodGroup: "B+",
+    address: "123, Lake View Road, Agartala, Tripura",
+  },
+  academic: {
+    rollNumber: "STU1001",
+    admissionNumber: "ADM2024001",
+    class: "10-A",
+    section: "A",
+    academicYear: "2025-2026",
+    previousSchool: "St. Mary's High School",
+  },
+  parents: {
+    fatherName: "Rajesh Sharma",
+    fatherOccupation: "Software Engineer",
+    fatherPhone: "+91 98765 43211",
+    motherName: "Sunita Sharma",
+    motherOccupation: "Teacher",
+    motherPhone: "+91 98765 43212",
+    guardianName: "Rajesh Sharma",
+    guardianRelation: "Father",
+    guardianPhone: "+91 98765 43211",
+  },
+  documents: [
+    { name: "10th Marksheet", uploaded: "2025-06-15" },
+    { name: "ID Card", uploaded: "2025-07-01" },
+    { name: "Transfer Certificate", uploaded: "2025-05-20" },
+  ],
+};
+
+export const dailyAttendance = Array.from({ length: 30 }, (_, i) => {
+  const date = new Date(2026, 4, 16 + i);
+  const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+  return {
+    day: i + 1,
+    date: date.toISOString().split("T")[0],
+    present: isWeekend ? null : i % 11 !== 0,
+    dayOfWeek: date.toLocaleDateString("en-US", { weekday: "short" }),
+  };
+});
+
+export const notificationCategories = [
+  {
+    category: "Timetable Updates",
+    icon: "Calendar",
+    items: [
+      { id: "nt1", title: "Timetable Updated for June", message: "Your class schedule has been updated for the month of June. Check the new timetable.", time: "Today, 8:30 AM", unread: true },
+      { id: "nt2", title: "Library Session Added", message: "A library session has been added on Friday at 11:30 AM in the Main Library.", time: "Yesterday, 3:15 PM", unread: true },
+    ],
+  },
+  {
+    category: "Fee Notifications",
+    icon: "DollarSign",
+    items: [
+      { id: "nf1", title: "Q3 2026 Fee Reminder", message: "Your Q3 2026 tuition fee of $2,400 is due by July 15, 2026. Pay now to avoid late fees.", time: "Today, 7:00 AM", unread: true },
+      { id: "nf2", title: "Fee Receipt Available", message: "Receipt for Q2 2026 fee payment is now available for download.", time: "2 days ago", unread: false },
+    ],
+  },
+  {
+    category: "Exam Schedule Updates",
+    icon: "FileText",
+    items: [
+      { id: "ne1", title: "Midterm Exam Schedule Published", message: "Midterm examinations begin June 12. Download your hall ticket from the Exam Schedule page.", time: "Today, 6:00 AM", unread: true },
+      { id: "ne2", title: "Math Exam Rescheduled", message: "The Mathematics midterm has been moved to June 13 at 9:00 AM in Hall A.", time: "3 days ago", unread: false },
+    ],
+  },
+  {
+    category: "Assignment Updates",
+    icon: "FileCheck",
+    items: [
+      { id: "na1", title: "New Assignment Posted", message: "Physics — Newton's Laws Lab Report is due June 10. Submit via the Assignments page.", time: "5 hours ago", unread: true },
+      { id: "na2", title: "Assignment Graded", message: "Your Macbeth Character Essay has been graded. Check your marks in Submission History.", time: "1 day ago", unread: false },
+    ],
+  },
+  {
+    category: "General",
+    icon: "Bell",
+    items: [
+      { id: "ng1", title: "School Reopening", message: "School reopens after the break on June 3. Regular classes resume.", time: "2 days ago", unread: false },
+      { id: "ng2", title: "Library Extended Hours", message: "Library will remain open until 6:00 PM during exam week.", time: "3 days ago", unread: true },
+    ],
+  },
+];
+
+export const feeBreakdown = {
+  annual: 7200,
+  paid: 4800,
+  pending: 2400,
+  components: [
+    { name: "Tuition Fee", amount: 5000, frequency: "Annual" },
+    { name: "Library Fee", amount: 500, frequency: "Annual" },
+    { name: "Laboratory Fee", amount: 800, frequency: "Annual" },
+    { name: "Sports Fee", amount: 400, frequency: "Annual" },
+    { name: "Transport Fee", amount: 500, frequency: "Optional" },
+  ],
+};
+
+// ──────────────────────────────────────────────
+// Teacher-Specific Mock Data
+// ──────────────────────────────────────────────
+
+export const teacherTimetable = [
+  { day: "Mon", slots: [["08:00", "10-A", "Mathematics", "201"], ["09:00", "10-B", "Mathematics", "202"], ["10:00", "9-A", "Mathematics", "101"], ["11:30", "Recess", "", ""], ["12:00", "11-A", "Calculus", "301"]] },
+  { day: "Tue", slots: [["08:00", "10-A", "Mathematics", "201"], ["09:00", "Lab", "10-A Practical", "Lab 1"], ["10:00", "10-B", "Mathematics", "202"], ["11:30", "Recess", "", ""], ["12:00", "9-B", "Mathematics", "102"]] },
+  { day: "Wed", slots: [["08:00", "9-A", "Mathematics", "101"], ["09:00", "10-A", "Mathematics", "201"], ["10:00", "Library", "10-B Library", "Library"], ["11:30", "Recess", "", ""], ["12:00", "11-A", "Calculus", "301"]] },
+  { day: "Thu", slots: [["08:00", "10-B", "Mathematics", "202"], ["09:00", "9-B", "Mathematics", "102"], ["10:00", "10-A", "Mathematics", "201"], ["11:30", "Recess", "", ""], ["12:00", "9-A", "Mathematics", "101"]] },
+  { day: "Fri", slots: [["08:00", "11-A", "Calculus", "301"], ["09:00", "10-A", "Mathematics", "201"], ["10:00", "Lab", "10-B Practical", "Lab 2"], ["11:30", "Recess", "", ""], ["12:00", "9-B", "Mathematics", "102"]] },
+];
+
+export const teacherSubjectData = {
+  id: "MATH101",
+  name: "Mathematics",
+  code: "MATH101",
+  teacher: "Dr. Anika Rao",
+  progress: 68,
+  category: "core",
+  color: "from-indigo-500 to-blue-500",
+  classes: ["10-A", "10-B", "9-A", "9-B", "11-A"],
+  totalStudents: 149,
+  chapters: [
+    { id: "ch1", title: "Algebra: Linear Equations", completed: true, lessons: 4, completedLessons: 4 },
+    { id: "ch2", title: "Quadratic Equations", completed: true, lessons: 6, completedLessons: 6 },
+    { id: "ch3", title: "Coordinate Geometry", completed: true, lessons: 5, completedLessons: 5 },
+    { id: "ch4", title: "Trigonometry", completed: false, lessons: 8, completedLessons: 5 },
+    { id: "ch5", title: "Calculus: Limits", completed: false, lessons: 6, completedLessons: 2 },
+    { id: "ch6", title: "Probability & Statistics", completed: false, lessons: 5, completedLessons: 0 },
+  ],
+  resources: [
+    { id: "r1", title: "Algebra Formula Sheet", type: "note" as const, size: "2.4 MB", class: "All" },
+    { id: "r2", title: "Quadratic Equations Lecture", type: "video" as const, size: "45 MB", class: "10-A, 10-B" },
+    { id: "r3", title: "Trigonometry Reference PDF", type: "document" as const, size: "3.1 MB", class: "All" },
+    { id: "r4", title: "Practice Worksheet: Calculus", type: "document" as const, size: "1.8 MB", class: "11-A" },
+  ],
+  evaluations: {
+    total: 48,
+    pending: 12,
+    completed: 36,
+  },
+};
+
+export const teacherProfileData = {
+  personal: {
+    fullName: "Dr. Anika Rao",
+    email: "anika.rao@edusphere.edu",
+    phone: "+91 98765 43200",
+    address: "45, Green Park Colony, Agartala, Tripura",
+    dateOfBirth: "1985-08-22",
+    gender: "Female",
+  },
+  subject: {
+    name: "Mathematics",
+    code: "MATH101",
+  },
+  classes: ["10-A", "10-B", "9-A", "9-B", "11-A"],
+  qualifications: [
+    { degree: "Ph.D. in Mathematics", institution: "IIT Kharagpur", year: 2012 },
+    { degree: "M.Sc. in Applied Mathematics", institution: "University of Calcutta", year: 2007 },
+    { degree: "B.Sc. in Mathematics (Hons)", institution: "Presidency College, Kolkata", year: 2005 },
+  ],
+  experience: [
+    { position: "Senior Mathematics Teacher", institution: "EduSphere High School", from: "2018", to: "Present" },
+    { position: "Mathematics Teacher", institution: "Delhi Public School", from: "2012", to: "2018" },
+  ],
+  documents: [
+    { name: "Ph.D. Certificate", uploaded: "2024-01-15" },
+    { name: "Teaching License", uploaded: "2024-01-15" },
+    { name: "Experience Certificate - DPS", uploaded: "2024-01-15" },
+  ],
+};
+
+export const classStudents: Record<string, typeof students> = {
+  "10-A": students.slice(0, 8).map(s => ({ ...s, class: "10-A" })),
+  "10-B": students.slice(8, 16).map(s => ({ ...s, class: "10-B" })),
+  "9-A": students.slice(16, 24).map(s => ({ ...s, class: "9-A" })),
+};
+
+export const teacherAssignments = [
+  { id: "TA1", title: "Quadratic Equations Problem Set", class: "10-A", due: "2026-06-08", submissions: 28, total: 32, status: "active" as const, graded: 18 },
+  { id: "TA2", title: "Quadratic Equations Problem Set", class: "10-B", due: "2026-06-08", submissions: 22, total: 30, status: "active" as const, graded: 15 },
+  { id: "TA3", title: "Linear Equations Worksheet", class: "9-A", due: "2026-06-10", submissions: 10, total: 34, status: "active" as const, graded: 0 },
+  { id: "TA4", title: "Calculus Limits Exercise", class: "11-A", due: "2026-06-12", submissions: 5, total: 28, status: "active" as const, graded: 0 },
+  { id: "TA5", title: "Coordinate Geometry Quiz", class: "9-B", due: "2026-05-30", submissions: 31, total: 31, status: "closed" as const, graded: 31 },
+  { id: "TA6", title: "Trigonometry Test", class: "10-A", due: "2026-05-25", submissions: 32, total: 32, status: "closed" as const, graded: 32 },
+];
+
+export const librarySlots = [
+  { id: "ls1", day: "Monday", date: "2026-06-15", start: "09:00", end: "10:00", room: "Main Library", available: true },
+  { id: "ls2", day: "Monday", date: "2026-06-15", start: "10:00", end: "11:00", room: "Main Library", available: true },
+  { id: "ls3", day: "Tuesday", date: "2026-06-16", start: "08:00", end: "09:00", room: "Main Library", available: false },
+  { id: "ls4", day: "Tuesday", date: "2026-06-16", start: "09:00", end: "10:00", room: "Main Library", available: true },
+  { id: "ls5", day: "Wednesday", date: "2026-06-17", start: "08:00", end: "09:00", room: "Main Library", available: true },
+  { id: "ls6", day: "Wednesday", date: "2026-06-17", start: "11:00", end: "12:00", room: "Main Library", available: true },
+  { id: "ls7", day: "Thursday", date: "2026-06-18", start: "10:00", end: "11:00", room: "Main Library", available: false },
+  { id: "ls8", day: "Friday", date: "2026-06-19", start: "08:00", end: "09:00", room: "Main Library", available: true },
+];
+
+export const answerScripts = [
+  { id: "AS1", student: "Riya Sen", class: "10-A", exam: "Midterm — Mathematics", subject: "Mathematics", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-13" },
+  { id: "AS2", student: "Arnav Das", class: "10-A", exam: "Midterm — Mathematics", subject: "Mathematics", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-13" },
+  { id: "AS3", student: "Priya Pal", class: "10-A", exam: "Midterm — Mathematics", subject: "Mathematics", totalMarks: 100, status: "evaluating" as const, uploadedAt: "2026-06-13", draftMarks: 82, draftRemarks: "Good work. Review Q3." },
+  { id: "AS4", student: "Neha Basu", class: "10-A", exam: "Midterm — Mathematics", subject: "Mathematics", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-13" },
+  { id: "AS5", student: "Rahul Dev", class: "10-A", exam: "Midterm — Mathematics", subject: "Mathematics", totalMarks: 100, status: "completed" as const, marks: 91, remarks: "Excellent performance!" },
+  { id: "AS6", student: "Sayan Roy", class: "10-B", exam: "Midterm — Mathematics", subject: "Mathematics", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-14" },
+  { id: "AS7", student: "Tanisha Roy", class: "10-B", exam: "Midterm — Mathematics", subject: "Mathematics", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-14" },
+  { id: "AS8", student: "Vikram Sen", class: "10-B", exam: "Midterm — Mathematics", subject: "Mathematics", totalMarks: 100, status: "evaluating" as const, uploadedAt: "2026-06-14", draftMarks: 76, draftRemarks: "" },
 ];

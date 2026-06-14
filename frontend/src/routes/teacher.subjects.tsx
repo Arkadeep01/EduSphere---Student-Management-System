@@ -1,60 +1,114 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/dashboard/PageHeader";
+import { PageWrapper, StaggerContainer, StaggerItem, HoverLift } from "@/components/brand/animations";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { BookOpen, Upload, Plus, FileText, Video, Download } from "lucide-react";
-import { subjects, assignments } from "@/lib/mock-data";
+import { BookOpen, Upload, FileText, Video, Download, CheckCircle2, Users, Layers } from "lucide-react";
+import { teacherSubjectData } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/teacher/subjects")({
-  head: () => ({ meta: [{ title: "My Subjects — Teacher" }] }),
-  component: () => (
-    <>
-      <PageHeader title="My Subjects" description="Manage notes, assignments and resources" />
-      <div className="grid lg:grid-cols-3 gap-4 mb-6">
-        {subjects.slice(0, 3).map(s => (
-          <Card key={s.id} className="hover-lift overflow-hidden">
-            <div className={`h-24 bg-gradient-to-br ${s.color} flex items-center justify-center`}><BookOpen className="h-10 w-10 text-white/80" /></div>
-            <CardContent className="p-5">
-              <Badge variant="secondary">{s.code}</Badge>
-              <h3 className="font-semibold text-lg mt-2">{s.name}</h3>
-              <Progress value={s.progress} className="mt-3" />
-              <p className="text-xs text-muted-foreground mt-1">{s.progress}% syllabus covered</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      <Card><CardContent className="p-6">
-        <Tabs defaultValue="overview">
-          <TabsList><TabsTrigger value="overview">Overview</TabsTrigger><TabsTrigger value="notes">Notes</TabsTrigger><TabsTrigger value="assignments">Assignments</TabsTrigger><TabsTrigger value="resources">Resources</TabsTrigger><TabsTrigger value="submissions">Submissions</TabsTrigger></TabsList>
-          <TabsContent value="overview" className="mt-4"><p className="text-sm text-muted-foreground">Quick summary of {subjects[0].name} — 6 modules, 12 lessons, 32 enrolled students.</p></TabsContent>
-          <TabsContent value="notes" className="mt-4 space-y-3">
-            <Button size="sm" className="bg-gradient-brand border-0"><Plus className="mr-2 h-4 w-4" />Create note</Button>
-            {["Chapter 1: Algebra", "Chapter 2: Geometry", "Chapter 3: Trigonometry"].map(n => (
-              <div key={n} className="flex items-center justify-between p-3 border rounded-lg"><div className="flex items-center gap-3"><FileText className="h-4 w-4 text-primary" /><span className="text-sm font-medium">{n}</span></div><Button size="sm" variant="ghost">Edit</Button></div>
-            ))}
-          </TabsContent>
-          <TabsContent value="assignments" className="mt-4 space-y-3">
-            <Button size="sm" className="bg-gradient-brand border-0"><Plus className="mr-2 h-4 w-4" />New assignment</Button>
-            {assignments.slice(0, 3).map(a => (
-              <div key={a.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div><p className="font-medium text-sm">{a.title}</p><p className="text-xs text-muted-foreground">Due {a.due} · {a.submissions}/{a.total} submitted</p></div>
-                <Button size="sm" variant="outline">Review</Button>
+  head: () => ({ meta: [{ title: "My Subject — Teacher" }] }),
+  component: () => {
+    const subject = teacherSubjectData;
+    const completedChapters = subject.chapters.filter(c => c.completed).length;
+
+    return (
+      <PageWrapper>
+        {/* Subject Info Cards */}
+        <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <StaggerItem><Card><CardContent className="p-4 text-center">
+            <Layers className="h-5 w-5 mx-auto text-primary" />
+            <p className="text-2xl font-bold mt-2">{subject.classes.length}</p>
+            <p className="text-xs text-muted-foreground">Classes</p>
+          </CardContent></Card></StaggerItem>
+          <StaggerItem><Card><CardContent className="p-4 text-center">
+            <Users className="h-5 w-5 mx-auto text-brand" />
+            <p className="text-2xl font-bold mt-2">{subject.totalStudents}</p>
+            <p className="text-xs text-muted-foreground">Students</p>
+          </CardContent></Card></StaggerItem>
+          <StaggerItem><Card><CardContent className="p-4 text-center">
+            <BookOpen className="h-5 w-5 mx-auto text-info" />
+            <p className="text-2xl font-bold mt-2">{completedChapters}/{subject.chapters.length}</p>
+            <p className="text-xs text-muted-foreground">Chapters</p>
+          </CardContent></Card></StaggerItem>
+          <StaggerItem><Card><CardContent className="p-4 text-center">
+            <CheckCircle2 className="h-5 w-5 mx-auto text-success" />
+            <p className="text-2xl font-bold mt-2">{subject.evaluations.completed}/{subject.evaluations.total}</p>
+            <p className="text-xs text-muted-foreground">Evaluations</p>
+          </CardContent></Card></StaggerItem>
+        </StaggerContainer>
+
+        {/* Main Details */}
+        <Card><CardContent className="p-6">
+          <Tabs defaultValue="chapters">
+            <TabsList>
+              <TabsTrigger value="chapters">Chapters</TabsTrigger>
+              <TabsTrigger value="classes">Classes</TabsTrigger>
+              <TabsTrigger value="resources">Resources</TabsTrigger>
+              <TabsTrigger value="evaluations">Evaluations</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="chapters" className="mt-4 space-y-3">
+              {subject.chapters.map(ch => (
+                <div key={ch.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    {ch.completed ? <CheckCircle2 className="h-5 w-5 text-success" /> : <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30" />}
+                    <div><p className="text-sm font-medium">{ch.title}</p><p className="text-xs text-muted-foreground">{ch.completedLessons}/{ch.lessons} lessons completed</p></div>
+                  </div>
+                  <Progress value={ch.completed ? 100 : (ch.completedLessons / ch.lessons) * 100} className="w-24 h-1.5" />
+                </div>
+              ))}
+            </TabsContent>
+
+            <TabsContent value="classes" className="mt-4">
+              <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {subject.classes.map(cls => (
+                  <StaggerItem key={cls}>
+                    <HoverLift>
+                      <Card className="cursor-pointer">
+                        <CardContent className="p-4 flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center"><Layers className="h-5 w-5 text-primary" /></div>
+                          <div><p className="font-semibold">{cls}</p><p className="text-xs text-muted-foreground">{subject.name}</p></div>
+                        </CardContent>
+                      </Card>
+                    </HoverLift>
+                  </StaggerItem>
+                ))}
+              </StaggerContainer>
+            </TabsContent>
+
+            <TabsContent value="resources" className="mt-4 space-y-3">
+              <Button size="sm" className="bg-gradient-brand border-0"><Upload className="mr-2 h-4 w-4" />Upload resource</Button>
+              <div className="grid sm:grid-cols-2 gap-3 mt-3">
+                {subject.resources.map(r => {
+                  const Icon = r.type === "video" ? Video : r.type === "note" ? FileText : FileText;
+                  return (
+                    <div key={r.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Icon className="h-4 w-4 text-primary shrink-0" />
+                        <div className="min-w-0"><p className="text-sm font-medium truncate">{r.title}</p><p className="text-xs text-muted-foreground">{r.size} · {r.class}</p></div>
+                      </div>
+                      <Button size="sm" variant="ghost"><Download className="h-4 w-4" /></Button>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </TabsContent>
-          <TabsContent value="resources" className="mt-4 space-y-3">
-            <Button size="sm" className="bg-gradient-brand border-0"><Upload className="mr-2 h-4 w-4" />Upload resource</Button>
-            {[["Lecture recording 01", Video], ["Reference PDF", FileText], ["Practice sheet", FileText]].map(([n, I], i) => {
-              const Icon = I as typeof Video;
-              return <div key={i} className="flex items-center justify-between p-3 border rounded-lg"><div className="flex items-center gap-3"><Icon className="h-4 w-4 text-primary" /><span className="text-sm font-medium">{n as string}</span></div><Button size="sm" variant="ghost"><Download className="h-4 w-4" /></Button></div>;
-            })}
-          </TabsContent>
-          <TabsContent value="submissions" className="mt-4"><p className="text-sm text-muted-foreground">18 of 32 students have submitted the latest assignment.</p></TabsContent>
-        </Tabs>
-      </CardContent></Card>
-    </>
-  ),
+            </TabsContent>
+
+            <TabsContent value="evaluations" className="mt-4">
+              <Card><CardContent className="p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div><p className="text-2xl font-bold">{subject.evaluations.pending}</p><p className="text-xs text-muted-foreground">Pending Evaluation</p></div>
+                  <div><p className="text-2xl font-bold text-success">{subject.evaluations.completed}</p><p className="text-xs text-muted-foreground">Completed</p></div>
+                  <div><p className="text-2xl font-bold text-primary">{subject.evaluations.total}</p><p className="text-xs text-muted-foreground">Total</p></div>
+                </div>
+                <Progress value={(subject.evaluations.completed / subject.evaluations.total) * 100} className="h-2" />
+              </CardContent></Card>
+            </TabsContent>
+          </Tabs>
+        </CardContent></Card>
+      </PageWrapper>
+    );
+  },
 });
