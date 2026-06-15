@@ -3,31 +3,149 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Star, Mail } from "lucide-react";
-import { teachers } from "@/lib/mock-data";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Star, Mail, Plus, Search, GraduationCap, BookOpen, Users } from "lucide-react";
+import { useState } from "react";
+import { teachers, classCards, subjectAllocations, classTeacherAssignments, subjects } from "@/lib/mock-data";
+import { toast } from "sonner";
+
+function AdminTeachersComponent() {
+  const [showNotifyModal, setShowNotifyModal] = useState<string | null>(null);
+  const [notifyMessage, setNotifyMessage] = useState("");
+  const [showAddTeacher, setShowAddTeacher] = useState(false);
+  const [showAllocateSubject, setShowAllocateSubject] = useState(false);
+  const [showAssignClassTeacher, setShowAssignClassTeacher] = useState(false);
+  const [q, setQ] = useState("");
+
+  const filtered = teachers.filter(t =>
+    t.name.toLowerCase().includes(q.toLowerCase()) ||
+    t.subject.toLowerCase().includes(q.toLowerCase()) ||
+    t.id.toLowerCase().includes(q.toLowerCase())
+  );
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-6">
+        <div><h2 className="text-xl font-bold">Teacher Management</h2><p className="text-sm text-muted-foreground">{teachers.length} teachers</p></div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowAssignClassTeacher(true)}><Users className="mr-2 h-4 w-4" />Class Teacher</Button>
+          <Button variant="outline" size="sm" onClick={() => setShowAllocateSubject(true)}><BookOpen className="mr-2 h-4 w-4" />Allocate Subject</Button>
+          <Button size="sm" className="bg-gradient-brand border-0" onClick={() => setShowAddTeacher(true)}><Plus className="mr-2 h-4 w-4" />Add Teacher</Button>
+        </div>
+      </div>
+
+      <Tabs defaultValue="teachers">
+        <TabsList className="mb-4"><TabsTrigger value="teachers">Teachers</TabsTrigger><TabsTrigger value="allocations">Subject Allocations</TabsTrigger><TabsTrigger value="class-teachers">Class Teachers</TabsTrigger></TabsList>
+
+        <TabsContent value="teachers">
+          <div className="relative mb-4 max-w-sm"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search teachers..." className="pl-9" value={q} onChange={e => setQ(e.target.value)} /></div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filtered.map(t => (
+              <Card key={t.id} className="hover-lift"><CardContent className="p-5">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-12 w-12"><AvatarFallback className="bg-gradient-brand text-white">{t.name.split(" ").map(s => s[0]).slice(0, 2).join("")}</AvatarFallback></Avatar>
+                  <div className="min-w-0 flex-1"><p className="font-semibold truncate">{t.name}</p><p className="text-xs text-muted-foreground">{t.subject}</p></div>
+                </div>
+                <div className="mt-4 flex items-center justify-between text-sm">
+                  <Badge variant="outline">{t.classes} classes</Badge>
+                  <span className="flex items-center gap-1"><Star className="h-3 w-3 fill-warning text-warning" />{t.rating}</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">{t.experience} years experience</p>
+                <Button size="sm" variant="outline" className="w-full mt-3" onClick={() => setShowNotifyModal(t.id)}><Mail className="mr-2 h-3 w-3" />Send Notification</Button>
+              </CardContent></Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="allocations">
+          <Card><CardContent className="p-4">
+            <Table><TableHeader><TableRow><TableHead>Teacher</TableHead><TableHead>Subject</TableHead><TableHead>Assigned Classes</TableHead><TableHead>Academic Year</TableHead></TableRow></TableHeader>
+              <TableBody>{subjectAllocations.map((sa, i) => (
+                <TableRow key={i}>
+                  <TableCell className="font-medium">{sa.teacher}</TableCell>
+                  <TableCell>{sa.subject}</TableCell>
+                  <TableCell>{sa.classes.join(", ")}</TableCell>
+                  <TableCell><Badge variant="outline">{sa.academicYear}</Badge></TableCell>
+                </TableRow>
+              ))}</TableBody>
+            </Table>
+          </CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="class-teachers">
+          <Card><CardContent className="p-4">
+            <Table><TableHeader><TableRow><TableHead>Teacher</TableHead><TableHead>Class</TableHead><TableHead>Academic Year</TableHead></TableRow></TableHeader>
+              <TableBody>{classTeacherAssignments.map((ct, i) => (
+                <TableRow key={i}>
+                  <TableCell className="font-medium">{ct.teacher}</TableCell>
+                  <TableCell>Class {ct.class}</TableCell>
+                  <TableCell><Badge variant="outline">{ct.academicYear}</Badge></TableCell>
+                </TableRow>
+              ))}</TableBody>
+            </Table>
+          </CardContent></Card>
+        </TabsContent>
+      </Tabs>
+
+      <Dialog open={!!showNotifyModal} onOpenChange={o => { if (!o) setShowNotifyModal(null); }}>
+        <DialogContent><DialogHeader><DialogTitle>Send Notification</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Teacher</Label><p className="text-sm font-medium">{teachers.find(t => t.id === showNotifyModal)?.name}</p></div>
+            <div><Label>Message</Label><Textarea placeholder="Type your notification message..." value={notifyMessage} onChange={e => setNotifyMessage(e.target.value)} rows={4} /></div>
+          </div>
+          <DialogFooter><Button variant="outline" onClick={() => { setShowNotifyModal(null); setNotifyMessage(""); }}>Cancel</Button>
+            <Button className="bg-gradient-brand border-0" onClick={() => { toast.success("Notification sent to teacher"); setShowNotifyModal(null); setNotifyMessage(""); }}>Send</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showAddTeacher} onOpenChange={setShowAddTeacher}>
+        <DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Add Teacher</DialogTitle></DialogHeader>
+          <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+            <div><Label>Full Name</Label><Input placeholder="Enter full name" /></div>
+            <div className="grid grid-cols-2 gap-3"><div><Label>Email</Label><Input type="email" /></div><div><Label>Phone</Label><Input placeholder="Phone number" /></div></div>
+            <div className="grid grid-cols-2 gap-3"><div><Label>Employee ID</Label><Input placeholder="TCHxxx" /></div><div><Label>Qualification</Label><Input placeholder="e.g. Ph.D., M.Sc." /></div></div>
+            <div><Label>Experience (years)</Label><Input type="number" placeholder="0" /></div>
+            <div><Label>Subject</Label><Select><SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger><SelectContent>{subjects.map(s => (<SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>))}</SelectContent></Select></div>
+            <div><Label>Assigned Classes</Label><Select><SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger><SelectContent>{classCards.map(c => (<SelectItem key={c.name} value={c.name}>Class {c.name}</SelectItem>))}</SelectContent></Select></div>
+          </div>
+          <DialogFooter><Button variant="outline" onClick={() => setShowAddTeacher(false)}>Cancel</Button><Button className="bg-gradient-brand border-0" onClick={() => { toast.success("Teacher added successfully"); setShowAddTeacher(false); }}>Add Teacher</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showAllocateSubject} onOpenChange={setShowAllocateSubject}>
+        <DialogContent><DialogHeader><DialogTitle>Subject Teacher Allocation</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Teacher</Label><Select><SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger><SelectContent>{teachers.map(t => (<SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>))}</SelectContent></Select></div>
+            <div><Label>Subject</Label><Select><SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger><SelectContent>{subjects.map(s => (<SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>))}</SelectContent></Select></div>
+            <div><Label>Assigned Classes</Label><div className="flex flex-wrap gap-2">{classCards.slice(0, 4).map(c => (<Badge key={c.name} variant="outline" className="cursor-pointer">Class {c.name}</Badge>))}</div></div>
+            <div><Label>Academic Session</Label><Select defaultValue="2026-27"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="2026-27">2026-27</SelectItem><SelectItem value="2025-26">2025-26</SelectItem></SelectContent></Select></div>
+          </div>
+          <DialogFooter><Button variant="outline" onClick={() => setShowAllocateSubject(false)}>Cancel</Button><Button className="bg-gradient-brand border-0" onClick={() => { toast.success("Subject allocation saved"); setShowAllocateSubject(false); }}>Save Allocation</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showAssignClassTeacher} onOpenChange={setShowAssignClassTeacher}>
+        <DialogContent><DialogHeader><DialogTitle>Assign Class Teacher</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Teacher</Label><Select><SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger><SelectContent>{teachers.map(t => (<SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>))}</SelectContent></Select></div>
+            <div><Label>Class</Label><Select><SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger><SelectContent>{classCards.map(c => (<SelectItem key={c.name} value={c.name}>Class {c.name}</SelectItem>))}</SelectContent></Select></div>
+            <div><Label>Academic Year</Label><Select defaultValue="2026-27"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="2026-27">2026-27</SelectItem><SelectItem value="2025-26">2025-26</SelectItem></SelectContent></Select></div>
+          </div>
+          <DialogFooter><Button variant="outline" onClick={() => setShowAssignClassTeacher(false)}>Cancel</Button><Button className="bg-gradient-brand border-0" onClick={() => { toast.success("Class teacher assigned"); setShowAssignClassTeacher(false); }}>Assign</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
 
 export const Route = createFileRoute("/admin/teachers")({
   head: () => ({ meta: [{ title: "Teachers — Admin" }] }),
-  component: () => (
-    <>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {teachers.map(t => (
-          <Card key={t.id} className="hover-lift"><CardContent className="p-5">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-12 w-12"><AvatarFallback className="bg-gradient-brand text-white">{t.name.split(" ").map(s => s[0]).slice(0, 2).join("")}</AvatarFallback></Avatar>
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold truncate">{t.name}</p>
-                <p className="text-xs text-muted-foreground">{t.subject}</p>
-              </div>
-            </div>
-            <div className="mt-4 flex items-center justify-between text-sm">
-              <Badge variant="outline">{t.classes} classes</Badge>
-              <span className="flex items-center gap-1"><Star className="h-3 w-3 fill-warning text-warning" />{t.rating}</span>
-            </div>
-            <Button size="sm" variant="outline" className="w-full mt-3"><Mail className="mr-2 h-3 w-3" />Message</Button>
-          </CardContent></Card>
-        ))}
-      </div>
-    </>
-  ),
+  component: AdminTeachersComponent,
 });

@@ -1,3 +1,4 @@
+from typing import cast
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -17,7 +18,7 @@ class CustomTokenObtainPairSerializer(serializers.Serializer):
         if portal not in ["student", "teacher", "admin"]:
             raise serializers.ValidationError({"portal": "Invalid portal specified."})
 
-        user = authenticate(username=email, password=password)
+        user = cast(CustomUser, authenticate(username=email, password=password))
         if not user:
             raise serializers.ValidationError("Invalid email or password.")
         if not user.is_active:

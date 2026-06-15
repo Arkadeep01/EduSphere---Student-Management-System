@@ -973,3 +973,271 @@ export const answerScripts = [
   { id: "AS7", student: "Tanisha Roy", class: "10-B", exam: "Midterm — Mathematics", subject: "Mathematics", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-14" },
   { id: "AS8", student: "Vikram Sen", class: "10-B", exam: "Midterm — Mathematics", subject: "Mathematics", totalMarks: 100, status: "evaluating" as const, uploadedAt: "2026-06-14", draftMarks: 76, draftRemarks: "" },
 ];
+
+// ──────────────────────────────────────────────
+// Admin-Specific Mock Data
+// ──────────────────────────────────────────────
+
+export const classCards = [
+  { name: "10", total: 92, boys: 48, girls: 44, pendingRequests: 3, sections: ["A", "B", "C"], classTeacher: "Dr. Anika Rao" },
+  { name: "9", total: 88, boys: 45, girls: 43, pendingRequests: 1, sections: ["A", "B"], classTeacher: "Mr. Rajesh Sharma" },
+  { name: "11", total: 76, boys: 40, girls: 36, pendingRequests: 5, sections: ["A", "B"], classTeacher: "Prof. James Miller" },
+  { name: "12", total: 64, boys: 33, girls: 31, pendingRequests: 0, sections: ["A"], classTeacher: "Dr. Sarah Khan" },
+  { name: "8", total: 95, boys: 50, girls: 45, pendingRequests: 2, sections: ["A", "B"], classTeacher: "Ms. Elena Cruz" },
+  { name: "7", total: 101, boys: 52, girls: 49, pendingRequests: 4, sections: ["A", "B", "C"], classTeacher: "Mrs. Pooja Das" },
+];
+
+export const classDetailsData: Record<string, {
+  sections: string[];
+  totalStudents: number;
+  subjects: { name: string; teacher: string; code: string }[];
+  classTeacher: string;
+  timetable: { day: string; slots: string[][] }[];
+}> = {
+  "10": {
+    sections: ["A", "B", "C"],
+    totalStudents: 92,
+    classTeacher: "Dr. Anika Rao",
+    subjects: [
+      { name: "Mathematics", teacher: "Dr. Anika Rao", code: "MATH101" },
+      { name: "Physics", teacher: "Prof. James Miller", code: "PHY201" },
+      { name: "English Literature", teacher: "Ms. Elena Cruz", code: "ENG110" },
+      { name: "Biology", teacher: "Dr. Sarah Khan", code: "BIO150" },
+      { name: "Chemistry", teacher: "Mr. David Park", code: "CHM120" },
+      { name: "Computer Science", teacher: "Ms. Rina Gupta", code: "CS210" },
+    ],
+    timetable: [
+      { day: "Mon", slots: [["08:00", "Mathematics", "Dr. Rao", "201"], ["09:00", "Physics", "Prof. Miller", "Lab 1"], ["10:00", "English", "Ms. Cruz", "104"], ["11:30", "Biology", "Dr. Khan", "Lab 3"]] },
+      { day: "Tue", slots: [["08:00", "Chemistry", "Mr. Park", "Lab 2"], ["09:00", "CS", "Ms. Gupta", "Lab 4"], ["10:00", "Mathematics", "Dr. Rao", "201"], ["11:30", "PE", "Coach Tom", "Field"]] },
+    ],
+  },
+  "9": {
+    sections: ["A", "B"],
+    totalStudents: 88,
+    classTeacher: "Mr. Rajesh Sharma",
+    subjects: [
+      { name: "Mathematics", teacher: "Mr. Rajesh Sharma", code: "MATH101" },
+      { name: "Physics", teacher: "Prof. James Miller", code: "PHY201" },
+      { name: "English Literature", teacher: "Ms. Elena Cruz", code: "ENG110" },
+      { name: "Biology", teacher: "Dr. Sarah Khan", code: "BIO150" },
+    ],
+    timetable: [
+      { day: "Mon", slots: [["08:00", "Mathematics", "Mr. Sharma", "101"], ["09:00", "Physics", "Prof. Miller", "Lab 1"], ["10:00", "English", "Ms. Cruz", "104"]] },
+    ],
+  },
+  "11": {
+    sections: ["A", "B"],
+    totalStudents: 76,
+    classTeacher: "Prof. James Miller",
+    subjects: [
+      { name: "Mathematics", teacher: "Dr. Anika Rao", code: "MATH101" },
+      { name: "Physics", teacher: "Prof. James Miller", code: "PHY201" },
+      { name: "Chemistry", teacher: "Mr. David Park", code: "CHM120" },
+      { name: "Business Studies", teacher: "Mrs. Priya Sen", code: "BST301" },
+      { name: "Economics", teacher: "Mrs. Nandini Roy", code: "ECO250" },
+    ],
+    timetable: [
+      { day: "Mon", slots: [["08:00", "Mathematics", "Dr. Rao", "301"], ["09:00", "Physics", "Prof. Miller", "Lab 1"], ["10:00", "Chemistry", "Mr. Park", "Lab 2"]] },
+    ],
+  },
+  "12": {
+    sections: ["A"],
+    totalStudents: 64,
+    classTeacher: "Dr. Sarah Khan",
+    subjects: [
+      { name: "Mathematics", teacher: "Dr. Anika Rao", code: "MATH101" },
+      { name: "Physics", teacher: "", code: "PHY201" },
+      { name: "Chemistry", teacher: "Mr. David Park", code: "CHM120" },
+    ],
+    timetable: [
+      { day: "Mon", slots: [["08:00", "Mathematics", "Dr. Rao", "301"], ["10:00", "Chemistry", "Mr. Park", "Lab 2"]] },
+    ],
+  },
+};
+
+export const feeStatusData: Record<string, { student: string; status: "paid" | "unpaid"; amount: number; dueDate: string }[]> = {
+  "10": [
+    { student: "Aarav Sharma", status: "paid", amount: 2400, dueDate: "2026-07-15" },
+    { student: "Priya Patel", status: "paid", amount: 2400, dueDate: "2026-07-15" },
+    { student: "Liam Chen", status: "unpaid", amount: 2400, dueDate: "2026-07-15" },
+    { student: "Sophia Garcia", status: "paid", amount: 2400, dueDate: "2026-07-15" },
+    { student: "Noah Kim", status: "unpaid", amount: 2400, dueDate: "2026-07-15" },
+    { student: "Olivia Brown", status: "paid", amount: 2400, dueDate: "2026-07-15" },
+    { student: "Ethan Wang", status: "unpaid", amount: 2400, dueDate: "2026-07-15" },
+    { student: "Ava Johnson", status: "paid", amount: 2400, dueDate: "2026-07-15" },
+  ],
+  "9": [
+    { student: "Mia Davis", status: "paid", amount: 2400, dueDate: "2026-07-15" },
+    { student: "Lucas Martin", status: "unpaid", amount: 2400, dueDate: "2026-07-15" },
+    { student: "Isabella Lee", status: "paid", amount: 2400, dueDate: "2026-07-15" },
+    { student: "Mason Rodriguez", status: "paid", amount: 2400, dueDate: "2026-07-15" },
+  ],
+};
+
+export const facultyAttendanceData = [
+  { id: "TCH201", name: "Dr. Anika Rao", subject: "Mathematics", today: "present" as const, monthly: { present: 18, absent: 1, leave: 1, halfDay: 0 } },
+  { id: "TCH202", name: "Mr. Rajesh Sharma", subject: "Mathematics", today: "present" as const, monthly: { present: 19, absent: 0, leave: 1, halfDay: 0 } },
+  { id: "TCH203", name: "Prof. James Miller", subject: "Physics", today: "leave" as const, monthly: { present: 17, absent: 1, leave: 2, halfDay: 0 } },
+  { id: "TCH204", name: "Dr. Vivek Roy", subject: "Physics", today: "present" as const, monthly: { present: 18, absent: 0, leave: 0, halfDay: 2 } },
+  { id: "TCH205", name: "Ms. Elena Cruz", subject: "English Literature", today: "absent" as const, monthly: { present: 16, absent: 2, leave: 1, halfDay: 1 } },
+  { id: "TCH206", name: "Mrs. Pooja Das", subject: "English Literature", today: "present" as const, monthly: { present: 20, absent: 0, leave: 0, halfDay: 0 } },
+  { id: "TCH207", name: "Dr. Sarah Khan", subject: "Biology", today: "present" as const, monthly: { present: 19, absent: 0, leave: 0, halfDay: 1 } },
+  { id: "TCH208", name: "Mrs. Sneha Gupta", subject: "Biology", today: "half_day" as const, monthly: { present: 18, absent: 1, leave: 0, halfDay: 1 } },
+  { id: "TCH209", name: "Mr. David Park", subject: "Chemistry", today: "present" as const, monthly: { present: 20, absent: 0, leave: 0, halfDay: 0 } },
+  { id: "TCH210", name: "Dr. Amit Verma", subject: "Chemistry", today: "present" as const, monthly: { present: 17, absent: 0, leave: 2, halfDay: 1 } },
+  { id: "TCH211", name: "Ms. Rina Gupta", subject: "Computer Science", today: "present" as const, monthly: { present: 19, absent: 0, leave: 1, halfDay: 0 } },
+  { id: "TCH212", name: "Mr. Abhishek Sen", subject: "Computer Science", today: "absent" as const, monthly: { present: 15, absent: 3, leave: 1, halfDay: 1 } },
+];
+
+export const attendanceAnalytics = {
+  school: { present: 94.2, previous: 92.8, trend: "up" as const },
+  byClass: [
+    { class: "10", present: 96.1 },
+    { class: "9", present: 93.5 },
+    { class: "11", present: 91.8 },
+    { class: "12", present: 88.2 },
+    { class: "8", present: 95.7 },
+    { class: "7", present: 94.0 },
+  ],
+  weeklyTrend: [
+    { week: "Week 1", present: 94.0, absent: 6.0 },
+    { week: "Week 2", present: 93.2, absent: 6.8 },
+    { week: "Week 3", present: 95.1, absent: 4.9 },
+    { week: "Week 4", present: 92.8, absent: 7.2 },
+    { week: "Week 5", present: 94.5, absent: 5.5 },
+  ],
+};
+
+export const examsFull = [
+  { id: "E1", name: "Midterm — Mathematics", date: "2026-06-12", time: "09:00 AM", room: "Hall A", duration: "2h", classes: ["10-A", "10-B", "10-C"], subjects: ["Mathematics"], status: "scheduled" as const },
+  { id: "E2", name: "Midterm — Physics", date: "2026-06-14", time: "09:00 AM", room: "Hall B", duration: "2h", classes: ["10-A", "10-B"], subjects: ["Physics"], status: "scheduled" as const },
+  { id: "E3", name: "Midterm — English", date: "2026-06-16", time: "11:00 AM", room: "Hall A", duration: "1.5h", classes: ["10-A", "10-B", "9-A", "9-B"], subjects: ["English Literature"], status: "published" as const },
+  { id: "E4", name: "Midterm — Biology", date: "2026-06-18", time: "09:00 AM", room: "Lab 3", duration: "2h", classes: ["10-A", "10-B"], subjects: ["Biology"], status: "draft" as const },
+  { id: "E5", name: "Midterm — Chemistry", date: "2026-06-20", time: "09:00 AM", room: "Lab 2", duration: "2h", classes: ["10-A", "10-B", "11-A"], subjects: ["Chemistry"], status: "published" as const },
+  { id: "E6", name: "Final — Mathematics", date: "2026-07-20", time: "09:00 AM", room: "Hall A", duration: "3h", classes: ["10-A", "10-B", "10-C"], subjects: ["Mathematics"], status: "draft" as const },
+  { id: "E7", name: "Unit Test — Computer Science", date: "2026-06-08", time: "10:00 AM", room: "Lab 4", duration: "1h", classes: ["10-A"], subjects: ["Computer Science"], status: "archived" as const },
+];
+
+export const answerScriptsFull = [
+  { id: "AS1", student: "Riya Sen", class: "10-A", section: "A", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-13" },
+  { id: "AS2", student: "Arnav Das", class: "10-A", section: "A", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-13" },
+  { id: "AS3", student: "Priya Pal", class: "10-A", section: "A", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "evaluating" as const, uploadedAt: "2026-06-13", draftMarks: 82, draftRemarks: "Good work. Review Q3." },
+  { id: "AS4", student: "Neha Basu", class: "10-A", section: "A", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-13" },
+  { id: "AS5", student: "Rahul Dev", class: "10-A", section: "A", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "completed" as const, marks: 91, remarks: "Excellent performance!" },
+  { id: "AS6", student: "Sayan Roy", class: "10-B", section: "B", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-14" },
+  { id: "AS7", student: "Tanisha Roy", class: "10-B", section: "B", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-14" },
+  { id: "AS8", student: "Vikram Sen", class: "10-B", section: "B", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "evaluating" as const, uploadedAt: "2026-06-14", draftMarks: 76, draftRemarks: "" },
+  { id: "AS9", student: "Mia Davis", class: "9-A", section: "A", exam: "Midterm — English", subject: "English Literature", teacher: "Ms. Elena Cruz", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-15" },
+  { id: "AS10", student: "Lucas Martin", class: "9-A", section: "A", exam: "Midterm — English", subject: "English Literature", teacher: "Ms. Elena Cruz", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-15" },
+];
+
+export const evaluationTracking = [
+  { teacher: "Dr. Anika Rao", subject: "Mathematics", total: 48, pending: 12, evaluating: 3, completed: 33, exam: "Midterm — Mathematics" },
+  { teacher: "Ms. Elena Cruz", subject: "English Literature", total: 32, pending: 20, evaluating: 2, completed: 10, exam: "Midterm — English" },
+  { teacher: "Prof. James Miller", subject: "Physics", total: 28, pending: 28, evaluating: 0, completed: 0, exam: "Midterm — Physics" },
+  { teacher: "Mr. David Park", subject: "Chemistry", total: 36, pending: 15, evaluating: 5, completed: 16, exam: "Midterm — Chemistry" },
+];
+
+export const eventsFull = [
+  { id: "EV1", title: "Annual Science Fair", date: "2026-06-22", type: "Academic" as const, location: "Main Auditorium", description: "Students showcase innovative science projects.", status: "published" as const, banner: "/gallery/science-fair.jpg" },
+  { id: "EV2", title: "Inter-School Sports Meet", date: "2026-06-28", type: "Sports" as const, location: "Sports Ground", description: "Track and field competitions.", status: "published" as const, banner: "/gallery/sports-meet.avif" },
+  { id: "EV3", title: "Cultural Night", date: "2026-07-05", type: "Cultural" as const, location: "Open Theatre", description: "Music, dance and drama performances.", status: "draft" as const, banner: "" },
+  { id: "EV4", title: "Parent-Teacher Meeting", date: "2026-07-10", type: "Meeting" as const, location: "All Classrooms", description: "Quarterly progress discussion.", status: "published" as const, banner: "" },
+  { id: "EV5", title: "Graduation Ceremony", date: "2026-07-20", type: "Ceremony" as const, location: "Main Hall", description: "Class of 2026 graduation.", status: "published" as const, banner: "" },
+  { id: "EV6", title: "Robotics Workshop", date: "2026-08-05", type: "Workshop" as const, location: "CS Lab", description: "Hands-on robotics and coding workshop for grades 8-10.", status: "draft" as const, banner: "" },
+  { id: "EV7", title: "Alumni Meet", date: "2026-08-15", type: "Cultural" as const, location: "Main Hall", description: "Annual alumni gathering and networking event.", status: "archived" as const, banner: "" },
+];
+
+export const contactSubmissionsFull = [
+  { id: "CT001", name: "Rahul Sharma", email: "rahul.sharma@example.com", phone: "+91 98765 43210", subject: "Admission Inquiry", message: "I would like to know about the admission process for grade 11. Please share the fee structure and entrance exam details.", submittedAt: "2026-06-10T09:30:00", status: "unread" as const },
+  { id: "CT002", name: "Priya Patel", email: "priya.patel@example.com", phone: "+91 87654 32109", subject: "Transfer Certificate", message: "I need a transfer certificate for my daughter who is moving to another city. Please let me know the procedure.", submittedAt: "2026-06-11T14:15:00", status: "read" as const },
+  { id: "CT003", name: "Amit Singh", email: "amit.singh@example.com", phone: "+91 76543 21098", subject: "Fee Payment Issue", message: "I tried to pay the tuition fee online but the payment gateway showed an error. My account was debited but the receipt was not generated.", submittedAt: "2026-06-12T11:45:00", status: "unread" as const },
+  { id: "CT004", name: "Sneha Das", email: "sneha.das@example.com", phone: "+91 65432 10987", subject: "School Timing", message: "Could you please share the summer school timings for grade 9? I need to plan the transport accordingly.", submittedAt: "2026-06-13T08:00:00", status: "resolved" as const },
+  { id: "CT005", name: "Vikram Roy", email: "vikram.roy@example.com", phone: "+91 54321 09876", subject: "Scholarship Application", message: "I want to apply for the merit-based scholarship for my son who scored 95% in the previous year. What is the application process?", submittedAt: "2026-06-14T16:30:00", status: "pending" as const },
+  { id: "CT006", name: "Ananya Ghosh", email: "ananya.ghosh@example.com", phone: "+91 43210 98765", subject: "Library Membership", message: "I would like to know about the library membership process for alumni.", submittedAt: "2026-06-15T10:00:00", status: "unread" as const },
+];
+
+export const admissionStats = {
+  totalApplicants: 45,
+  entranceAppeared: 38,
+  passed: 28,
+  failed: 10,
+  pendingVerification: 12,
+  selected: 20,
+  rejected: 8,
+};
+
+export const siteContent = {
+  about: {
+    video: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    videoTitle: "EduSphere — Where Excellence Meets Innovation",
+    featuredStudents: [
+      { name: "Riya Sen", class: "10-A", achievement: "State Science Olympiad Winner", image: "https://i.pravatar.cc/100?img=10" },
+      { name: "Arnav Das", class: "10-A", achievement: "National Level Debater", image: "https://i.pravatar.cc/100?img=20" },
+      { name: "Priya Pal", class: "10-B", achievement: "Inter-School Athletics Gold", image: "https://i.pravatar.cc/100?img=30" },
+    ],
+    topStudents: [
+      { name: "Riya Sen", rank: 1, percentage: 97.5, class: "10-A" },
+      { name: "Arnav Das", rank: 2, percentage: 96.2, class: "10-A" },
+      { name: "Priya Pal", rank: 3, percentage: 94.8, class: "10-B" },
+      { name: "Sayan Roy", rank: 4, percentage: 93.1, class: "10-B" },
+      { name: "Neha Basu", rank: 5, percentage: 92.4, class: "10-A" },
+    ],
+    content: "EduSphere Academy is a premier educational institution dedicated to nurturing young minds through a blend of academic excellence, character development, and technological innovation. With state-of-the-art facilities, experienced faculty, and a student-centric approach, we prepare our students to become future-ready global citizens.",
+  },
+  gallery: {
+    images: [
+      { id: 1, label: "Annual Day", image: "/gallery/annual-day.avif", featured: true, order: 1 },
+      { id: 2, label: "Science Fair", image: "/gallery/science-fair.jpg", featured: true, order: 2 },
+      { id: 3, label: "Sports Meet", image: "/gallery/sports-meet.avif", featured: true, order: 3 },
+      { id: 4, label: "Art Exhibition", image: "/gallery/art-exhibition.avif", featured: false, order: 4 },
+      { id: 5, label: "Graduation", image: "/gallery/graduation.avif", featured: false, order: 5 },
+    ],
+  },
+  home: {
+    featuredImages: [
+      { id: 1, label: "Campus Aerial View", image: "/campus-image.jpg", starred: true, order: 1 },
+      { id: 2, label: "Students in Lab", image: "/students.avif", starred: true, order: 2 },
+      { id: 3, label: "Group of Students", image: "/group.avif", starred: false, order: 3 },
+    ],
+  },
+  admission: {
+    dates: [
+      { event: "Application Opens", date: "January 15, 2026" },
+      { event: "Early Bird Deadline", date: "March 31, 2026" },
+      { event: "Final Application Deadline", date: "May 15, 2026" },
+      { event: "Entrance Examination", date: "June 10–15, 2026" },
+      { event: "Result Declaration", date: "July 10, 2026" },
+      { event: "Academic Session Begins", date: "August 15, 2026" },
+    ],
+    fee: 500,
+    intakeCapacity: 240,
+    bannerInfo: "Admissions Open for Academic Year 2026-27",
+    notices: [
+      "Early bird discount of 10% available until March 31, 2026",
+      "Scholarship applications must be submitted with the admission form",
+      "Entrance examination syllabus is available on the admissions page",
+    ],
+  },
+};
+
+export const classTeacherAssignments = [
+  { teacher: "Dr. Anika Rao", class: "10", academicYear: "2026-27" },
+  { teacher: "Mr. Rajesh Sharma", class: "9", academicYear: "2026-27" },
+  { teacher: "Prof. James Miller", class: "11", academicYear: "2026-27" },
+  { teacher: "Dr. Sarah Khan", class: "12", academicYear: "2026-27" },
+  { teacher: "Ms. Elena Cruz", class: "8", academicYear: "2026-27" },
+  { teacher: "Mrs. Pooja Das", class: "7", academicYear: "2026-27" },
+];
+
+export const subjectAllocations = [
+  { teacher: "Dr. Anika Rao", subject: "Mathematics", classes: ["10-A", "10-B", "10-C", "11-A", "11-B"], academicYear: "2026-27" },
+  { teacher: "Mr. Rajesh Sharma", subject: "Mathematics", classes: ["9-A", "9-B"], academicYear: "2026-27" },
+  { teacher: "Prof. James Miller", subject: "Physics", classes: ["10-A", "10-B", "11-A", "11-B"], academicYear: "2026-27" },
+  { teacher: "Dr. Vivek Roy", subject: "Physics", classes: ["9-A", "9-B", "12-A"], academicYear: "2026-27" },
+  { teacher: "Ms. Elena Cruz", subject: "English Literature", classes: ["10-A", "10-B", "9-A", "9-B", "8-A"], academicYear: "2026-27" },
+  { teacher: "Mrs. Pooja Das", subject: "English Literature", classes: ["7-A", "7-B", "7-C"], academicYear: "2026-27" },
+  { teacher: "Dr. Sarah Khan", subject: "Biology", classes: ["10-A", "10-B", "11-A", "12-A"], academicYear: "2026-27" },
+  { teacher: "Mr. David Park", subject: "Chemistry", classes: ["10-A", "10-B", "11-A", "12-A"], academicYear: "2026-27" },
+  { teacher: "Ms. Rina Gupta", subject: "Computer Science", classes: ["10-A", "10-B", "11-A", "11-B", "12-A", "9-A"], academicYear: "2026-27" },
+];

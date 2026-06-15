@@ -163,6 +163,16 @@ def verify_otp_api(request):
         user = otp_obj.user
         user.is_active = True
         user.save()
+
+        # Ensure profile exists for the activated user
+        if user.role == "student":
+            from student.services import create_student_profile, assign_core_subjects
+            profile, _ = StudentProfile.objects.get_or_create(user=user)
+            assign_core_subjects(profile)
+        elif user.role == "teacher":
+            from teacher.models import TeacherProfile
+            TeacherProfile.objects.get_or_create(user=user)
+
         return JsonResponse({"success": True, "message": "OTP verified. Account activated."})
     except json.JSONDecodeError:
         return JsonResponse({"success": False, "message": "Invalid JSON."}, status=400)
@@ -213,6 +223,16 @@ def register_api(request):
             is_superuser=is_superuser,
             is_active=False,
         )
+
+        # Auto-create profile based on role
+        if role == "student":
+            from student.services import create_student_profile, assign_core_subjects
+            profile = create_student_profile(user, data)
+            assign_core_subjects(profile)
+        elif role == "teacher":
+            from teacher.models import TeacherProfile
+            TeacherProfile.objects.get_or_create(user=user)
+
         # Do NOT auto-login; user must verify OTP first
         return JsonResponse({
             "success": True,

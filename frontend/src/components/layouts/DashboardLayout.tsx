@@ -75,12 +75,20 @@ export function  DashboardLayout({ role }: { role: Role }) {
     "subjects": "Subjects",
     "assignments": "Assignments",
     "attendance": "Attendance",
-    "exams": "Exam Schedule",
+    "exams": "Examinations",
     "results": "Results",
-    "fees": "Fees",
+    "fees": "Fees & Finance",
     "timetable": "Timetable",
     "notifications": "Notifications",
     "profile": "Profile",
+    "students": "Student Management",
+    "teachers": "Teachers",
+    "classes": "Classes",
+    "events": "Events",
+    "contacts": "Contact Submissions",
+    "admissions": "Admission Forms",
+    "reports": "Reports",
+    "settings": "Settings",
   };
   const currentPage = pathname.split("/").pop() || "";
   const pageTitle = pageTitleMap[currentPage] || currentPage.charAt(0).toUpperCase() + currentPage.slice(1);

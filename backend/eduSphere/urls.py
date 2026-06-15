@@ -8,8 +8,8 @@ urlpatterns = [
     path("authentication/", include('allauth.urls')),
     path("", include("authentication.urls")),
     path("api/student/", include("student.urls")),
-    path("api/student/", include("student.urls")),
     path("api/teacher/", include("teacher.urls")),
+    path("api/admin/", include("administration.urls")),
 ]
 
 if settings.DEBUG:
