@@ -718,6 +718,49 @@ export const subjectSelection = {
   ],
 };
 
+export interface SubjectRequestRecord {
+  id: string;
+  studentId: string;
+  studentName: string;
+  rollNumber: string;
+  class: string;
+  section: string;
+  subjectId: string;
+  subjectName: string;
+  subjectCode: string;
+  subjectCategory: string;
+  requestedOn: string;
+  status: "pending" | "approved" | "rejected";
+}
+
+export interface NotificationRecord {
+  id: string;
+  studentId: string;
+  studentName: string;
+  title: string;
+  message: string;
+  createdAt: string;
+  read: boolean;
+}
+
+export const subjectRequestRecords: SubjectRequestRecord[] = [
+  { id: "sr1", studentId: "STU1000", studentName: "Aarav Sharma", rollNumber: "STU1000", class: "10-A", section: "A", subjectId: "RES320", subjectName: "Research Methodology", subjectCode: "RES320", subjectCategory: "specialized", requestedOn: "2026-06-10", status: "pending" },
+  { id: "sr2", studentId: "STU1001", studentName: "Priya Patel", rollNumber: "STU1001", class: "10-B", section: "B", subjectId: "ECO250", subjectName: "Economics", subjectCode: "ECO250", subjectCategory: "specialized", requestedOn: "2026-06-11", status: "pending" },
+  { id: "sr3", studentId: "STU1002", studentName: "Liam Chen", rollNumber: "STU1002", class: "10-A", section: "A", subjectId: "ART440", subjectName: "Painting & Visual Arts", subjectCode: "ART440", subjectCategory: "enrichment", requestedOn: "2026-06-12", status: "pending" },
+  { id: "sr4", studentId: "STU1005", studentName: "Olivia Brown", rollNumber: "STU1005", class: "11-A", section: "A", subjectId: "PG0440", subjectName: "Painting", subjectCode: "PG0440", subjectCategory: "specialized", requestedOn: "2026-06-13", status: "pending" },
+  { id: "sr5", studentId: "STU1006", studentName: "Ethan Wang", rollNumber: "STU1006", class: "9-A", section: "A", subjectId: "RES320", subjectName: "Research Methodology", subjectCode: "RES320", subjectCategory: "specialized", requestedOn: "2026-06-14", status: "pending" },
+  { id: "sr6", studentId: "STU1000", studentName: "Aarav Sharma", rollNumber: "STU1000", class: "10-A", section: "A", subjectId: "GEO210", subjectName: "Geography", subjectCode: "GEO210", subjectCategory: "enrichment", requestedOn: "2026-06-15", status: "approved" },
+  { id: "sr7", studentId: "STU1003", studentName: "Sophia Garcia", rollNumber: "STU1003", class: "11-B", section: "B", subjectId: "ART440", subjectName: "Painting & Visual Arts", subjectCode: "ART440", subjectCategory: "enrichment", requestedOn: "2026-06-16", status: "rejected" },
+  { id: "sr8", studentId: "STU1004", studentName: "Noah Kim", rollNumber: "STU1004", class: "8-A", section: "A", subjectId: "ECO250", subjectName: "Economics", subjectCode: "ECO250", subjectCategory: "specialized", requestedOn: "2026-06-17", status: "pending" },
+  { id: "sr9", studentId: "STU1008", studentName: "Mia Davis", rollNumber: "STU1008", class: "9-B", section: "B", subjectId: "ICT220", subjectName: "Information Technology", subjectCode: "ICT220", subjectCategory: "specialized", requestedOn: "2026-06-18", status: "pending" },
+  { id: "sr10", studentId: "STU1009", studentName: "Lucas Martin", rollNumber: "STU1009", class: "7-A", section: "A", subjectId: "HIS180", subjectName: "History", subjectCode: "HIS180", subjectCategory: "enrichment", requestedOn: "2026-06-19", status: "pending" },
+];
+
+export const notificationRecords: NotificationRecord[] = [
+  { id: "n1", studentId: "STU1000", studentName: "Aarav Sharma", title: "Subject Request Approved", message: "Your request for Geography has been approved.", createdAt: "2026-06-16T10:00:00", read: true },
+  { id: "n2", studentId: "STU1003", studentName: "Sophia Garcia", title: "Subject Request Rejected", message: "Your request for Painting & Visual Arts has been rejected.", createdAt: "2026-06-17T10:00:00", read: false },
+];
+
 export const assignmentDetails = {
   id: "A1",
   title: "Quadratic Equations Problem Set",
@@ -1198,6 +1241,39 @@ export const classDetailsData: Record<string, {
     ],
     timetable: [
       { day: "Mon", slots: [["08:00", "Mathematics", "Dr. Rao", "301"], ["10:00", "Chemistry", "Mr. Park", "Lab 2"]] },
+    ],
+  },
+  "8": {
+    sections: ["A", "B"],
+    totalStudents: 95,
+    classTeacher: "Ms. Elena Cruz",
+    subjects: [
+      { name: "Mathematics", teacher: "Mr. Rajesh Sharma", code: "MATH101" },
+      { name: "Science", teacher: "Dr. Sarah Khan", code: "SCI101" },
+      { name: "English", teacher: "Ms. Elena Cruz", code: "ENG101" },
+      { name: "Social Studies", teacher: "Mrs. Priya Sen", code: "SST101" },
+      { name: "Hindi", teacher: "Mrs. Pooja Das", code: "HIN101" },
+      { name: "Computer Science", teacher: "Ms. Rina Gupta", code: "CS101" },
+    ],
+    timetable: [
+      { day: "Mon", slots: [["08:00", "Mathematics", "Mr. Sharma", "101"], ["09:00", "Science", "Dr. Khan", "Lab 1"], ["10:00", "English", "Ms. Cruz", "102"], ["11:30", "Social Studies", "Mrs. Sen", "103"]] },
+      { day: "Tue", slots: [["08:00", "Hindi", "Mrs. Das", "104"], ["09:00", "Computer Science", "Ms. Gupta", "Lab 2"], ["10:00", "Mathematics", "Mr. Sharma", "101"]] },
+    ],
+  },
+  "7": {
+    sections: ["A", "B", "C"],
+    totalStudents: 101,
+    classTeacher: "Mrs. Pooja Das",
+    subjects: [
+      { name: "Mathematics", teacher: "Mr. Rajesh Sharma", code: "MATH101" },
+      { name: "Science", teacher: "Dr. Sarah Khan", code: "SCI101" },
+      { name: "English", teacher: "Ms. Elena Cruz", code: "ENG101" },
+      { name: "Social Studies", teacher: "Mrs. Priya Sen", code: "SST101" },
+      { name: "Hindi", teacher: "Mrs. Pooja Das", code: "HIN101" },
+    ],
+    timetable: [
+      { day: "Mon", slots: [["08:00", "Mathematics", "Mr. Sharma", "101"], ["09:00", "Science", "Dr. Khan", "Lab 1"], ["10:00", "English", "Ms. Cruz", "102"], ["11:30", "Hindi", "Mrs. Das", "104"]] },
+      { day: "Tue", slots: [["08:00", "Social Studies", "Mrs. Sen", "103"], ["09:00", "Mathematics", "Mr. Sharma", "101"], ["10:00", "Science", "Dr. Khan", "Lab 1"]] },
     ],
   },
 };

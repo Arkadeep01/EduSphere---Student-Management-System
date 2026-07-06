@@ -9,13 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { teacherExamData } from "@/lib/mock-data";
-import type { PaperData, QMark } from "@/lib/mock-data";
+import type { PaperData } from "@/lib/mock-data";
 import {
   ArrowLeft, Eye, Download, ZoomIn, ZoomOut, RotateCw,
   ChevronLeft, ChevronRight, Maximize, Minimize, Save, Send,
   FileText, CheckCircle2, Clock, XCircle, ScrollText,
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 function PaperEvaluationPage() {

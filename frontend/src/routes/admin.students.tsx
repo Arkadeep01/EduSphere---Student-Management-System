@@ -6,12 +6,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, MoreHorizontal, ArrowLeft, Users, UserCheck, UserX, Download, Plus, ToggleLeft, ToggleRight, Calendar } from "lucide-react";
+import { Search, ArrowLeft, Users, UserCheck, Download, Plus, ToggleLeft, ToggleRight, CheckCircle, XCircle } from "lucide-react";
 import { useState } from "react";
-import { students, classCards, classDetailsData, feeStatusData } from "@/lib/mock-data";
+import { students, classCards, classDetailsData, feeStatusData, subjectRequestRecords, notificationRecords } from "@/lib/mock-data";
+import type { SubjectRequestRecord } from "@/lib/mock-data";
 import { toast } from "sonner";
 import { StatCard } from "@/components/dashboard/StatCard";
 
@@ -22,12 +22,57 @@ function AdminStudentsComponent() {
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<typeof students[0] | null>(null);
   const [subjectRequestsEnabled, setSubjectRequestsEnabled] = useState(true);
+  const [requests, setRequests] = useState<SubjectRequestRecord[]>(subjectRequestRecords);
   const [showAddStudent, setShowAddStudent] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [exportScope, setExportScope] = useState("school");
   const [feeFilter, setFeeFilter] = useState<"all" | "paid" | "unpaid">("all");
   const [q, setQ] = useState("");
   const [cls, setCls] = useState("all");
+
+  const pendingRequests = requests.filter(r => r.status === "pending");
+
+  function getClassPendingCount(className: string): number {
+    return pendingRequests.filter(r => r.class.startsWith(className)).length;
+  }
+
+  function handleApprove(req: SubjectRequestRecord) {
+    setRequests(prev => prev.map(r =>
+      r.id === req.id ? { ...r, status: "approved" as const } : r
+    ));
+    notificationRecords.push({
+      id: `n${Date.now()}`,
+      studentId: req.studentId,
+      studentName: req.studentName,
+      title: "Subject Request Approved",
+      message: `Your request for ${req.subjectName} has been approved.`,
+      createdAt: new Date().toISOString(),
+      read: false,
+    });
+    toast.success(`${req.studentName} approved for ${req.subjectName}`);
+  }
+
+  function handleReject(req: SubjectRequestRecord) {
+    setRequests(prev => prev.map(r =>
+      r.id === req.id ? { ...r, status: "rejected" as const } : r
+    ));
+    notificationRecords.push({
+      id: `n${Date.now()}`,
+      studentId: req.studentId,
+      studentName: req.studentName,
+      title: "Subject Request Rejected",
+      message: `Your request for ${req.subjectName} has been rejected.`,
+      createdAt: new Date().toISOString(),
+      read: false,
+    });
+    toast.success(`${req.studentName} rejected for ${req.subjectName}`);
+  }
+
+  function handleToggle() {
+    const newVal = !subjectRequestsEnabled;
+    setSubjectRequestsEnabled(newVal);
+    toast.success(newVal ? "Subject requests globally enabled" : "Subject requests globally disabled");
+  }
 
   const filtered = students.filter(s =>
     (s.name.toLowerCase().includes(q.toLowerCase()) || s.id.toLowerCase().includes(q.toLowerCase()))
@@ -37,8 +82,8 @@ function AdminStudentsComponent() {
   const classDetail = selectedClass ? classDetailsData[selectedClass] : null;
   const feeData = selectedClass ? feeStatusData[selectedClass] || [] : [];
   const filteredFees = feeData.filter(f => feeFilter === "all" || f.status === feeFilter);
-
   const classStudents = students.filter(s => s.class.startsWith(selectedClass || ""));
+  const classPendingReqs = selectedClass ? pendingRequests.filter(r => r.class.startsWith(selectedClass)) : [];
 
   if (view === "class-detail" && selectedClass && classDetail) {
     return (
@@ -108,11 +153,32 @@ function AdminStudentsComponent() {
             </CardContent></Card>
             <Card className="mt-4"><CardContent className="p-4 space-y-2">
               <div className="flex items-center justify-between"><span className="text-sm font-medium">Subject Requests</span>
-                <Button variant="ghost" size="sm" onClick={() => { setSubjectRequestsEnabled(!subjectRequestsEnabled); toast.success(subjectRequestsEnabled ? "Subject requests disabled" : "Subject requests enabled"); }}>
+                <Button variant="ghost" size="sm" onClick={handleToggle}>
                   {subjectRequestsEnabled ? <ToggleRight className="h-5 w-5 text-success" /> : <ToggleLeft className="h-5 w-5 text-muted-foreground" />}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">{classDetail.subjects.filter((_, i) => i < 2).length} pending requests</p>
+              {classPendingReqs.length === 0 ? (
+                <p className="text-xs text-muted-foreground">No pending requests</p>
+              ) : (
+                <div className="space-y-2 mt-1">
+                  {classPendingReqs.slice(0, 4).map(req => (
+                    <div key={req.id} className="p-2 rounded bg-muted/40 text-xs space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{req.studentName}</span>
+                        <span className="text-muted-foreground">{req.section}</span>
+                      </div>
+                      <p className="text-muted-foreground">Requested: <span className="font-medium">{req.subjectName}</span></p>
+                      <div className="flex gap-1 pt-1">
+                        <Button size="sm" variant="default" className="h-6 px-2 text-[10px] bg-success hover:bg-success/90" onClick={() => handleApprove(req)}>Approve</Button>
+                        <Button size="sm" variant="destructive" className="h-6 px-2 text-[10px]" onClick={() => handleReject(req)}>Reject</Button>
+                      </div>
+                    </div>
+                  ))}
+                  {classPendingReqs.length > 4 && (
+                    <p className="text-[10px] text-muted-foreground text-center">+{classPendingReqs.length - 4} more</p>
+                  )}
+                </div>
+              )}
             </CardContent></Card>
           </div>
         </div>
@@ -198,14 +264,14 @@ function AdminStudentsComponent() {
 
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {classCards.map(c => {
-          const detail = classDetailsData[c.name];
+          const classPending = getClassPendingCount(c.name);
           return (
             <Card key={c.name} className="hover-lift overflow-hidden cursor-pointer" onClick={() => { setSelectedClass(c.name); setView("class-detail"); }}>
               <div className="h-1 bg-gradient-brand" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><Users className="h-5 w-5" /></div>
-                  {c.pendingRequests > 0 && <Badge variant="secondary">{c.pendingRequests} pending</Badge>}
+                  {classPending > 0 && <Badge variant="secondary">{classPending} pending</Badge>}
                 </div>
                 <h3 className="mt-3 font-semibold text-lg">Class {c.name}</h3>
                 <div className="mt-3 space-y-1 text-sm">
@@ -223,17 +289,89 @@ function AdminStudentsComponent() {
         })}
       </div>
 
-      <div className="flex items-center justify-between mt-8 mb-4">
-        <h3 className="font-semibold">Subject Request Control</h3>
-        <Button variant="outline" size="sm" onClick={() => { setSubjectRequestsEnabled(!subjectRequestsEnabled); toast.success(subjectRequestsEnabled ? "Subject requests globally disabled" : "Subject requests globally enabled"); }}>
-          {subjectRequestsEnabled ? <><ToggleRight className="mr-2 h-4 w-4 text-success" />Enabled</> : <><ToggleLeft className="mr-2 h-4 w-4" />Disabled</>}
-        </Button>
-      </div>
+      {/* Subject Request Control Panel */}
+      <Card className="mt-8">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="font-semibold text-lg">Subject Request Control</h3>
+              <p className="text-sm text-muted-foreground">
+                Pending Requests ({pendingRequests.length})
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium">{subjectRequestsEnabled ? "Enabled" : "Disabled"}</span>
+              <Button
+                variant={subjectRequestsEnabled ? "default" : "outline"}
+                size="sm"
+                onClick={handleToggle}
+                className={subjectRequestsEnabled ? "bg-success hover:bg-success/90" : ""}
+              >
+                {subjectRequestsEnabled ? <><ToggleRight className="mr-2 h-4 w-4" />Disable</> : <><ToggleLeft className="mr-2 h-4 w-4" />Enable</>}
+              </Button>
+            </div>
+          </div>
 
-      <div className="flex items-center justify-between mt-8 mb-4">
-        <h3 className="font-semibold">Fee Reports</h3>
-        <Button variant="outline" size="sm" onClick={() => setView("fee-report")}><Calendar className="mr-2 h-4 w-4" />View Report</Button>
-      </div>
+          {pendingRequests.length === 0 ? (
+            <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+              <CheckCircle className="h-4 w-4 mr-2 text-success" />
+              No Pending Subject Requests
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student Name</TableHead>
+                    <TableHead>Roll Number</TableHead>
+                    <TableHead>Class</TableHead>
+                    <TableHead>Section</TableHead>
+                    <TableHead>Requested Subject</TableHead>
+                    <TableHead>Requested Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pendingRequests.map(req => (
+                    <TableRow key={req.id}>
+                      <TableCell className="font-medium">{req.studentName}</TableCell>
+                      <TableCell className="font-mono text-xs">{req.rollNumber}</TableCell>
+                      <TableCell>{req.class}</TableCell>
+                      <TableCell>{req.section || "-"}</TableCell>
+                      <TableCell>{req.subjectName} ({req.subjectCode})</TableCell>
+                      <TableCell className="text-xs">{new Date(req.requestedOn).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="bg-warning/15 text-warning-foreground">Pending</Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="bg-success hover:bg-success/90 h-8 px-3"
+                            onClick={() => handleApprove(req)}
+                          >
+                            <CheckCircle className="h-3 w-3 mr-1" />Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="h-8 px-3"
+                            onClick={() => handleReject(req)}
+                          >
+                            <XCircle className="h-3 w-3 mr-1" />Reject
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Dialog open={showAddStudent} onOpenChange={setShowAddStudent}>
         <DialogContent><DialogHeader><DialogTitle>Add Student</DialogTitle></DialogHeader>

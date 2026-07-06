@@ -6,12 +6,15 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookOpen, FileText, Download, Video } from "lucide-react";
-import { coreSubjects, specializedSubjects, enrichedSubjects, subjectSelection, assignments, studentSubjectResources } from "@/lib/mock-data";
+import { coreSubjects, specializedSubjects, enrichedSubjects, subjectSelection, assignments, studentSubjectResources, subjectRequestRecords } from "@/lib/mock-data";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 type SubjectType = typeof coreSubjects[number];
 type RequestStatuses = Record<string, string>;
+
+const MOCK_STUDENT_ID = "STU1000";
+const MAX_REQUESTS = 3;
 
 function getSubjectStatus(subject: SubjectType): string {
   if (subject.category === "core") {
@@ -30,6 +33,9 @@ function StudentSubjectsComponent() {
   const [selected, setSelected] = useState(coreSubjects[0]);
   const [requestStatuses, setRequestStatuses] = useState<RequestStatuses>({});
   const [requestsEnabled, setRequestsEnabled] = useState(true);
+  const studentRequests = subjectRequestRecords.filter(r => r.studentId === MOCK_STUDENT_ID);
+  const [requestCount, setRequestCount] = useState(studentRequests.length);
+  const limitReached = requestCount >= MAX_REQUESTS;
 
   useEffect(() => {
     async function checkToggle() {
@@ -54,6 +60,21 @@ function StudentSubjectsComponent() {
   const handleRequestSubject = (subject: SubjectType) => {
     const key = `${subject.category}-${subject.id}`;
     setRequestStatuses(prev => ({ ...prev, [key]: "request_pending" }));
+    subjectRequestRecords.push({
+      id: `sr${Date.now()}`,
+      studentId: MOCK_STUDENT_ID,
+      studentName: "Aarav Sharma",
+      rollNumber: MOCK_STUDENT_ID,
+      class: "10-A",
+      section: "A",
+      subjectId: subject.id,
+      subjectName: subject.name,
+      subjectCode: subject.code,
+      subjectCategory: subject.category,
+      requestedOn: new Date().toISOString().slice(0, 10),
+      status: "pending",
+    });
+    setRequestCount(prev => prev + 1);
     toast.success(`Request sent for ${subject.name}. Waiting for admin approval.`);
   };
 
@@ -63,11 +84,28 @@ function StudentSubjectsComponent() {
     return getSubjectStatus(subject);
   };
 
+  const canRequest = (subject: SubjectType): boolean => {
+    if (!requestsEnabled) return false;
+    if (limitReached) return false;
+    return displayStatus(subject) === "not_selected";
+  };
+
+  const requestDisabledReason = (): string | null => {
+    if (!requestsEnabled) return "Subject requests are currently disabled by the administration.";
+    if (limitReached) return "Maximum subject request limit reached. Please contact Administration for further changes.";
+    return null;
+  };
+
   return (
     <PageWrapper>
       {!requestsEnabled && (
         <div className="mb-4 p-3 rounded-lg bg-warning/10 border border-warning/20 text-sm text-warning-foreground">
           Subject requests are currently disabled by the administration.
+        </div>
+      )}
+      {limitReached && (
+        <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive-foreground">
+          Maximum subject request limit reached. Please contact Administration for further changes.
         </div>
       )}
       {/* Subject Category Tabs */}
@@ -149,10 +187,13 @@ function StudentSubjectsComponent() {
           </div>
           <div className="flex items-center gap-3">
             <Badge className="capitalize">{selected.category}</Badge>
-            {displayStatus(selected) === "not_selected" && requestsEnabled && (
+            {canRequest(selected) && (
               <Button size="sm" onClick={() => handleRequestSubject(selected)} className="bg-gradient-brand border-0">
                 Request Subject
               </Button>
+            )}
+            {displayStatus(selected) === "not_selected" && !canRequest(selected) && (
+              <span className="text-xs text-muted-foreground">{requestDisabledReason()}</span>
             )}
           </div>
         </div>
