@@ -1,4 +1,4 @@
-import { request, API_BASE } from "./request";
+import { request, ADMIN_API_BASE } from "./request";
 
 // Dashboard
 export const dashboardApi = {
@@ -135,11 +135,34 @@ export const subjectRequestApi = {
   get: () => request<{ enabled: boolean }>("/subject-request-control/"),
   update: (enabled: boolean) =>
     request("/subject-request-control/", { method: "PATCH", body: JSON.stringify({ enabled }) }),
+  pendingRequests: (class_name?: string) => {
+    const qs = class_name ? `?class_name=${class_name}` : "";
+    return request<PendingSubjectRequest[]>(`/subject-requests/pending/${qs}`);
+  },
+  approve: (studentId: number, subjectIds: number[]) =>
+    request(`/students/${studentId}/approve-subjects/`, { method: "POST", body: JSON.stringify({ subject_ids: subjectIds }) }),
+  reject: (studentId: number, subjectIds: number[], reason?: string) =>
+    request(`/students/${studentId}/reject-subjects/`, { method: "POST", body: JSON.stringify({ subject_ids: subjectIds, reason: reason || "" }) }),
 };
+
+export interface PendingSubjectRequest {
+  id: number;
+  student_id: number;
+  student_name: string;
+  roll_number: string;
+  class_assigned: string;
+  section: string;
+  subject_id: number;
+  subject_name: string;
+  subject_code: string;
+  subject_category: string;
+  requested_on: string;
+  status: string;
+}
 
 // Exports
 export const exportApi = {
-  students: (format = "csv") => `${API_BASE}/exports/students/?format=${format}`,
-  teachers: (format = "csv") => `${API_BASE}/exports/teachers/?format=${format}`,
-  attendance: (format = "csv") => `${API_BASE}/exports/attendance/?format=${format}`,
+  students: (format = "csv") => `${ADMIN_API_BASE}/exports/students/?format=${format}`,
+  teachers: (format = "csv") => `${ADMIN_API_BASE}/exports/teachers/?format=${format}`,
+  attendance: (format = "csv") => `${ADMIN_API_BASE}/exports/attendance/?format=${format}`,
 };

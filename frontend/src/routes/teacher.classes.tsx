@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Layers, Clock, Library, Coffee } from "lucide-react";
-import { teacherSubjectData, teacherTimetable, librarySlots, classStudents } from "@/lib/mock-data";
+import { Users, Layers, Clock, Library, Coffee, BookOpen, Calendar, User, MapPin } from "lucide-react";
+import { teacherSubjectData, teacherTimetable, librarySlots, classStudents, classTeacherAssignments, type LibrarySlot } from "@/lib/mock-data";
+import { ClassDetailSection } from "@/components/teacher/ClassDetailSection";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -13,6 +14,8 @@ export const Route = createFileRoute("/teacher/classes")({
   head: () => ({ meta: [{ title: "My Classes — Teacher" }] }),
   component: () => {
     const [activeTab, setActiveTab] = useState("overview");
+    const [slots, setSlots] = useState<LibrarySlot[]>(librarySlots);
+    const [selectedClass, setSelectedClass] = useState<string | null>(null);
 
     const allTimeSlots = [...new Set(teacherTimetable.flatMap(d => d.slots.map(s => s[0])))];
     const earliestTime = allTimeSlots.reduce((min, t) => t < min ? t : min, "99:99");
@@ -32,9 +35,43 @@ export const Route = createFileRoute("/teacher/classes")({
     const hasLibrary = teacherTimetable.some(d => d.slots.some(s => s[1] === "Library"));
     const classTypes = [sessionTypesList, ...(hasLab ? ["Lab"] : []), ...(hasLibrary ? ["Library"] : [])].filter(Boolean).join(", ");
 
+    function handleBookSlot(slot: LibrarySlot) {
+      setSlots(prev => prev.map(s =>
+        s.id === slot.id
+          ? { ...s, available: false, bookedBy: teacherSubjectData.teacher, subject: teacherSubjectData.name, class: slot.class || "N/A", section: "-" }
+          : s
+      ));
+      toast.success(`Library session booked for ${slot.day} (${slot.start} – ${slot.end})`);
+    }
+
+    const availableSlots = slots.filter(s => s.available);
+    const bookedSlots = slots.filter(s => !s.available);
+
+    function getClassInfo(cls: string) {
+      const students = classStudents[cls] || [];
+      const baseClass = cls.split("-")[0];
+      const section = cls.split("-")[1] || "A";
+      const ct = classTeacherAssignments.find(t => t.class === baseClass);
+      const timetableEntries = teacherTimetable.flatMap(d =>
+        d.slots.filter(s => s[1] === cls)
+      );
+      const timings = timetableEntries.length > 0
+        ? `${formatTime12(timetableEntries[0][0])} – ${formatTime12(timetableEntries[timetableEntries.length - 1][0].replace(/^\d+/, h => `${+h + 1}`))}`
+        : "N/A";
+      const room = timetableEntries[0]?.[3] || "N/A";
+      return {
+        name: cls,
+        section,
+        subject: teacherSubjectData.name,
+        totalStudents: students.length,
+        classTeacher: ct?.teacher || "N/A",
+        timings,
+        room,
+      };
+    }
+
     return (
       <PageWrapper>
-        {/* Working Hours Banner */}
         <Card className="mb-6 bg-gradient-to-r from-primary/5 to-brand/5 border-primary/20">
           <CardContent className="p-4 flex items-center gap-3">
             <Clock className="h-5 w-5 text-primary" />
@@ -56,10 +93,16 @@ export const Route = createFileRoute("/teacher/classes")({
             <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {teacherSubjectData.classes.map(cls => {
                 const students = classStudents[cls] || [];
+                const sectionCount = students.length > 0 ? [...new Set(students.map(s => s.class.split("-")[1] || "A"))].length : 0;
                 return (
                   <StaggerItem key={cls}>
                     <HoverLift>
-                      <Card className="overflow-hidden cursor-pointer">
+                      <Card
+                        className={`overflow-hidden cursor-pointer transition-all duration-200 ${
+                          selectedClass === cls ? "ring-2 ring-primary shadow-lg" : ""
+                        }`}
+                        onClick={() => setSelectedClass(selectedClass === cls ? null : cls)}
+                      >
                         <div className="h-1 bg-gradient-brand" />
                         <CardContent className="p-5">
                           <div className="flex items-center justify-between">
@@ -68,6 +111,9 @@ export const Route = createFileRoute("/teacher/classes")({
                           </div>
                           <h3 className="font-semibold text-lg mt-3">{cls}</h3>
                           <p className="text-sm text-muted-foreground">{teacherSubjectData.name}</p>
+                          <div className="mt-2 flex gap-2 text-xs text-muted-foreground">
+                            <span>{sectionCount} section{sectionCount > 1 ? "s" : ""}</span>
+                          </div>
                         </CardContent>
                       </Card>
                     </HoverLift>
@@ -75,6 +121,13 @@ export const Route = createFileRoute("/teacher/classes")({
                 );
               })}
             </StaggerContainer>
+
+            {selectedClass && (
+              <ClassDetailSection
+                classInfo={getClassInfo(selectedClass)}
+                onClose={() => setSelectedClass(null)}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="schedule" className="mt-4">
@@ -111,29 +164,64 @@ export const Route = createFileRoute("/teacher/classes")({
             </CardContent></Card>
           </TabsContent>
 
-          <TabsContent value="library" className="mt-4">
-            <Card><CardHeader><CardTitle>Convert Class to Library Session</CardTitle></CardHeader><CardContent>
-              <p className="text-sm text-muted-foreground mb-4">Select a class slot to convert to a library session. Only available library slots are shown.</p>
-              <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {librarySlots.filter(s => s.available).map(slot => (
-                  <StaggerItem key={slot.id}>
-                    <HoverLift>
-                      <Card className="cursor-pointer">
+          <TabsContent value="library" className="mt-4 space-y-6">
+            <Card><CardHeader><CardTitle>Book a Library Session</CardTitle></CardHeader><CardContent>
+              <p className="text-sm text-muted-foreground mb-4">Available library slots. Booked slots are shown below.</p>
+              {availableSlots.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">No available library slots at this time.</p>
+              ) : (
+                <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {availableSlots.map(slot => (
+                    <StaggerItem key={slot.id}>
+                      <HoverLift>
+                        <Card className="cursor-pointer border-success/30">
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Library className="h-4 w-4 text-success" />
+                              <Badge className="bg-success/10 text-success border-0">{slot.day}</Badge>
+                              <Badge variant="outline" className="text-[10px]">Available</Badge>
+                            </div>
+                            <p className="text-sm font-medium"><Calendar className="h-3 w-3 inline mr-1" />{slot.date}</p>
+                            <p className="text-xs text-muted-foreground"><Clock className="h-3 w-3 inline mr-1" />{slot.start} – {slot.end}</p>
+                            <p className="text-xs text-muted-foreground"><MapPin className="h-3 w-3 inline mr-1" />{slot.room}</p>
+                            <Button size="sm" className="mt-3 w-full bg-gradient-brand border-0" onClick={() => handleBookSlot(slot)}>Book Slot</Button>
+                          </CardContent>
+                        </Card>
+                      </HoverLift>
+                    </StaggerItem>
+                  ))}
+                </StaggerContainer>
+              )}
+            </CardContent></Card>
+
+            {bookedSlots.length > 0 && (
+              <Card><CardHeader><CardTitle>Booked Library Sessions</CardTitle></CardHeader><CardContent>
+                <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {bookedSlots.map(slot => (
+                    <StaggerItem key={slot.id}>
+                      <Card className="border-violet-300 bg-violet-50/50 dark:bg-violet-950/10">
                         <CardContent className="p-4">
                           <div className="flex items-center gap-2 mb-2">
                             <Library className="h-4 w-4 text-violet-500" />
                             <Badge variant="secondary">{slot.day}</Badge>
+                            <Badge className="bg-violet-500/10 text-violet-600 border-0 text-[10px]">Booked</Badge>
                           </div>
-                          <p className="text-sm font-medium">{slot.date}</p>
-                          <p className="text-xs text-muted-foreground">{slot.start} – {slot.end} · {slot.room}</p>
-                          <Button size="sm" className="mt-3 w-full bg-gradient-brand border-0" onClick={() => toast.success(`Library session booked for ${slot.day}`)}>Book Slot</Button>
+                          <p className="text-sm font-medium"><Calendar className="h-3 w-3 inline mr-1" />{slot.date}</p>
+                          <p className="text-xs text-muted-foreground"><Clock className="h-3 w-3 inline mr-1" />{slot.start} – {slot.end}</p>
+                          <p className="text-xs text-muted-foreground"><MapPin className="h-3 w-3 inline mr-1" />{slot.room}</p>
+                          <div className="mt-2 pt-2 border-t text-xs space-y-1">
+                            {slot.bookedBy && <p><User className="h-3 w-3 inline mr-1" />{slot.bookedBy}</p>}
+                            {slot.subject && <p><BookOpen className="h-3 w-3 inline mr-1" />{slot.subject}</p>}
+                            {slot.class && <p><Layers className="h-3 w-3 inline mr-1" />{slot.class}{slot.section ? ` · Section ${slot.section}` : ""}</p>}
+                            <p className="text-muted-foreground">{slot.start} – {slot.end} · {slot.room}</p>
+                          </div>
                         </CardContent>
                       </Card>
-                    </HoverLift>
-                  </StaggerItem>
-                ))}
-              </StaggerContainer>
-            </CardContent></Card>
+                    </StaggerItem>
+                  ))}
+                </StaggerContainer>
+              </CardContent></Card>
+            )}
           </TabsContent>
         </Tabs>
       </PageWrapper>

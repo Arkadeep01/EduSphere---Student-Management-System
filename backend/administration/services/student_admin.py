@@ -5,8 +5,11 @@ from student.services import (
     create_student_profile,
     assign_core_subjects,
     approve_student_subjects,
+    reject_student_subjects,
     admin_assign_subjects,
 )
+from administration.models.subject_request import SubjectRequestControl
+from teacher.models import TeacherProfile, TeacherClassAssignment
 
 
 class StudentAdminService:
@@ -46,7 +49,37 @@ class StudentAdminService:
     @staticmethod
     def approve_subject_requests(student_id, subject_ids):
         profile = StudentProfile.objects.get(id=student_id)
-        approve_student_subjects(profile, subject_ids)
+        approved = approve_student_subjects(profile, subject_ids)
+        # Notify student
+        subjects = Subject.objects.filter(id__in=subject_ids)
+        subject_names = ", ".join(subjects.values_list("name", flat=True))
+        Notification.objects.create(
+            user=profile.user,
+            title="Subject Enrollment Approved",
+            message=f"Your request for subject(s): {subject_names} has been approved.",
+            notification_type="general",
+        )
+        # Notify teachers
+        for subject in subjects:
+            _notify_teachers_for_subject(subject, profile)
+        return approved
+
+    @staticmethod
+    def reject_subject_requests(student_id, subject_ids, reason=""):
+        profile = StudentProfile.objects.get(id=student_id)
+        reject_student_subjects(profile, subject_ids)
+        # Notify student
+        subjects = Subject.objects.filter(id__in=subject_ids)
+        subject_names = ", ".join(subjects.values_list("name", flat=True))
+        msg = f"Your request for subject(s): {subject_names} has been rejected."
+        if reason:
+            msg += f" Reason: {reason}"
+        Notification.objects.create(
+            user=profile.user,
+            title="Subject Request Rejected",
+            message=msg,
+            notification_type="general",
+        )
 
     @staticmethod
     def assign_subjects(student_id, subject_ids):
@@ -80,3 +113,23 @@ class StudentAdminService:
     def get_student_documents(student_id):
         from student.models import AdmissionDocument
         return AdmissionDocument.objects.filter(student_id=student_id)
+
+    @staticmethod
+    def subject_requests_enabled():
+        obj, _ = SubjectRequestControl.objects.get_or_create(pk=1)
+        return obj.enabled
+
+
+def _notify_teachers_for_subject(subject, student_profile):
+    """Notify teachers assigned to the subject about new student enrollment."""
+    from administration.models.teacher import TeacherSubjectAllocation
+    allocations = TeacherSubjectAllocation.objects.filter(subject=subject)
+    class_name = student_profile.class_assigned
+    for allocation in allocations:
+        if class_name in allocation.assigned_classes:
+            Notification.objects.create(
+                user=allocation.teacher.user,
+                title="New Student Enrolled",
+                message=f"Student {student_profile.user.get_full_name() or student_profile.user.email} has been enrolled in {subject.name} ({class_name}).",
+                notification_type="general",
+            )

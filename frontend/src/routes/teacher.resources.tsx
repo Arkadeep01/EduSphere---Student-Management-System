@@ -20,7 +20,7 @@ const resourceIcons: Record<string, typeof FileText> = {
 function TeacherResourcesComponent() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
-  const resources = teacherSubjectData.resources;
+  const resources = teacherSubjectData.chapters?.flatMap(ch => ch.resources ?? []) ?? [];
   const types = ["all", ...new Set(resources.map(r => r.type))];
 
   const filtered = resources.filter(r => {

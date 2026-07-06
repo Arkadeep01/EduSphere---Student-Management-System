@@ -170,3 +170,26 @@ class AnswerScript(models.Model):
 
     def __str__(self):
         return f"{self.student.user.email} - {self.exam_name} ({self.evaluation_status})"
+
+
+class QuestionMarks(models.Model):
+    answer_script = models.ForeignKey(
+        AnswerScript,
+        on_delete=models.CASCADE,
+        related_name="question_marks",
+    )
+    question_label = models.CharField(max_length=50)  # e.g. "Q1", "Q2"
+    question_title = models.CharField(max_length=200, blank=True)  # e.g. "Algebra"
+    max_marks = models.DecimalField(max_digits=5, decimal_places=2)
+    obtained_marks = models.DecimalField(
+        max_digits=5, decimal_places=2, blank=True, null=True
+    )
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order"]
+        verbose_name = "Question Marks"
+        verbose_name_plural = "Question Marks"
+
+    def __str__(self):
+        return f"{self.question_label} ({self.obtained_marks}/{self.max_marks})"

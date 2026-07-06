@@ -14,4 +14,5 @@ urlpatterns = [
     path("timetable/", views.TimetableView.as_view(), name="student-timetable"),
     path("notifications/", views.NotificationView.as_view(), name="student-notifications"),
     path("resources/", views.ResourceListView.as_view(), name="student-resources"),
+    path("subject-request-status/", views.SubjectRequestStatusView.as_view(), name="student-subject-request-status"),
 ]

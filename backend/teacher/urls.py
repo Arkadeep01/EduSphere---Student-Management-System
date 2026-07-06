@@ -6,6 +6,7 @@ urlpatterns = [
     path("profile/", views.TeacherProfileView.as_view(), name="teacher-profile"),
     path("classes/", views.TeacherClassView.as_view(), name="teacher-classes"),
     path("classes/<str:class_name>/students/", views.ClassStudentsView.as_view(), name="teacher-class-students"),
+    path("classes/<str:class_name>/performance/", views.ClassStudentPerformanceView.as_view(), name="teacher-class-performance"),
     path("timetable/", views.TimetableView.as_view(), name="teacher-timetable"),
     path("timetable/convert-library/", views.LibraryConversionView.as_view(), name="teacher-convert-library"),
     path("library-bookings/", views.LibraryBookingView.as_view(), name="teacher-library-bookings"),

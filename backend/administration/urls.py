@@ -15,9 +15,11 @@ urlpatterns = [
     path("students/", views.StudentListView.as_view(), name="admin-student-list"),
     path("students/<int:student_id>/", views.StudentDetailView.as_view(), name="admin-student-detail"),
     path("students/<int:student_id>/approve-subjects/", views.StudentSubjectApprovalView.as_view(), name="admin-student-approve-subjects"),
+    path("students/<int:student_id>/reject-subjects/", views.StudentSubjectRejectView.as_view(), name="admin-student-reject-subjects"),
     path("students/<int:student_id>/assign-subjects/", views.StudentSubjectAssignmentView.as_view(), name="admin-student-assign-subjects"),
     path("students/<int:student_id>/notifications/", views.StudentNotificationsView.as_view(), name="admin-student-notifications"),
     path("students/<int:student_id>/documents/", views.StudentDocumentsView.as_view(), name="admin-student-documents"),
+    path("subject-requests/pending/", views.PendingSubjectRequestsListView.as_view(), name="admin-pending-subject-requests"),
 
     # Teachers
     path("teachers/", views.TeacherListView.as_view(), name="admin-teacher-list"),

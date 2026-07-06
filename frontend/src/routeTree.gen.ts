@@ -33,6 +33,7 @@ import { Route as TeacherResourcesRouteImport } from './routes/teacher.resources
 import { Route as TeacherSubjectsRouteImport } from './routes/teacher.subjects'
 import { Route as TeacherProfileRouteImport } from './routes/teacher.profile'
 import { Route as TeacherExamsRouteImport } from './routes/teacher.exams'
+import { Route as TeacherExamsEvaluateExamIdClassIdRouteImport } from './routes/teacher.exams.evaluate.$examId.$classId'
 import { Route as TeacherDashboardRouteImport } from './routes/teacher.dashboard'
 import { Route as TeacherClassesRouteImport } from './routes/teacher.classes'
 import { Route as TeacherAttendanceRouteImport } from './routes/teacher.attendance'
@@ -201,6 +202,11 @@ const TeacherAttendanceRoute = TeacherAttendanceRouteImport.update({
 const TeacherAssignmentsRoute = TeacherAssignmentsRouteImport.update({
   id: '/assignments',
   path: '/assignments',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherExamsEvaluateExamIdClassIdRoute = TeacherExamsEvaluateExamIdClassIdRouteImport.update({
+  id: '/exams/evaluate/$examId/$classId',
+  path: '/exams/evaluate/$examId/$classId',
   getParentRoute: () => TeacherRoute,
 } as any)
 const StudentTimetableRoute = StudentTimetableRouteImport.update({
@@ -380,6 +386,7 @@ export interface FileRoutesByFullPath {
   '/teacher/subjects': typeof TeacherSubjectsRoute
   '/teacher/timetable': typeof TeacherTimetableRoute
   '/teacher/resources': typeof TeacherResourcesRoute
+  '/teacher/exams/evaluate/$examId/$classId': typeof TeacherExamsEvaluateExamIdClassIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -429,6 +436,7 @@ export interface FileRoutesByTo {
   '/teacher/classes': typeof TeacherClassesRoute
   '/teacher/dashboard': typeof TeacherDashboardRoute
   '/teacher/exams': typeof TeacherExamsRoute
+  '/teacher/exams/evaluate/$examId/$classId': typeof TeacherExamsEvaluateExamIdClassIdRoute
   '/teacher/profile': typeof TeacherProfileRoute
   '/teacher/subjects': typeof TeacherSubjectsRoute
   '/teacher/timetable': typeof TeacherTimetableRoute
@@ -539,6 +547,7 @@ export interface FileRouteTypes {
     | '/teacher/profile'
     | '/teacher/subjects'
     | '/teacher/timetable'
+    | '/teacher/exams/evaluate/$examId/$classId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -591,6 +600,7 @@ export interface FileRouteTypes {
     | '/teacher/profile'
     | '/teacher/subjects'
     | '/teacher/timetable'
+    | '/teacher/exams/evaluate/$examId/$classId'
   id:
     | '__root__'
     | '/'
@@ -643,6 +653,7 @@ export interface FileRouteTypes {
     | '/teacher/profile'
     | '/teacher/subjects'
     | '/teacher/timetable'
+    | '/teacher/exams/evaluate/$examId/$classId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -864,6 +875,13 @@ declare module '@tanstack/react-router' {
       path: '/assignments'
       fullPath: '/teacher/assignments'
       preLoaderRoute: typeof TeacherAssignmentsRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/exams/evaluate/$examId/$classId': {
+      id: '/teacher/exams/evaluate/$examId/$classId'
+      path: '/exams/evaluate/$examId/$classId'
+      fullPath: '/teacher/exams/evaluate/$examId/$classId'
+      preLoaderRoute: typeof TeacherExamsEvaluateExamIdClassIdRouteImport
       parentRoute: typeof TeacherRoute
     }
     '/student/notifications': {
@@ -1105,6 +1123,7 @@ interface TeacherRouteChildren {
   TeacherClassesRoute: typeof TeacherClassesRoute
   TeacherDashboardRoute: typeof TeacherDashboardRoute
   TeacherExamsRoute: typeof TeacherExamsRoute
+  TeacherExamsEvaluateExamIdClassIdRoute: typeof TeacherExamsEvaluateExamIdClassIdRoute
   TeacherProfileRoute: typeof TeacherProfileRoute
   TeacherSubjectsRoute: typeof TeacherSubjectsRoute
   TeacherTimetableRoute: typeof TeacherTimetableRoute
@@ -1116,6 +1135,7 @@ const TeacherRouteChildren: TeacherRouteChildren = {
   TeacherClassesRoute: TeacherClassesRoute,
   TeacherDashboardRoute: TeacherDashboardRoute,
   TeacherExamsRoute: TeacherExamsRoute,
+  TeacherExamsEvaluateExamIdClassIdRoute: TeacherExamsEvaluateExamIdClassIdRoute,
   TeacherProfileRoute: TeacherProfileRoute,
   TeacherSubjectsRoute: TeacherSubjectsRoute,
   TeacherTimetableRoute: TeacherTimetableRoute,

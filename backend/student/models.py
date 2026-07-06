@@ -98,11 +98,18 @@ class AdmissionDocument(models.Model):
 
 
 class Assignment(models.Model):
+    STATUS_CHOICES = [
+        ("active", "Active"),
+        ("closed", "Closed"),
+        ("marked", "Marked"),
+    ]
+
     title = models.CharField(max_length=200)
     description = models.TextField(blank=False)  # Mandatory: cannot be empty
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name="assignments")
     target_class = models.CharField(max_length=20, help_text="e.g. X-A")
     due_date = models.DateTimeField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="active")
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

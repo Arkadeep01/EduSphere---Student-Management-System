@@ -6,11 +6,12 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookOpen, FileText, Download, Video } from "lucide-react";
-import { coreSubjects, specializedSubjects, enrichedSubjects, subjectSelection, assignments } from "@/lib/mock-data";
-import { useState } from "react";
+import { coreSubjects, specializedSubjects, enrichedSubjects, subjectSelection, assignments, studentSubjectResources } from "@/lib/mock-data";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 type SubjectType = typeof coreSubjects[number];
+type RequestStatuses = Record<string, string>;
 
 function getSubjectStatus(subject: SubjectType): string {
   if (subject.category === "core") {
@@ -27,7 +28,21 @@ function getSubjectStatus(subject: SubjectType): string {
 
 function StudentSubjectsComponent() {
   const [selected, setSelected] = useState(coreSubjects[0]);
-  const [requestStatuses, setRequestStatuses] = useState<Record<string, string>>({});
+  const [requestStatuses, setRequestStatuses] = useState<RequestStatuses>({});
+  const [requestsEnabled, setRequestsEnabled] = useState(true);
+
+  useEffect(() => {
+    async function checkToggle() {
+      try {
+        const { subjectRequestApi } = await import("@/services/adminApi");
+        const res = await subjectRequestApi.get();
+        setRequestsEnabled(res.enabled);
+      } catch {
+        setRequestsEnabled(true);
+      }
+    }
+    checkToggle();
+  }, []);
 
   const statusBadge = (status?: string) => {
     if (status === "selected") return <Badge className="bg-success text-success-foreground border-0 text-xs">Selected</Badge>;
@@ -50,6 +65,11 @@ function StudentSubjectsComponent() {
 
   return (
     <PageWrapper>
+      {!requestsEnabled && (
+        <div className="mb-4 p-3 rounded-lg bg-warning/10 border border-warning/20 text-sm text-warning-foreground">
+          Subject requests are currently disabled by the administration.
+        </div>
+      )}
       {/* Subject Category Tabs */}
       <Tabs defaultValue="core" className="mb-6">
         <TabsList className="mx-auto">
@@ -129,7 +149,7 @@ function StudentSubjectsComponent() {
           </div>
           <div className="flex items-center gap-3">
             <Badge className="capitalize">{selected.category}</Badge>
-            {displayStatus(selected) === "not_selected" && (
+            {displayStatus(selected) === "not_selected" && requestsEnabled && (
               <Button size="sm" onClick={() => handleRequestSubject(selected)} className="bg-gradient-brand border-0">
                 Request Subject
               </Button>
@@ -180,10 +200,18 @@ function StudentSubjectsComponent() {
             ))}
           </TabsContent>
           <TabsContent value="resources" className="mt-4 space-y-2">
-            {[["Recorded Lecture 01", Video], ["Reference Book PDF", FileText], ["Practice worksheet", FileText]].map(([n, I], i) => {
-              const Icon = I as typeof Video;
-              return <div key={i} className="flex items-center justify-between p-3 border rounded-lg"><div className="flex items-center gap-3"><Icon className="h-4 w-4 text-primary" /><span className="text-sm">{n as string}</span></div><Button size="sm" variant="ghost"><Download className="h-4 w-4" /></Button></div>;
+            {(studentSubjectResources[selected.name] || []).map(r => {
+              const Icon = r.type === "video" ? Video : r.type === "note" ? FileText : FileText;
+              return (
+                <div key={r.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3"><Icon className="h-4 w-4 text-primary" /><span className="text-sm">{r.title} <span className="text-xs text-muted-foreground">({r.size})</span></span></div>
+                  <Button size="sm" variant="ghost"><Download className="h-4 w-4" /></Button>
+                </div>
+              );
             })}
+            {(!studentSubjectResources[selected.name] || studentSubjectResources[selected.name].length === 0) && (
+              <p className="text-sm text-muted-foreground py-4 text-center">No resources available for this subject.</p>
+            )}
           </TabsContent>
         </Tabs>
       </CardContent></Card>

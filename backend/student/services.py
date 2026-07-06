@@ -87,6 +87,15 @@ def approve_student_subjects(student_profile, subject_ids):
     ).update(status="approved")
 
 
+def reject_student_subjects(student_profile, subject_ids):
+    """Admin rejects selected subject requests."""
+    StudentSubject.objects.filter(
+        student=student_profile,
+        subject_id__in=subject_ids,
+        status="pending",
+    ).update(status="rejected")
+
+
 def admin_assign_subjects(student_profile, subject_ids):
     """Admin directly assigns subjects (skips approval)."""
     validate_elective_counts(student_profile, subject_ids)

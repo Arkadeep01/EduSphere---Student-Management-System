@@ -6,7 +6,7 @@ from rest_framework import status
 from administration.permissions import IsAdmin
 from administration.services.student_admin import StudentAdminService
 from student.models import StudentProfile, StudentSubject, Subject
-from student.serializers import StudentProfileSerializer
+from student.serializers import StudentProfileSerializer, StudentSubjectSerializer
 from administration.serializers.admission import StudentRegistrationLogSerializer
 
 
@@ -88,3 +88,40 @@ class StudentDocumentsView(APIView):
         from student.serializers import AdmissionDocumentSerializer
         serializer = AdmissionDocumentSerializer(docs, many=True)
         return Response(serializer.data)
+
+
+class PendingSubjectRequestsListView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        class_name = request.query_params.get("class_name")
+        qs = StudentAdminService.get_subject_requests()
+        if class_name:
+            qs = qs.filter(student__class_assigned__startswith=class_name)
+        data = []
+        for sr in qs:
+            data.append({
+                "id": sr.id,
+                "student_id": sr.student.id,
+                "student_name": sr.student.user.get_full_name() or sr.student.user.email,
+                "roll_number": sr.student.roll_number or "",
+                "class_assigned": sr.student.class_assigned,
+                "section": sr.student.section,
+                "subject_id": sr.subject.id,
+                "subject_name": sr.subject.name,
+                "subject_code": sr.subject.code,
+                "subject_category": sr.subject.tier,
+                "requested_on": sr.created_at.isoformat(),
+                "status": sr.status,
+            })
+        return Response(data)
+
+
+class StudentSubjectRejectView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request, student_id):
+        subject_ids = request.data.get("subject_ids", [])
+        reason = request.data.get("reason", "")
+        StudentAdminService.reject_subject_requests(student_id, subject_ids, reason)
+        return Response({"status": "rejected"})

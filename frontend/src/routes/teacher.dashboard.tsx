@@ -14,7 +14,7 @@ export const Route = createFileRoute("/teacher/dashboard")({
     const SESSION_RECESS = "Recess";
 
     const subject = teacherSubjectData;
-    const activeAssignments = teacherAssignments.filter(a => a.status === "active");
+    const activeAssignments = teacherAssignments.filter(a => new Date(a.due) >= new Date(new Date().toDateString()));
     const pendingAttendance = teacherTimetable.filter(d =>
       d.slots.some(s => s[1] !== SESSION_RECESS)
     ).length;

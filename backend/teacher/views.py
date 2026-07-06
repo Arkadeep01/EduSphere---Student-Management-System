@@ -25,7 +25,7 @@ from .selectors import (
     get_weekly_timetable, get_evaluation_queue,
     get_pending_evaluations, search_answer_scripts,
     get_library_bookings, get_teacher_resources,
-    get_class_attendance_summary,
+    get_class_attendance_summary, get_class_student_performance,
 )
 
 
@@ -262,3 +262,12 @@ class ResourceView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ClassStudentPerformanceView(APIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def get(self, request, class_name):
+        profile = get_or_create_teacher_profile(request.user)
+        data = get_class_student_performance(profile, class_name)
+        return Response(data)

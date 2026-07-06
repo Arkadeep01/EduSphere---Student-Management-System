@@ -103,6 +103,13 @@ class SubjectSelectionView(APIView):
     permission_classes = [IsAuthenticated, IsStudent]
 
     def post(self, request):
+        from administration.models.subject_request import SubjectRequestControl
+        ctrl, _ = SubjectRequestControl.objects.get_or_create(pk=1)
+        if not ctrl.enabled:
+            return Response(
+                {"error": "Subject enrollment requests are currently closed by the administration."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         profile = StudentProfile.objects.filter(user=request.user).first()
         if not profile:
             return Response(
@@ -266,3 +273,12 @@ class ResourceListView(APIView):
         from teacher.serializers import ResourceSerializer
         serializer = ResourceSerializer(resources, many=True)
         return Response(serializer.data)
+
+
+class SubjectRequestStatusView(APIView):
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get(self, request):
+        from administration.models.subject_request import SubjectRequestControl
+        obj, _ = SubjectRequestControl.objects.get_or_create(pk=1)
+        return Response({"enabled": obj.enabled})

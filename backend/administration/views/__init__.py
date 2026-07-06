@@ -12,6 +12,8 @@ from .student_admin import (
     StudentSubjectAssignmentView,
     StudentNotificationsView,
     StudentDocumentsView,
+    PendingSubjectRequestsListView,
+    StudentSubjectRejectView,
 )
 
 from .teacher_admin import (

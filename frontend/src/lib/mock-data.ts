@@ -881,24 +881,71 @@ export const teacherSubjectData = {
   name: "Mathematics",
   code: "MATH101",
   teacher: "Dr. Anika Rao",
-  progress: 68,
   category: "core",
   color: "from-indigo-500 to-blue-500",
   classes: ["10-A", "10-B", "9-A", "9-B", "11-A"],
   totalStudents: 149,
   chapters: [
-    { id: "ch1", title: "Algebra: Linear Equations", completed: true, lessons: 4, completedLessons: 4 },
-    { id: "ch2", title: "Quadratic Equations", completed: true, lessons: 6, completedLessons: 6 },
-    { id: "ch3", title: "Coordinate Geometry", completed: true, lessons: 5, completedLessons: 5 },
-    { id: "ch4", title: "Trigonometry", completed: false, lessons: 8, completedLessons: 5 },
-    { id: "ch5", title: "Calculus: Limits", completed: false, lessons: 6, completedLessons: 2 },
-    { id: "ch6", title: "Probability & Statistics", completed: false, lessons: 5, completedLessons: 0 },
-  ],
-  resources: [
-    { id: "r1", title: "Algebra Formula Sheet", type: "note" as const, size: "2.4 MB", class: "All" },
-    { id: "r2", title: "Quadratic Equations Lecture", type: "video" as const, size: "45 MB", class: "10-A, 10-B" },
-    { id: "r3", title: "Trigonometry Reference PDF", type: "document" as const, size: "3.1 MB", class: "All" },
-    { id: "r4", title: "Practice Worksheet: Calculus", type: "document" as const, size: "1.8 MB", class: "11-A" },
+    {
+      id: "ch1", title: "Algebra: Linear Equations", completed: true, lessons: 4, completedLessons: 4,
+      modules: [
+        { id: "ch1m1", title: "Linear Equations in One Variable", completed: true, subtopics: ["Solving ax + b = 0", "Word Problems", "Graphical Representation"] },
+        { id: "ch1m2", title: "Linear Equations in Two Variables", completed: true, subtopics: ["Graphing Lines", "Slope-Intercept Form", "Systems of Equations"] },
+      ],
+      resources: [
+        { id: "ch1r1", title: "Linear Equations Notes", type: "note" as const, size: "1.2 MB" },
+        { id: "ch1r2", title: "Algebra Formula Sheet", type: "document" as const, size: "2.4 MB" },
+      ]
+    },
+    {
+      id: "ch2", title: "Quadratic Equations", completed: true, lessons: 6, completedLessons: 6,
+      modules: [
+        { id: "ch2m1", title: "Standard Form & Roots", completed: true, subtopics: ["ax² + bx + c = 0", "Discriminant", "Nature of Roots"] },
+        { id: "ch2m2", title: "Solving Methods", completed: true, subtopics: ["Factorization", "Completing Square", "Quadratic Formula"] },
+        { id: "ch2m3", title: "Applications", completed: true, subtopics: ["Word Problems", "Projectile Motion"] },
+      ],
+      resources: [
+        { id: "ch2r1", title: "Quadratic Equations Lecture", type: "video" as const, size: "45 MB" },
+      ]
+    },
+    {
+      id: "ch3", title: "Coordinate Geometry", completed: true, lessons: 5, completedLessons: 5,
+      modules: [
+        { id: "ch3m1", title: "Cartesian System", completed: true, subtopics: ["Coordinates", "Distance Formula", "Section Formula"] },
+        { id: "ch3m2", title: "Straight Lines", completed: true, subtopics: ["Slope", "Various Forms", "Angle between Lines"] },
+      ],
+      resources: []
+    },
+    {
+      id: "ch4", title: "Trigonometry", completed: false, lessons: 8, completedLessons: 5,
+      modules: [
+        { id: "ch4m1", title: "Basic Ratios", completed: true, subtopics: ["sin, cos, tan", "Trigonometric Identities", "Complementary Angles"] },
+        { id: "ch4m2", title: "Heights & Distances", completed: true, subtopics: ["Angle of Elevation", "Angle of Depression", "Real-world Problems"] },
+        { id: "ch4m3", title: "Trigonometric Equations", completed: false, subtopics: ["General Solutions", "Particular Solutions"] },
+      ],
+      resources: [
+        { id: "ch4r1", title: "Trigonometry Reference PDF", type: "document" as const, size: "3.1 MB" },
+      ]
+    },
+    {
+      id: "ch5", title: "Calculus: Limits", completed: false, lessons: 6, completedLessons: 2,
+      modules: [
+        { id: "ch5m1", title: "Introduction to Limits", completed: true, subtopics: ["Intuitive Definition", "One-sided Limits"] },
+        { id: "ch5m2", title: "Limit Laws", completed: false, subtopics: ["Sum, Product, Quotient", "Squeeze Theorem"] },
+        { id: "ch5m3", title: "Continuity", completed: false, subtopics: ["Definition", "Types of Discontinuity"] },
+      ],
+      resources: [
+        { id: "ch5r1", title: "Practice Worksheet: Calculus", type: "document" as const, size: "1.8 MB" },
+      ]
+    },
+    {
+      id: "ch6", title: "Probability & Statistics", completed: false, lessons: 5, completedLessons: 0,
+      modules: [
+        { id: "ch6m1", title: "Probability Basics", completed: false, subtopics: ["Events", "Conditional Probability", "Bayes Theorem"] },
+        { id: "ch6m2", title: "Statistical Measures", completed: false, subtopics: ["Mean, Median, Mode", "Standard Deviation"] },
+      ],
+      resources: []
+    },
   ],
   evaluations: {
     total: 48,
@@ -943,25 +990,125 @@ export const classStudents: Record<string, typeof students> = {
   "9-A": students.slice(16, 24).map(s => ({ ...s, class: "9-A" })),
 };
 
-export const teacherAssignments = [
-  { id: "TA1", title: "Quadratic Equations Problem Set", class: "10-A", due: "2026-06-08", submissions: 28, total: 32, status: "active" as const, graded: 18 },
-  { id: "TA2", title: "Quadratic Equations Problem Set", class: "10-B", due: "2026-06-08", submissions: 22, total: 30, status: "active" as const, graded: 15 },
-  { id: "TA3", title: "Linear Equations Worksheet", class: "9-A", due: "2026-06-10", submissions: 10, total: 34, status: "active" as const, graded: 0 },
-  { id: "TA4", title: "Calculus Limits Exercise", class: "11-A", due: "2026-06-12", submissions: 5, total: 28, status: "active" as const, graded: 0 },
-  { id: "TA5", title: "Coordinate Geometry Quiz", class: "9-B", due: "2026-05-30", submissions: 31, total: 31, status: "closed" as const, graded: 31 },
-  { id: "TA6", title: "Trigonometry Test", class: "10-A", due: "2026-05-25", submissions: 32, total: 32, status: "closed" as const, graded: 32 },
+export interface Assignment {
+  id: string;
+  title: string;
+  class: string;
+  due: string;
+  submissions: number;
+  total: number;
+  status?: "active" | "closed" | "marked";
+  graded: number;
+  submittedFiles?: Record<string, { filename: string; url: string; type: string; submittedAt: string }>;
+  marks?: Record<string, { marks: number; total: number; remarks: string; evaluatedAt: string }>;
+}
+
+export const teacherAssignments: Assignment[] = [
+  {
+    id: "TA1", title: "Quadratic Equations Problem Set", class: "10-A", due: "2026-06-08",
+    submissions: 28, total: 32, graded: 18,
+    submittedFiles: {
+      "STU1000": { filename: "quadratic_equations_arijit.pdf", url: "#", type: "pdf", submittedAt: "2026-06-05" },
+      "STU1001": { filename: "maths_hw_priya.docx", url: "#", type: "docx", submittedAt: "2026-06-06" },
+      "STU1002": { filename: "problem_set_liam.pptx", url: "#", type: "pptx", submittedAt: "2026-06-07" },
+    },
+    marks: {
+      "STU1000": { marks: 85, total: 100, remarks: "Good work, check Q4", evaluatedAt: "2026-06-09" },
+    },
+  },
+  { id: "TA2", title: "Quadratic Equations Problem Set", class: "10-B", due: "2026-06-08", submissions: 22, total: 30, graded: 15 },
+  { id: "TA3", title: "Linear Equations Worksheet", class: "9-A", due: "2026-06-10", submissions: 10, total: 34, graded: 0 },
+  { id: "TA4", title: "Calculus Limits Exercise", class: "11-A", due: "2026-06-12", submissions: 5, total: 28, graded: 0 },
+  { id: "TA5", title: "Coordinate Geometry Quiz", class: "9-B", due: "2026-05-30", submissions: 31, total: 31, graded: 31 },
+  { id: "TA6", title: "Trigonometry Test", class: "10-A", due: "2026-05-25", submissions: 32, total: 32, graded: 32 },
 ];
 
 export const librarySlots = [
   { id: "ls1", day: "Monday", date: "2026-06-15", start: "09:00", end: "10:00", room: "Main Library", available: true },
   { id: "ls2", day: "Monday", date: "2026-06-15", start: "10:00", end: "11:00", room: "Main Library", available: true },
-  { id: "ls3", day: "Tuesday", date: "2026-06-16", start: "08:00", end: "09:00", room: "Main Library", available: false },
+  { id: "ls3", day: "Tuesday", date: "2026-06-16", start: "08:00", end: "09:00", room: "Main Library", available: false, bookedBy: "Dr. Samir Ghosh", subject: "Physics", class: "10-A", section: "A" },
   { id: "ls4", day: "Tuesday", date: "2026-06-16", start: "09:00", end: "10:00", room: "Main Library", available: true },
   { id: "ls5", day: "Wednesday", date: "2026-06-17", start: "08:00", end: "09:00", room: "Main Library", available: true },
   { id: "ls6", day: "Wednesday", date: "2026-06-17", start: "11:00", end: "12:00", room: "Main Library", available: true },
-  { id: "ls7", day: "Thursday", date: "2026-06-18", start: "10:00", end: "11:00", room: "Main Library", available: false },
+  { id: "ls7", day: "Thursday", date: "2026-06-18", start: "10:00", end: "11:00", room: "Main Library", available: false, bookedBy: "Mrs. Meera Nair", subject: "History", class: "10-A", section: "B" },
   { id: "ls8", day: "Friday", date: "2026-06-19", start: "08:00", end: "09:00", room: "Main Library", available: true },
 ];
+
+export interface AssignmentMarks {
+  marks: number;
+  total: number;
+}
+
+export interface MidtermResult {
+  marksObtained: number;
+  totalMarks: number;
+  percentage: number;
+  grade: string;
+}
+
+export interface StudentPerformance {
+  id: string;
+  rollNumber: string;
+  name: string;
+  class: string;
+  attendancePercentage: number;
+  assignmentAverage: number;
+  assignmentRank: number;
+  midterm: MidtermResult | null;
+  overallProgress: number;
+}
+
+export const classStudentPerformance: Record<string, StudentPerformance[]> = {};
+
+for (const [cls, clsStudents] of Object.entries(classStudents)) {
+  classStudentPerformance[cls] = clsStudents.map((s, i) => {
+    const idx = i + 1;
+    const a1 = 65 + ((idx * 7) % 35);
+    const a2 = 60 + ((idx * 11) % 38);
+    const avg = Math.round((a1 + a2) / 2);
+
+    const hasMidterm = idx % 4 !== 0;
+    const mm = hasMidterm ? 55 + ((idx * 13) % 45) : null;
+    const mp = mm !== null ? Math.round((mm / 100) * 100) : null;
+    const grade = mp !== null
+      ? (mp >= 90 ? "A+" : mp >= 80 ? "A" : mp >= 70 ? "B+" : mp >= 60 ? "B" : "C")
+      : null;
+
+    return {
+      id: s.id,
+      rollNumber: s.id,
+      name: s.name,
+      class: cls,
+      attendancePercentage: s.attendance,
+      assignmentAverage: avg,
+      assignmentRank: 0,
+      midterm: hasMidterm && mm !== null && mp !== null ? {
+        marksObtained: mm,
+        totalMarks: 100,
+        percentage: mp,
+        grade: grade!,
+      } : null,
+      overallProgress: Math.round(avg * 0.5 + (mp ?? 0) * 0.5),
+    };
+  });
+
+  classStudentPerformance[cls].sort((a, b) => b.assignmentAverage - a.assignmentAverage);
+  classStudentPerformance[cls].forEach((s, i) => { s.assignmentRank = i + 1; });
+}
+
+export interface LibrarySlot {
+  id: string;
+  day: string;
+  date: string;
+  start: string;
+  end: string;
+  room: string;
+  available: boolean;
+  bookedBy?: string;
+  subject?: string;
+  class?: string;
+  section?: string;
+}
 
 export const answerScripts = [
   { id: "AS1", student: "Riya Sen", class: "10-A", exam: "Midterm — Mathematics", subject: "Mathematics", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-13" },
@@ -1228,6 +1375,264 @@ export const classTeacherAssignments = [
   { teacher: "Dr. Sarah Khan", class: "12", academicYear: "2026-27" },
   { teacher: "Ms. Elena Cruz", class: "8", academicYear: "2026-27" },
   { teacher: "Mrs. Pooja Das", class: "7", academicYear: "2026-27" },
+];
+
+export type ChapterResource = {
+  id: string;
+  title: string;
+  type: "note" | "video" | "document";
+  size: string;
+};
+
+export type ClassModuleStatus = {
+  id: string;
+  completed: boolean;
+};
+
+export type ClassChapterStatus = {
+  id: string;
+  completed: boolean;
+  modules: ClassModuleStatus[];
+  syllabus?: { fileName: string; uploadedAt: string };
+  resources: ChapterResource[];
+};
+
+export const classSubjectProgress: Record<string, ClassChapterStatus[]> = {
+  "10-A": [
+    {
+      id: "ch1", completed: true,
+      modules: [{ id: "ch1m1", completed: true }, { id: "ch1m2", completed: true }],
+      resources: [{ id: "ch1r1-10a", title: "10-A Algebra Worksheet", type: "document" as const, size: "0.8 MB" }],
+    },
+    {
+      id: "ch2", completed: true,
+      modules: [{ id: "ch2m1", completed: true }, { id: "ch2m2", completed: true }, { id: "ch2m3", completed: true }],
+      resources: [],
+    },
+    {
+      id: "ch3", completed: true,
+      modules: [{ id: "ch3m1", completed: true }, { id: "ch3m2", completed: true }],
+      resources: [],
+    },
+    {
+      id: "ch4", completed: false,
+      modules: [{ id: "ch4m1", completed: true }, { id: "ch4m2", completed: true }, { id: "ch4m3", completed: false }],
+      resources: [],
+    },
+    {
+      id: "ch5", completed: false,
+      modules: [{ id: "ch5m1", completed: true }, { id: "ch5m2", completed: false }, { id: "ch5m3", completed: false }],
+      resources: [],
+    },
+    {
+      id: "ch6", completed: false,
+      modules: [{ id: "ch6m1", completed: false }, { id: "ch6m2", completed: false }],
+      resources: [],
+    },
+  ],
+  "10-B": [
+    {
+      id: "ch1", completed: true,
+      modules: [{ id: "ch1m1", completed: true }, { id: "ch1m2", completed: true }],
+      resources: [],
+    },
+    {
+      id: "ch2", completed: false,
+      modules: [{ id: "ch2m1", completed: true }, { id: "ch2m2", completed: false }, { id: "ch2m3", completed: false }],
+      syllabus: { fileName: "10B_Quad_Syllabus.pdf", uploadedAt: "2026-06-20" },
+      resources: [{ id: "ch2r1-10b", title: "10-B Quadratic Notes", type: "note" as const, size: "1.1 MB" }],
+    },
+    {
+      id: "ch3", completed: false,
+      modules: [{ id: "ch3m1", completed: true }, { id: "ch3m2", completed: false }],
+      resources: [],
+    },
+    {
+      id: "ch4", completed: false,
+      modules: [{ id: "ch4m1", completed: false }, { id: "ch4m2", completed: false }, { id: "ch4m3", completed: false }],
+      resources: [],
+    },
+    {
+      id: "ch5", completed: false,
+      modules: [{ id: "ch5m1", completed: false }, { id: "ch5m2", completed: false }, { id: "ch5m3", completed: false }],
+      resources: [],
+    },
+    {
+      id: "ch6", completed: false,
+      modules: [{ id: "ch6m1", completed: false }, { id: "ch6m2", completed: false }],
+      resources: [],
+    },
+  ],
+};
+
+export const studentSubjectResources: Record<string, ChapterResource[]> = {
+  "Mathematics": [
+    { id: "r1", title: "Linear Equations Notes", type: "note" as const, size: "1.2 MB" },
+    { id: "r2", title: "Algebra Formula Sheet", type: "document" as const, size: "2.4 MB" },
+    { id: "r3", title: "Quadratic Equations Lecture", type: "video" as const, size: "45 MB" },
+    { id: "r4", title: "Trigonometry Reference PDF", type: "document" as const, size: "3.1 MB" },
+    { id: "r5", title: "Practice Worksheet: Calculus", type: "document" as const, size: "1.8 MB" },
+  ],
+  "Physics": [
+    { id: "r6", title: "Mechanics Notes", type: "note" as const, size: "2.1 MB" },
+    { id: "r7", title: "Laws of Motion Worksheet", type: "document" as const, size: "1.5 MB" },
+    { id: "r8", title: "Optics Lecture Recording", type: "video" as const, size: "120 MB" },
+  ],
+  "Chemistry": [
+    { id: "r9", title: "Periodic Table Reference", type: "document" as const, size: "4.2 MB" },
+    { id: "r10", title: "Chemical Bonding Notes", type: "note" as const, size: "1.8 MB" },
+  ],
+  "English Literature": [
+    { id: "r11", title: "Poetry Analysis Guide", type: "document" as const, size: "2.0 MB" },
+    { id: "r12", title: "Grammar Handbook", type: "note" as const, size: "0.9 MB" },
+  ],
+  "Biology": [
+    { id: "r13", title: "Cell Biology Notes", type: "note" as const, size: "2.5 MB" },
+    { id: "r14", title: "Genetics Worksheet", type: "document" as const, size: "1.3 MB" },
+  ],
+  "Computer Science": [
+    { id: "r15", title: "Python Basics Guide", type: "note" as const, size: "1.6 MB" },
+    { id: "r16", title: "Algorithm Visualization", type: "video" as const, size: "85 MB" },
+    { id: "r17", title: "Data Structures Reference", type: "document" as const, size: "3.0 MB" },
+  ],
+};
+
+export type QMark = {
+  id: string;
+  label: string;
+  maxMarks: number;
+  obtained: number | null;
+};
+
+export type PaperData = {
+  id: string;
+  rollNumber: string;
+  studentName: string;
+  submissionStatus: "submitted" | "absent" | "pending";
+  scriptFile?: string;
+  questions: QMark[];
+  totalMarks: number;
+  marksObtained: number | null;
+  draftMarks: number | null;
+  remarks: string;
+  draftRemarks: string;
+  status: "pending" | "draft" | "completed";
+  evaluatedAt?: string;
+};
+
+export type ClassExamData = {
+  examId: string;
+  examName: string;
+  className: string;
+  section: string;
+  examDate: string;
+  subject: string;
+  totalStudents: number;
+  submittedCount: number;
+  evaluatedCount: number;
+  status: "pending" | "evaluating" | "completed";
+  averageMarks?: number;
+  highestMarks?: number;
+  lowestMarks?: number;
+  passPercentage?: number;
+  papers: PaperData[];
+};
+
+const q = (id: string, label: string, max: number, obtained: number | null): QMark => ({ id, label, maxMarks: max, obtained });
+
+const mkPaper = (
+  id: string, roll: string, name: string,
+  qs: QMark[], total: number, status: "pending" | "draft" | "completed",
+  overrides?: Partial<PaperData>
+): PaperData => ({
+  id, rollNumber: roll, studentName: name,
+  submissionStatus: "submitted" as const,
+  questions: qs,
+  totalMarks: total,
+  marksObtained: status === "completed" ? qs.reduce((s, q) => s + (q.obtained ?? 0), 0) : null,
+  draftMarks: status === "draft" ? qs.reduce((s, q) => s + (q.obtained ?? 0), 0) : null,
+  remarks: "",
+  draftRemarks: "",
+  scriptFile: `/scripts/${id}.pdf`,
+  status,
+  ...overrides,
+});
+
+const midtermQs = [
+  q("q1", "Algebra", 20, null), q("q2", "Quadratic Equations", 15, null),
+  q("q3", "Coordinate Geometry", 25, null), q("q4", "Trigonometry", 20, null),
+  q("q5", "Calculus", 10, null), q("q6", "Statistics", 10, null),
+];
+
+const setObtained = (qs: QMark[], vals: number[]): QMark[] =>
+  qs.map((q, i) => ({ ...q, obtained: vals[i] ?? null }));
+
+export const teacherExamData: ClassExamData[] = [
+  {
+    examId: "E1", examName: "Midterm Examination", className: "10-A", section: "A",
+    examDate: "2026-06-12", subject: "Mathematics",
+    totalStudents: 32, submittedCount: 32, evaluatedCount: 18, status: "evaluating",
+    papers: [
+      mkPaper("P1", "1001", "Riya Sen", setObtained(midtermQs, [18, 14, 22, 17, 9, 8]), 100, "completed", { marksObtained: 88, evaluatedAt: "2026-06-20", remarks: "Excellent work, especially in Algebra." }),
+      mkPaper("P2", "1002", "Arnav Das", setObtained(midtermQs, [15, 12, 20, 14, 7, 6]), 100, "completed", { marksObtained: 74, evaluatedAt: "2026-06-20", remarks: "Good, needs practice in Trigonometry." }),
+      mkPaper("P3", "1003", "Priya Pal", setObtained(midtermQs, [20, 15, 25, 18, 10, 9]), 100, "completed", { marksObtained: 97, evaluatedAt: "2026-06-21", remarks: "Outstanding performance!" }),
+      mkPaper("P4", "1004", "Neha Basu", setObtained(midtermQs, [12, 10, 18, 15, 6, 5]), 100, "draft", { draftRemarks: "Review Q3, good effort." }),
+      mkPaper("P5", "1005", "Rahul Dev", setObtained(midtermQs, [10, 8, 15, 12, 5, 4]), 100, "draft", { draftRemarks: "Needs to focus on Calculus." }),
+      mkPaper("P6", "1006", "Sneha Kapoor", setObtained(midtermQs, [null, null, null, null, null, null]), 100, "pending"),
+      mkPaper("P7", "1007", "Vikram Singh", setObtained(midtermQs, [null, null, null, null, null, null]), 100, "pending"),
+    ],
+  },
+  {
+    examId: "E1", examName: "Midterm Examination", className: "10-B", section: "B",
+    examDate: "2026-06-12", subject: "Mathematics",
+    totalStudents: 30, submittedCount: 30, evaluatedCount: 30, status: "completed",
+    averageMarks: 81.2, highestMarks: 98, lowestMarks: 45, passPercentage: 93.3,
+    papers: [
+      mkPaper("P8", "1021", "Sayan Roy", setObtained(midtermQs, [19, 14, 24, 18, 9, 9]), 100, "completed", { marksObtained: 93, evaluatedAt: "2026-06-19", remarks: "Excellent consistency." }),
+      mkPaper("P9", "1022", "Tanisha Roy", setObtained(midtermQs, [16, 13, 21, 16, 8, 7]), 100, "completed", { marksObtained: 81, evaluatedAt: "2026-06-19", remarks: "Good work." }),
+      mkPaper("P10", "1023", "Vikram Sen", setObtained(midtermQs, [14, 10, 19, 13, 6, 5]), 100, "completed", { marksObtained: 67, evaluatedAt: "2026-06-20", remarks: "Fair, needs improvement in Coordinate Geometry." }),
+      mkPaper("P11", "1024", "Aanya Gupta", setObtained(midtermQs, [20, 15, 25, 20, 10, 8]), 100, "completed", { marksObtained: 98, evaluatedAt: "2026-06-19", remarks: "Brilliant!" }),
+      mkPaper("P12", "1025", "Rohit Das", setObtained(midtermQs, [8, 7, 12, 10, 4, 4]), 100, "completed", { marksObtained: 45, evaluatedAt: "2026-06-21", remarks: "Requires extra coaching." }),
+    ],
+  },
+  {
+    examId: "E1", examName: "Midterm Examination", className: "9-A", section: "A",
+    examDate: "2026-06-12", subject: "Mathematics",
+    totalStudents: 28, submittedCount: 28, evaluatedCount: 0, status: "pending",
+    papers: [
+      mkPaper("P13", "901", "Mia Davis", setObtained(midtermQs, [null, null, null, null, null, null]), 100, "pending"),
+      mkPaper("P14", "902", "Lucas Martin", setObtained(midtermQs, [null, null, null, null, null, null]), 100, "pending"),
+      mkPaper("P15", "903", "Isabella Lee", setObtained(midtermQs, [null, null, null, null, null, null]), 100, "pending"),
+    ],
+  },
+  {
+    examId: "E1", examName: "Midterm Examination", className: "9-B", section: "B",
+    examDate: "2026-06-12", subject: "Mathematics",
+    totalStudents: 26, submittedCount: 25, evaluatedCount: 0, status: "pending",
+    papers: [
+      mkPaper("P16", "951", "Mason Rodriguez", setObtained(midtermQs, [null, null, null, null, null, null]), 100, "pending"),
+      mkPaper("P17", "952", "Aria Patel", setObtained(midtermQs, [null, null, null, null, null, null]), 100, "pending"),
+    ],
+  },
+  {
+    examId: "E2", examName: "Unit Test — Calculus", className: "11-A", section: "A",
+    examDate: "2026-07-01", subject: "Mathematics",
+    totalStudents: 25, submittedCount: 25, evaluatedCount: 10, status: "evaluating",
+    papers: (() => {
+      const utQs = [
+        q("u1", "Limits", 25, null), q("u2", "Continuity", 25, null),
+        q("u3", "Derivatives", 25, null), q("u4", "Applications", 25, null),
+      ];
+      return [
+        mkPaper("P18", "1101", "Ananya Ghosh", setObtained(utQs, [22, 20, 23, 18]), 100, "completed", { marksObtained: 83, evaluatedAt: "2026-07-04", remarks: "Strong in Limits." }),
+        mkPaper("P19", "1102", "Ravi Kumar", setObtained(utQs, [18, 19, 20, 16]), 100, "completed", { marksObtained: 73, evaluatedAt: "2026-07-04", remarks: "Needs practice in Applications." }),
+        mkPaper("P20", "1103", "Sita Rajan", setObtained(utQs, [24, 23, 25, 22]), 100, "completed", { marksObtained: 94, evaluatedAt: "2026-07-04", remarks: "Excellent." }),
+        mkPaper("P21", "1104", "Arjun Nair", setObtained(utQs, [null, null, null, null]), 100, "pending"),
+        mkPaper("P22", "1105", "Divya Mehta", setObtained(utQs, [null, null, null, null]), 100, "pending"),
+        mkPaper("P23", "1106", "Karan Joshi", setObtained(utQs, [15, 14, 16, 12]), 100, "draft", { draftRemarks: "Work in progress." }),
+      ];
+    })(),
+  },
 ];
 
 export const subjectAllocations = [
