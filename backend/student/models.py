@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from .validators import validate_assignment_file_extension, validate_assignment_file_size
 
 
 class Subject(models.Model):
@@ -143,7 +144,10 @@ class AssignmentSubmission(models.Model):
         on_delete=models.CASCADE,
         related_name="assignment_submissions",
     )
-    file = models.FileField(upload_to="submissions/", blank=True, null=True)
+    file = models.FileField(
+        upload_to="submissions/", blank=True, null=True,
+        validators=[validate_assignment_file_extension, validate_assignment_file_size],
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     grade = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
     remarks = models.TextField(blank=True)
@@ -156,6 +160,28 @@ class AssignmentSubmission(models.Model):
 
     def __str__(self):
         return f"{self.student.user.email} - {self.assignment.title} ({self.status})"
+
+
+class SubmissionFile(models.Model):
+    submission = models.ForeignKey(
+        AssignmentSubmission,
+        on_delete=models.CASCADE,
+        related_name="files",
+    )
+    file = models.FileField(
+        upload_to="submissions/",
+        validators=[validate_assignment_file_extension, validate_assignment_file_size],
+    )
+    original_name = models.CharField(max_length=255)
+    file_type = models.CharField(max_length=20)
+    file_size = models.BigIntegerField(default=0)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["uploaded_at"]
+
+    def __str__(self):
+        return f"{self.original_name} ({self.submission.id})"
 
 
 class Attendance(models.Model):

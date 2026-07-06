@@ -1,10 +1,17 @@
+import os
+
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
 from .models import (
     Subject, StudentProfile, StudentSubject, AdmissionDocument,
-    Assignment, AssignmentSubmission,
+    Assignment, AssignmentSubmission, SubmissionFile,
+)
+from .validators import (
+    validate_assignment_file_extension,
+    validate_assignment_file_size,
+    ALLOWED_ASSIGNMENT_EXTENSIONS,
 )
 
 
@@ -136,14 +143,35 @@ def create_assignment(teacher_user, data):
     return assignment
 
 
-def submit_assignment(assignment, student_profile, file):
-    """Student submits an assignment file."""
-    submission, created = AssignmentSubmission.objects.update_or_create(
+def submit_assignment(assignment, student_profile):
+    """Get or create a submission record for the student."""
+    submission, created = AssignmentSubmission.objects.get_or_create(
         assignment=assignment,
         student=student_profile,
-        defaults={"file": file, "status": "submitted"},
+        defaults={"status": "submitted"},
     )
-    return submission
+    return submission, created
+
+
+def add_submission_file(submission, uploaded_file):
+    """Validate and attach a file to a submission."""
+    validate_assignment_file_extension(uploaded_file)
+    validate_assignment_file_size(uploaded_file)
+    ext = os.path.splitext(uploaded_file.name)[1].lower()
+    sf = SubmissionFile.objects.create(
+        submission=submission,
+        file=uploaded_file,
+        original_name=uploaded_file.name,
+        file_type=ext.lstrip("."),
+        file_size=uploaded_file.size,
+    )
+    return sf
+
+
+def remove_submission_file(submission_file):
+    """Remove a file from a submission (also deletes from storage)."""
+    submission_file.file.delete(save=False)
+    submission_file.delete()
 
 
 def evaluate_submission(submission, grade, remarks):

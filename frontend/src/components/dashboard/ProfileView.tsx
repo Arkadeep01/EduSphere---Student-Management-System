@@ -1,5 +1,6 @@
 import { PageWrapper } from "@/components/brand/animations";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -7,11 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { studentProfileData, teacherProfileData, teacherSubjectData } from "@/lib/mock-data";
-import { Camera, Download, BookOpen, GraduationCap, Briefcase, FileText } from "lucide-react";
-import { useState, useRef } from "react";
+import { generateMockUploadResponse } from "@/lib/upload";
+import type { UploadedFileInfo } from "@/lib/upload";
+import { Camera, Download, BookOpen, GraduationCap, Briefcase, FileText, Crop, Check, X } from "lucide-react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 interface ProfileViewProps {
   role?: "student" | "teacher";
@@ -29,6 +33,15 @@ export function ProfileView({ role }: ProfileViewProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [cropModal, setCropModal] = useState(false);
+  const [cropZoom, setCropZoom] = useState(1);
+  const [cropX, setCropX] = useState(0);
+  const [cropY, setCropY] = useState(0);
+  const cropImageRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [profileUploadInfo, setProfileUploadInfo] = useState<UploadedFileInfo | null>(null);
   const [notifSettings, setNotifSettings] = useState({
     email: true,
     push: true,
@@ -54,25 +67,59 @@ export function ProfileView({ role }: ProfileViewProps) {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select an image file");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image must be less than 5 MB");
+        return;
+      }
+      setSelectedFile(file);
       const reader = new FileReader();
       reader.onload = (ev) => {
         const dataUrl = ev.target?.result as string;
         setImagePreview(dataUrl);
+        setCropZoom(1);
+        setCropX(0);
+        setCropY(0);
+        setCropModal(true);
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - cropX, y: e.clientY - cropY });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    setCropX(e.clientX - dragStart.x);
+    setCropY(e.clientY - dragStart.y);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
   const handleSaveImage = () => {
-    if (imagePreview) {
+    if (imagePreview && selectedFile) {
       setProfileImage(imagePreview);
+      setCropModal(false);
+      const mock = generateMockUploadResponse(selectedFile, "current_user");
+      setProfileUploadInfo(mock);
       setImagePreview(null);
+      setSelectedFile(null);
       toast.success("Profile image saved");
     }
   };
 
   const handleChangeImage = () => {
     setImagePreview(null);
+    setSelectedFile(null);
+    setCropModal(false);
     fileInputRef.current?.click();
   };
 
@@ -100,7 +147,7 @@ export function ProfileView({ role }: ProfileViewProps) {
               <Camera className="h-3 w-3 text-white" />
             </div>
           ) : null}
-          {imagePreview && (
+          {imagePreview && !cropModal && (
             <div className="absolute -bottom-8 left-0 flex gap-1">
               <Button size="sm" variant="default" className="h-6 text-[10px] px-2" onClick={handleSaveImage}>Save</Button>
               <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={handleChangeImage}>Change</Button>
@@ -259,6 +306,57 @@ export function ProfileView({ role }: ProfileViewProps) {
           <Button onClick={() => toast.success("Password changed")} className="bg-gradient-brand border-0">Change password</Button>
         </CardContent></Card></TabsContent>
       </Tabs>
+
+      <Dialog open={cropModal} onOpenChange={o => { if (!o) { setCropModal(false); setImagePreview(null); setSelectedFile(null); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Crop Profile Photo</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div
+              ref={cropImageRef}
+              className="relative w-48 h-48 mx-auto rounded-full overflow-hidden cursor-move bg-muted"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
+              {imagePreview && (
+                <img
+                  src={imagePreview}
+                  alt="Crop preview"
+                  className="absolute pointer-events-none"
+                  style={{
+                    width: `${cropZoom * 100}%`,
+                    height: `${cropZoom * 100}%`,
+                    maxWidth: "none",
+                    left: `${cropX}px`,
+                    top: `${cropY}px`,
+                    objectFit: "cover",
+                  }}
+                />
+              )}
+            </div>
+            <div className="flex items-center gap-3 px-2">
+              <span className="text-xs text-muted-foreground">Zoom</span>
+              <input
+                type="range"
+                min="1"
+                max="2"
+                step="0.05"
+                value={cropZoom}
+                onChange={e => setCropZoom(Number(e.target.value))}
+                className="flex-1"
+              />
+              <span className="text-xs text-muted-foreground">{Math.round(cropZoom * 100)}%</span>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setCropModal(false); setImagePreview(null); setSelectedFile(null); }}>Cancel</Button>
+            <Button className="bg-gradient-brand border-0" onClick={handleSaveImage}>
+              <Crop className="h-4 w-4 mr-2" />Crop & Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageWrapper>
   );
 }

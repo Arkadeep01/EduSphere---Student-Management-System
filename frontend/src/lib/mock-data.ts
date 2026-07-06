@@ -101,7 +101,7 @@ export const subjects = [
 ];
 
 export const assignments = [
-  { id: "A1", title: "Quadratic Equations Problem Set", subject: "Mathematics", due: "2026-06-08", status: "pending", submissions: 18, total: 32 },
+  { id: "A1", title: "Quadratic Equations Problem Set", subject: "Mathematics", due: "2026-07-15", status: "pending", submissions: 18, total: 32 },
   { id: "A2", title: "Newton's Laws Lab Report", subject: "Physics", due: "2026-06-10", status: "pending", submissions: 22, total: 32 },
   { id: "A3", title: "Macbeth Character Essay", subject: "English", due: "2026-06-05", status: "graded", submissions: 32, total: 32 },
   { id: "A4", title: "Cell Division Diagram", subject: "Biology", due: "2026-06-12", status: "pending", submissions: 10, total: 32 },
@@ -761,18 +761,60 @@ export const notificationRecords: NotificationRecord[] = [
   { id: "n2", studentId: "STU1003", studentName: "Sophia Garcia", title: "Subject Request Rejected", message: "Your request for Painting & Visual Arts has been rejected.", createdAt: "2026-06-17T10:00:00", read: false },
 ];
 
+export interface SubmissionFileInfo {
+  id: string;
+  originalName: string;
+  fileType: string;
+  fileSize: number;
+  uploadedAt: string;
+  dataUrl?: string;
+}
+
+export interface StudentSubmission {
+  id: string;
+  assignmentId: string;
+  status: "pending" | "submitted" | "evaluated" | "late";
+  files: SubmissionFileInfo[];
+  grade: string | null;
+  marks: number | null;
+  totalMarks: number | null;
+  remarks: string;
+  submittedAt: string | null;
+  evaluatedAt: string | null;
+}
+
+export const studentSubmissions: Record<string, StudentSubmission> = {};
+
 export const assignmentDetails = {
   id: "A1",
   title: "Quadratic Equations Problem Set",
   subject: "Mathematics",
   description: "Solve the following quadratic equations using factorization, completing the square, and the quadratic formula. Show all steps clearly. Submit as a single PDF.",
-  due: "2026-06-08",
+  due: "2026-07-15",
   status: "pending" as const,
   totalMarks: 50,
   attachments: ["quadratic_eqns.pdf", "reference_sheet.pdf"],
   teacherRemarks: "",
   marks: null as number | null,
 };
+
+export function getAssignmentDetailById(id: string) {
+  const found = assignments.find(a => a.id === id);
+  if (!found) return assignmentDetails;
+  if (id === "A1") return assignmentDetails;
+  return {
+    id: found.id,
+    title: found.title,
+    subject: found.subject,
+    description: `Complete the ${found.title} assignment. Follow all instructions and submit before the due date.`,
+    due: found.due,
+    status: found.status as "pending" | "graded",
+    totalMarks: 50,
+    attachments: [] as string[],
+    teacherRemarks: "",
+    marks: null as number | null,
+  };
+}
 
 export const submissionHistory = [
   { id: "SH1", title: "Macbeth Character Essay", subject: "English", submitted: "2026-06-03", status: "graded" as const, marks: 42, total: 50, grade: "A", remarks: "Excellent analysis of Macbeth's character arc. Well-structured essay with strong textual evidence." },
@@ -1048,7 +1090,7 @@ export interface Assignment {
 
 export const teacherAssignments: Assignment[] = [
   {
-    id: "TA1", title: "Quadratic Equations Problem Set", class: "10-A", due: "2026-06-08",
+    id: "TA1", title: "Quadratic Equations Problem Set", class: "10-A", due: "2026-07-15",
     submissions: 28, total: 32, graded: 18,
     submittedFiles: {
       "STU1000": { filename: "quadratic_equations_arijit.pdf", url: "#", type: "pdf", submittedAt: "2026-06-05" },
@@ -1342,16 +1384,16 @@ export const examsFull = [
 ];
 
 export const answerScriptsFull = [
-  { id: "AS1", student: "Riya Sen", class: "10-A", section: "A", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-13" },
-  { id: "AS2", student: "Arnav Das", class: "10-A", section: "A", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-13" },
-  { id: "AS3", student: "Priya Pal", class: "10-A", section: "A", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "evaluating" as const, uploadedAt: "2026-06-13", draftMarks: 82, draftRemarks: "Good work. Review Q3." },
-  { id: "AS4", student: "Neha Basu", class: "10-A", section: "A", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-13" },
-  { id: "AS5", student: "Rahul Dev", class: "10-A", section: "A", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "completed" as const, marks: 91, remarks: "Excellent performance!" },
-  { id: "AS6", student: "Sayan Roy", class: "10-B", section: "B", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-14" },
-  { id: "AS7", student: "Tanisha Roy", class: "10-B", section: "B", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-14" },
-  { id: "AS8", student: "Vikram Sen", class: "10-B", section: "B", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "evaluating" as const, uploadedAt: "2026-06-14", draftMarks: 76, draftRemarks: "" },
-  { id: "AS9", student: "Mia Davis", class: "9-A", section: "A", exam: "Midterm — English", subject: "English Literature", teacher: "Ms. Elena Cruz", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-15" },
-  { id: "AS10", student: "Lucas Martin", class: "9-A", section: "A", exam: "Midterm — English", subject: "English Literature", teacher: "Ms. Elena Cruz", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-15" },
+  { id: "AS1", student: "Riya Sen", rollNumber: "STU1000", class: "10-A", section: "A", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-13", pdfName: "riya_sen_script.pdf" },
+  { id: "AS2", student: "Arnav Das", rollNumber: "STU1001", class: "10-A", section: "A", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-13", pdfName: "arnav_das_script.pdf" },
+  { id: "AS3", student: "Priya Pal", rollNumber: "STU1002", class: "10-A", section: "A", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "evaluating" as const, uploadedAt: "2026-06-13", pdfName: "priya_pal_script.pdf", draftMarks: 82, draftRemarks: "Good work. Review Q3." },
+  { id: "AS4", student: "Neha Basu", rollNumber: "STU1003", class: "10-A", section: "A", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-13", pdfName: "neha_basu_script.pdf" },
+  { id: "AS5", student: "Rahul Dev", rollNumber: "STU1004", class: "10-A", section: "A", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "completed" as const, marks: 91, remarks: "Excellent performance!", pdfName: "rahul_dev_script.pdf" },
+  { id: "AS6", student: "Sayan Roy", rollNumber: "STU1021", class: "10-B", section: "B", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-14", pdfName: "sayan_roy_script.pdf" },
+  { id: "AS7", student: "Tanisha Roy", rollNumber: "STU1022", class: "10-B", section: "B", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-14", pdfName: "tanisha_roy_script.pdf" },
+  { id: "AS8", student: "Vikram Sen", rollNumber: "STU1023", class: "10-B", section: "B", exam: "Midterm — Mathematics", subject: "Mathematics", teacher: "Dr. Anika Rao", totalMarks: 100, status: "evaluating" as const, uploadedAt: "2026-06-14", pdfName: "vikram_sen_script.pdf", draftMarks: 76, draftRemarks: "" },
+  { id: "AS9", student: "Mia Davis", rollNumber: "STU901", class: "9-A", section: "A", exam: "Midterm — English", subject: "English Literature", teacher: "Ms. Elena Cruz", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-15", pdfName: "mia_davis_script.pdf" },
+  { id: "AS10", student: "Lucas Martin", rollNumber: "STU902", class: "9-A", section: "A", exam: "Midterm — English", subject: "English Literature", teacher: "Ms. Elena Cruz", totalMarks: 100, status: "pending" as const, uploadedAt: "2026-06-15", pdfName: "lucas_martin_script.pdf" },
 ];
 
 export const evaluationTracking = [
@@ -1456,8 +1498,13 @@ export const classTeacherAssignments = [
 export type ChapterResource = {
   id: string;
   title: string;
-  type: "note" | "video" | "document";
+  type: "note" | "video" | "document" | "reference";
   size: string;
+  description?: string;
+  fileSize?: number;
+  downloadCount?: number;
+  uploadedAt?: string;
+  fileUrl?: string;
 };
 
 export type ClassModuleStatus = {

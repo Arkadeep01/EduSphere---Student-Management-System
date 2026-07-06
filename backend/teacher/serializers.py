@@ -56,8 +56,11 @@ class LibrarySessionSerializer(serializers.ModelSerializer):
 class ResourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resource
-        fields = ["id", "teacher", "title", "file", "resource_type", "target_class", "uploaded_at"]
-        read_only_fields = ["teacher", "uploaded_at"]
+        fields = [
+            "id", "teacher", "title", "description", "file", "file_size",
+            "download_count", "resource_type", "target_class", "uploaded_at",
+        ]
+        read_only_fields = ["teacher", "file_size", "download_count", "uploaded_at"]
 
 
 class AnswerScriptSerializer(serializers.ModelSerializer):

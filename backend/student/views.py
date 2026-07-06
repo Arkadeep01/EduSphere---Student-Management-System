@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -6,16 +7,19 @@ from rest_framework import status
 from .permissions import IsStudent
 from .models import (
     Subject, StudentProfile, StudentSubject, AdmissionDocument,
-    AssignmentSubmission, Attendance, Result, Timetable, Notification,
+    Assignment, AssignmentSubmission, SubmissionFile, Attendance, Result, Timetable,
+    Notification,
 )
 from .serializers import (
     SubjectSerializer, StudentProfileSerializer, StudentSubjectSerializer,
     AdmissionDocumentSerializer, AssignmentSubmissionSerializer,
+    SubmissionFileSerializer,
     AttendanceSerializer, ResultSerializer, TimetableSerializer,
     NotificationSerializer,
 )
 from .services import (
     add_student_subject_selection, submit_assignment,
+    add_submission_file, remove_submission_file,
 )
 from .selectors import (
     get_student_dashboard_data, get_assigned_subjects,
@@ -150,17 +154,15 @@ class SubmissionView(APIView):
         profile = StudentProfile.objects.filter(user=request.user).first()
         if not profile:
             return Response(
-                {"error": "Profile not found."},
+                {"error": "Student profile not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
         assignment_id = request.data.get("assignment")
-        file = request.FILES.get("file")
-        if not assignment_id or not file:
+        if not assignment_id:
             return Response(
-                {"error": "assignment and file are required."},
+                {"error": "assignment is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        from student.models import Assignment
         try:
             assignment = Assignment.objects.get(id=assignment_id)
         except Assignment.DoesNotExist:
@@ -168,9 +170,40 @@ class SubmissionView(APIView):
                 {"error": "Assignment not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        submission = submit_assignment(assignment, profile, file)
+        if assignment.due_date < timezone.now():
+            return Response(
+                {"error": "Submission deadline has passed."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        uploaded_files = request.FILES.getlist("files")
+        if not uploaded_files:
+            return Response(
+                {"error": "At least one file is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if len(uploaded_files) > 5:
+            return Response(
+                {"error": "Maximum 5 files per assignment."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        submission, _ = submit_assignment(assignment, profile)
+        errors = []
+        added = []
+        for f in uploaded_files:
+            try:
+                sf = add_submission_file(submission, f)
+                added.append(sf)
+            except Exception as e:
+                errors.append({"file": f.name, "error": str(e)})
+        if not added and errors:
+            return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+        submission.status = "submitted"
+        submission.save(update_fields=["status"])
         serializer = AssignmentSubmissionSerializer(submission)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        result = serializer.data
+        if errors:
+            result["file_errors"] = errors
+        return Response(result, status=status.HTTP_201_CREATED)
 
     def get(self, request):
         profile = StudentProfile.objects.filter(user=request.user).first()
@@ -179,9 +212,45 @@ class SubmissionView(APIView):
                 {"error": "Profile not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
+        assignment_id = request.query_params.get("assignment")
+        if assignment_id:
+            try:
+                submission = AssignmentSubmission.objects.get(
+                    assignment_id=assignment_id, student=profile
+                )
+                serializer = AssignmentSubmissionSerializer(submission)
+                return Response(serializer.data)
+            except AssignmentSubmission.DoesNotExist:
+                return Response({"submission": None})
         submissions = get_submissions_for_student(profile)
         serializer = AssignmentSubmissionSerializer(submissions, many=True)
         return Response(serializer.data)
+
+
+class SubmissionFileView(APIView):
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def delete(self, request, file_id):
+        profile = StudentProfile.objects.filter(user=request.user).first()
+        if not profile:
+            return Response(
+                {"error": "Profile not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        try:
+            sf = SubmissionFile.objects.get(id=file_id, submission__student=profile)
+        except SubmissionFile.DoesNotExist:
+            return Response(
+                {"error": "File not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if sf.submission.assignment.due_date < timezone.now():
+            return Response(
+                {"error": "Cannot remove files after the due date."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        remove_submission_file(sf)
+        return Response({"message": "File removed."})
 
 
 class AttendanceView(APIView):

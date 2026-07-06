@@ -9,9 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, MoreHorizontal, CheckCircle2, XCircle, Eye, FileText, UserPlus, HelpCircle, Grid3X3 } from "lucide-react";
+import { Search, MoreHorizontal, CheckCircle2, XCircle, Eye, FileText, UserPlus, HelpCircle, Grid3X3, Download } from "lucide-react";
 import { useState } from "react";
 import { admissionSubmissions, admissionStats } from "@/lib/mock-data";
+import { getAdmissionApplications, updateAdmissionStatus, updateDocumentVerification } from "@/lib/admission-store";
+import type { AdmissionDocEntry } from "@/lib/upload";
 import { toast } from "sonner";
 import { StatCard } from "@/components/dashboard/StatCard";
 
@@ -22,7 +24,28 @@ const statusBadge: Record<string, { variant: "default" | "destructive" | "second
 };
 
 function AdminAdmissionsComponent() {
-  const [applications, setApplications] = useState(admissionSubmissions);
+  const [applications, setApplications] = useState(() => {
+    const storeApps = getAdmissionApplications().map(a => ({
+      id: a.id,
+      name: a.name,
+      fathersName: a.fatherName,
+      mothersName: a.motherName,
+      phoneNumber: a.phoneNumber,
+      address: a.address,
+      guardianName: a.guardianName,
+      guardianRelationship: a.guardianRelationship,
+      previousSchool: a.previousSchool,
+      board: a.board,
+      stream: a.stream,
+      marks: a.marks,
+      documents: a.documents.map(d => d.label),
+      docEntries: a.documents,
+      photoFile: a.photoFile,
+      submittedAt: a.submittedAt,
+      status: a.status as "pending" | "approved" | "rejected",
+    }));
+    return [...admissionSubmissions, ...storeApps];
+  });
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selected, setSelected] = useState<string | null>(null);
@@ -133,12 +156,38 @@ function AdminAdmissionsComponent() {
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-2"><h4 className="font-medium text-sm">Documents ({detail.documents.length})</h4>
+                  <div className="flex items-center justify-between mb-2"><h4 className="font-medium text-sm">Documents ({(detail as any).docEntries?.length || detail.documents.length})</h4>
                     <Button size="sm" variant="ghost" onClick={() => setShowDocViewer(true)}><Grid3X3 className="h-4 w-4" /></Button>
                   </div>
-                  <div className="flex flex-wrap gap-2">{detail.documents.map(d => (
-                    <Badge key={d} variant="outline" className="text-xs cursor-pointer" onClick={() => toast.success(`Opening ${d}`)}>{d}</Badge>
-                  ))}</div>
+                  <div className="flex flex-wrap gap-2">
+                    {((detail as any).docEntries || []).length > 0 ? (
+                      (detail as any).docEntries.map((d: AdmissionDocEntry) => (
+                        <div key={d.id} className="flex items-center gap-1">
+                          <Badge variant={d.verified ? "default" : "outline"} className={`text-xs ${d.verified ? "bg-success" : ""}`}>
+                            {d.label}
+                            {d.verified ? <CheckCircle2 className="h-3 w-3 ml-1" /> : null}
+                          </Badge>
+                          {d.file && (
+                            <>
+                              <Button size="sm" variant="ghost" className="h-5 w-5 p-0" onClick={() => window.open(d.file!.download_url, "_blank")}>
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                              <Button size="sm" variant="ghost" className="h-5 w-5 p-0 text-success" onClick={() => { updateDocumentVerification(detail.id, d.id, true); toast.success(`${d.label} verified`); }}>
+                                <CheckCircle2 className="h-3 w-3" />
+                              </Button>
+                              <Button size="sm" variant="ghost" className="h-5 w-5 p-0 text-destructive" onClick={() => { updateDocumentVerification(detail.id, d.id, false); toast.error(`${d.label} rejected`); }}>
+                                <XCircle className="h-3 w-3" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      detail.documents.map(d => (
+                        <Badge key={d} variant="outline" className="text-xs cursor-pointer" onClick={() => toast.success(`Opening ${d}`)}>{d}</Badge>
+                      ))
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-2 pt-2">
@@ -156,16 +205,60 @@ function AdminAdmissionsComponent() {
       </div>
 
       <Dialog open={showDocViewer} onOpenChange={setShowDocViewer}>
-        <DialogContent className="max-w-2xl"><DialogHeader><DialogTitle>Document Viewer</DialogTitle></DialogHeader>
-          <div className="grid grid-cols-3 gap-3">
-            {detail?.documents.map((d) => (
-              <Card key={d} className="cursor-pointer hover:border-primary" onClick={() => toast.success(`Opening ${d}`)}>
-                <CardContent className="p-4 text-center">
-                  <div className="h-20 rounded-lg bg-muted flex items-center justify-center mb-2"><FileText className="h-8 w-8 text-muted-foreground" /></div>
-                  <p className="text-xs truncate">{d}</p>
-                </CardContent>
-              </Card>
-            ))}
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto"><DialogHeader><DialogTitle>Document Viewer — {detail?.name}</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {((detail as any)?.docEntries || []).length > 0 ? (
+              (detail as any).docEntries.map((d: AdmissionDocEntry) => (
+                <Card key={d.id} className={d.verified ? "border-success" : ""}>
+                  <CardContent className="p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">{d.label}</p>
+                      {d.verified && <Badge className="bg-success text-xs">Verified</Badge>}
+                    </div>
+                    {d.file ? (
+                      <>
+                        <div className="h-32 rounded-lg bg-muted/20 flex items-center justify-center overflow-hidden">
+                          {d.file.extension && [".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(d.file.extension) ? (
+                            <img src={d.file.preview_url} alt={d.file.original_name} className="max-h-full max-w-full object-contain" />
+                          ) : d.file.extension === ".pdf" ? (
+                            <embed src={d.file.download_url} type="application/pdf" className="w-full h-full" />
+                          ) : (
+                            <FileText className="h-10 w-10 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] text-muted-foreground truncate">{d.file.original_name}</p>
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => window.open(d.file!.download_url, "_blank")}>
+                              <Download className="h-3 w-3" />
+                            </Button>
+                            {!d.verified && (
+                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-success" onClick={() => { updateDocumentVerification(detail!.id, d.id, true); toast.success(`${d.label} verified`); }}>
+                                <CheckCircle2 className="h-3 w-3" />
+                              </Button>
+                            )}
+                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" onClick={() => { updateDocumentVerification(detail!.id, d.id, false); toast.error(`${d.label} rejected`); }}>
+                              <XCircle className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-4 text-xs text-muted-foreground">No file uploaded</div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              detail?.documents.map((d) => (
+                <Card key={d} className="cursor-pointer hover:border-primary" onClick={() => toast.success(`Opening ${d}`)}>
+                  <CardContent className="p-4 text-center">
+                    <div className="h-20 rounded-lg bg-muted flex items-center justify-center mb-2"><FileText className="h-8 w-8 text-muted-foreground" /></div>
+                    <p className="text-xs truncate">{d}</p>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </DialogContent>
       </Dialog>

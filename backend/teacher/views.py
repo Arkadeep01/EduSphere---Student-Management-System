@@ -4,6 +4,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
 from student.permissions import IsTeacher
+from student.models import Assignment, AssignmentSubmission
+from student.serializers import AssignmentSubmissionSerializer
+from student.services import evaluate_submission
 from .models import (
     TeacherProfile, TeacherClassAssignment, TimetableEntry,
     LibrarySession, Resource, AnswerScript,
@@ -17,7 +20,8 @@ from .services import (
     get_or_create_teacher_profile, assign_class_to_teacher,
     create_timetable_entry, convert_to_library_session,
     bulk_mark_attendance, save_draft_marks, submit_evaluation,
-    upload_resource,
+    upload_resource, replace_resource, delete_resource,
+    increment_download_count,
 )
 from .selectors import (
     get_teacher_dashboard_data, get_assigned_classes,
@@ -239,6 +243,45 @@ class EvaluationSubmitView(APIView):
         return Response(serializer.data)
 
 
+class AssignmentSubmissionsView(APIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def get(self, request, assignment_id):
+        try:
+            assignment = Assignment.objects.get(id=assignment_id)
+        except Assignment.DoesNotExist:
+            return Response(
+                {"error": "Assignment not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        submissions = AssignmentSubmission.objects.filter(assignment=assignment)
+        serializer = AssignmentSubmissionSerializer(submissions, many=True)
+        return Response(serializer.data)
+
+
+class SubmissionMarksView(APIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def post(self, request, submission_id):
+        try:
+            submission = AssignmentSubmission.objects.get(id=submission_id)
+        except AssignmentSubmission.DoesNotExist:
+            return Response(
+                {"error": "Submission not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        grade = request.data.get("grade")
+        remarks = request.data.get("remarks", "")
+        if grade is None:
+            return Response(
+                {"error": "grade is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        submission = evaluate_submission(submission, grade, remarks)
+        serializer = AssignmentSubmissionSerializer(submission)
+        return Response(serializer.data)
+
+
 class ResourceView(APIView):
     permission_classes = [IsAuthenticated, IsTeacher]
 
@@ -262,6 +305,57 @@ class ResourceView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ResourceDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def get_object(self, request, resource_id):
+        profile = get_or_create_teacher_profile(request.user)
+        try:
+            return Resource.objects.get(id=resource_id, teacher=profile)
+        except Resource.DoesNotExist:
+            return None
+
+    def get(self, request, resource_id):
+        resource = self.get_object(request, resource_id)
+        if not resource:
+            return Response({"error": "Resource not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ResourceSerializer(resource)
+        return Response(serializer.data)
+
+    def put(self, request, resource_id):
+        resource = self.get_object(request, resource_id)
+        if not resource:
+            return Response({"error": "Resource not found."}, status=status.HTTP_404_NOT_FOUND)
+        file = request.FILES.get("file")
+        try:
+            resource = replace_resource(resource, request.data, file)
+            serializer = ResourceSerializer(resource)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, resource_id):
+        resource = self.get_object(request, resource_id)
+        if not resource:
+            return Response({"error": "Resource not found."}, status=status.HTTP_404_NOT_FOUND)
+        delete_resource(resource)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ResourceDownloadView(APIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def get(self, request, resource_id):
+        profile = get_or_create_teacher_profile(request.user)
+        try:
+            resource = Resource.objects.get(id=resource_id, teacher=profile)
+        except Resource.DoesNotExist:
+            return Response({"error": "Resource not found."}, status=status.HTTP_404_NOT_FOUND)
+        increment_download_count(resource)
+        from django.http import FileResponse
+        return FileResponse(resource.file, as_attachment=True, filename=resource.file.name.split("/")[-1])
 
 
 class ClassStudentPerformanceView(APIView):

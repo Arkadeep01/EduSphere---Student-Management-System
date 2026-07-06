@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     Subject, StudentProfile, StudentSubject, AdmissionDocument,
-    Assignment, AssignmentSubmission, Attendance, Result, Timetable,
+    Assignment, AssignmentSubmission, SubmissionFile, Attendance, Result, Timetable,
     Notification,
 )
 
@@ -83,15 +83,23 @@ class AssignmentSerializer(serializers.ModelSerializer):
         return value
 
 
+class SubmissionFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubmissionFile
+        fields = ["id", "file", "original_name", "file_type", "file_size", "uploaded_at"]
+        read_only_fields = ["original_name", "file_type", "file_size", "uploaded_at"]
+
+
 class AssignmentSubmissionSerializer(serializers.ModelSerializer):
     student_name = serializers.SerializerMethodField()
     assignment_title = serializers.CharField(source="assignment.title", read_only=True)
+    files = SubmissionFileSerializer(many=True, read_only=True)
 
     class Meta:
         model = AssignmentSubmission
         fields = [
             "id", "assignment", "assignment_title", "student", "student_name",
-            "file", "status", "grade", "remarks", "submitted_at", "evaluated_at",
+            "file", "files", "status", "grade", "remarks", "submitted_at", "evaluated_at",
         ]
         read_only_fields = ["status", "grade", "remarks", "submitted_at", "evaluated_at"]
 

@@ -16,4 +16,8 @@ urlpatterns = [
     path("evaluation/<int:script_id>/draft/", views.DraftMarkView.as_view(), name="teacher-evaluation-draft"),
     path("evaluation/<int:script_id>/submit/", views.EvaluationSubmitView.as_view(), name="teacher-evaluation-submit"),
     path("resources/", views.ResourceView.as_view(), name="teacher-resources"),
+    path("resources/<int:resource_id>/", views.ResourceDetailView.as_view(), name="teacher-resource-detail"),
+    path("resources/<int:resource_id>/download/", views.ResourceDownloadView.as_view(), name="teacher-resource-download"),
+    path("assignments/<int:assignment_id>/submissions/", views.AssignmentSubmissionsView.as_view(), name="teacher-assignment-submissions"),
+    path("submissions/<int:submission_id>/marks/", views.SubmissionMarksView.as_view(), name="teacher-submission-marks"),
 ]

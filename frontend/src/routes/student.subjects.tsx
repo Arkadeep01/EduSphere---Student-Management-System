@@ -5,9 +5,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, FileText, Download, Video } from "lucide-react";
-import { coreSubjects, specializedSubjects, enrichedSubjects, subjectSelection, assignments, studentSubjectResources, subjectRequestRecords } from "@/lib/mock-data";
-import { useState, useEffect } from "react";
+import { BookOpen, FileText, Download, Video, Eye } from "lucide-react";
+import { coreSubjects, specializedSubjects, enrichedSubjects, subjectSelection, assignments, studentSubjectResources, subjectRequestRecords, studentProfileData } from "@/lib/mock-data";
+import { getResourcesBySubject } from "@/lib/resource-store";
+import { getSyllabusForStudent } from "@/lib/syllabus-store";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 
 type SubjectType = typeof coreSubjects[number];
@@ -36,6 +38,7 @@ function StudentSubjectsComponent() {
   const studentRequests = subjectRequestRecords.filter(r => r.studentId === MOCK_STUDENT_ID);
   const [requestCount, setRequestCount] = useState(studentRequests.length);
   const limitReached = requestCount >= MAX_REQUESTS;
+  const studentClass = studentProfileData.academic.class;
 
   useEffect(() => {
     async function checkToggle() {
@@ -49,6 +52,10 @@ function StudentSubjectsComponent() {
     }
     checkToggle();
   }, []);
+
+  const syllabus = useMemo(() => {
+    return getSyllabusForStudent(selected.code, studentClass);
+  }, [selected, studentClass]);
 
   const statusBadge = (status?: string) => {
     if (status === "selected") return <Badge className="bg-success text-success-foreground border-0 text-xs">Selected</Badge>;
@@ -226,8 +233,53 @@ function StudentSubjectsComponent() {
               <p className="text-sm font-medium text-muted-foreground mb-1">Progress</p>
               <Progress value={selected.progress} className="h-2" />
             </div>
+            {syllabus && (
+              <div className="p-4 border rounded-lg">
+                <p className="text-sm font-medium text-muted-foreground mb-2">Latest Syllabus</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="text-sm font-medium">{syllabus.fileName}</p>
+                      <p className="text-xs text-muted-foreground">Uploaded {new Date(syllabus.uploadedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => window.open(syllabus.fileUrl)}>
+                      <Eye className="h-4 w-4 mr-1" />View
+                    </Button>
+                    <Button size="sm" variant="ghost" asChild>
+                      <a href={syllabus.fileUrl} download={syllabus.fileName}>
+                        <Download className="h-4 w-4 mr-1" />Download
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </TabsContent>
           <TabsContent value="notes" className="mt-4 space-y-2">
+            {syllabus && (
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <FileText className="h-4 w-4 text-primary" />
+                  <div>
+                    <span className="text-sm font-medium">Syllabus</span>
+                    <p className="text-xs text-muted-foreground">{syllabus.fileName}</p>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="ghost" onClick={() => window.open(syllabus.fileUrl)}>
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="ghost" asChild>
+                    <a href={syllabus.fileUrl} download={syllabus.fileName}>
+                      <Download className="h-4 w-4" />
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            )}
             {["Intro & Syllabus", "Chapter 1 Notes", "Chapter 2 Summary", "Mid-term Revision"].map(n => (
               <div key={n} className="flex items-center justify-between p-3 border rounded-lg"><div className="flex items-center gap-3"><FileText className="h-4 w-4 text-primary" /><span className="text-sm">{n}</span></div><Button size="sm" variant="ghost"><Download className="h-4 w-4" /></Button></div>
             ))}
@@ -241,18 +293,29 @@ function StudentSubjectsComponent() {
             ))}
           </TabsContent>
           <TabsContent value="resources" className="mt-4 space-y-2">
-            {(studentSubjectResources[selected.name] || []).map(r => {
-              const Icon = r.type === "video" ? Video : r.type === "note" ? FileText : FileText;
-              return (
-                <div key={r.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3"><Icon className="h-4 w-4 text-primary" /><span className="text-sm">{r.title} <span className="text-xs text-muted-foreground">({r.size})</span></span></div>
-                  <Button size="sm" variant="ghost"><Download className="h-4 w-4" /></Button>
-                </div>
-              );
-            })}
-            {(!studentSubjectResources[selected.name] || studentSubjectResources[selected.name].length === 0) && (
-              <p className="text-sm text-muted-foreground py-4 text-center">No resources available for this subject.</p>
-            )}
+            {(() => {
+              const staticRes = studentSubjectResources[selected.name] || [];
+              const sharedRes = getResourcesBySubject(selected.name, studentClass);
+              const allRes = [...staticRes, ...sharedRes];
+              if (allRes.length === 0) {
+                return <p className="text-sm text-muted-foreground py-4 text-center">No resources available for this subject.</p>;
+              }
+              return allRes.map(r => {
+                const Icon = r.type === "video" ? Video : r.type === "note" ? FileText : FileText;
+                return (
+                  <div key={r.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3"><Icon className="h-4 w-4 text-primary" /><span className="text-sm">{r.title} <span className="text-xs text-muted-foreground">({r.size})</span></span></div>
+                    <Button size="sm" variant="ghost" asChild={!!r.fileUrl}>
+                      {r.fileUrl ? (
+                        <a href={r.fileUrl} download={r.title}><Download className="h-4 w-4" /></a>
+                      ) : (
+                        <button><Download className="h-4 w-4" /></button>
+                      )}
+                    </Button>
+                  </div>
+                );
+              });
+            })()}
           </TabsContent>
         </Tabs>
       </CardContent></Card>

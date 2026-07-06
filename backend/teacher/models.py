@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from student.models import Subject
+from student.validators import FileExtensionValidator, FileSizeValidator
 
 
 class TeacherProfile(models.Model):
@@ -113,6 +114,8 @@ class Resource(models.Model):
         ("document", "Document"),
         ("reference", "Reference"),
     ]
+    ALLOWED_EXTENSIONS = [".pdf", ".doc", ".docx", ".ppt", ".pptx", ".jpg", ".jpeg", ".png", ".mp4", ".zip"]
+    MAX_SIZE_BYTES = 100 * 1024 * 1024  # 100 MB
 
     teacher = models.ForeignKey(
         TeacherProfile,
@@ -120,13 +123,27 @@ class Resource(models.Model):
         related_name="resources",
     )
     title = models.CharField(max_length=200)
-    file = models.FileField(upload_to="resources/")
+    description = models.TextField(blank=True)
+    file = models.FileField(
+        upload_to="resources/",
+        validators=[FileExtensionValidator(ALLOWED_EXTENSIONS), FileSizeValidator(MAX_SIZE_BYTES)],
+    )
+    file_size = models.PositiveIntegerField(blank=True, null=True, editable=False)
+    download_count = models.PositiveIntegerField(default=0, editable=False)
     resource_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     target_class = models.CharField(max_length=20, blank=True, help_text="e.g. X-A")
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-uploaded_at"]
+
+    def save(self, *args, **kwargs):
+        if self.file and not self.file_size:
+            try:
+                self.file_size = self.file.size
+            except Exception:
+                pass
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.title} ({self.resource_type})"

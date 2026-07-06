@@ -137,10 +137,42 @@ def upload_resource(teacher_profile, data, file):
     resource = Resource.objects.create(
         teacher=teacher_profile,
         title=data["title"],
+        description=data.get("description", ""),
         file=file,
         resource_type=data["resource_type"],
         target_class=data.get("target_class", ""),
     )
+    return resource
+
+
+def replace_resource(resource, data, file=None):
+    """Replace an existing resource's file and/or metadata."""
+    if file:
+        resource.file.delete(save=False)
+        resource.file = file
+        resource.file_size = file.size
+    if "title" in data:
+        resource.title = data["title"]
+    if "description" in data:
+        resource.description = data["description"]
+    if "resource_type" in data:
+        resource.resource_type = data["resource_type"]
+    if "target_class" in data:
+        resource.target_class = data["target_class"]
+    resource.save()
+    return resource
+
+
+def delete_resource(resource):
+    """Delete a resource and its file from storage."""
+    resource.file.delete(save=False)
+    resource.delete()
+
+
+def increment_download_count(resource):
+    """Increment the download counter for a resource."""
+    resource.download_count += 1
+    resource.save(update_fields=["download_count"])
     return resource
 
 

@@ -9,13 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { teacherExamData } from "@/lib/mock-data";
+import { getAnswerScripts, updateScriptStatus } from "@/lib/script-store";
 import type { PaperData } from "@/lib/mock-data";
 import {
   ArrowLeft, Eye, Download, ZoomIn, ZoomOut, RotateCw,
   ChevronLeft, ChevronRight, Maximize, Minimize, Save, Send,
   FileText, CheckCircle2, Clock, XCircle, ScrollText,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 function PaperEvaluationPage() {
@@ -23,6 +24,21 @@ function PaperEvaluationPage() {
   const { examId, classId } = Route.useParams();
   const classData = teacherExamData.find(c => c.examId === examId && c.className === classId);
   const [data, setData] = useState(classData);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    function handleUpdate() {
+      setRefreshKey(k => k + 1);
+    }
+    window.addEventListener("answerScriptsUpdated", handleUpdate);
+    return () => window.removeEventListener("answerScriptsUpdated", handleUpdate);
+  }, []);
+
+  useEffect(() => {
+    if (refreshKey && classData) {
+      setData({ ...classData });
+    }
+  }, [refreshKey, classData]);
   const [selectedPaperId, setSelectedPaperId] = useState<string | null>(null);
   const [marksInput, setMarksInput] = useState<Record<string, Record<string, string>>>({});
   const [remarksInput, setRemarksInput] = useState<Record<string, string>>({});
@@ -45,7 +61,26 @@ function PaperEvaluationPage() {
     );
   }
 
-  const papers = data.papers;
+  const uploadedScripts = getAnswerScripts().filter(s =>
+    s.examName === data.examName && s.className === data.className
+  );
+  const dynamicPapers: PaperData[] = uploadedScripts.map(s => ({
+    id: s.id,
+    rollNumber: s.rollNumber,
+    studentName: s.studentName,
+    submissionStatus: "submitted" as const,
+    scriptFile: s.file.download_url,
+    questions: [],
+    totalMarks: s.totalMarks,
+    marksObtained: s.status === "completed" ? (s.marks ?? null) : null,
+    draftMarks: null,
+    remarks: s.remarks || "",
+    draftRemarks: "",
+    status: s.status === "completed" ? "completed" as const : s.status === "evaluating" ? "draft" as const : "pending" as const,
+    evaluatedAt: s.uploadedAt,
+  }));
+  const allPapers = [...data.papers, ...dynamicPapers.filter(dp => !data.papers.some(p => p.id === dp.id))];
+  const papers = allPapers;
   const selectedPaper = selectedPaperId ? papers.find(p => p.id === selectedPaperId) : null;
   const evaluatedCount = papers.filter(p => p.status === "completed").length;
   const draftCount = papers.filter(p => p.status === "draft").length;
@@ -104,6 +139,7 @@ function PaperEvaluationPage() {
       obtained: paperMarks[q.id] !== undefined && paperMarks[q.id] !== "" ? Number(paperMarks[q.id]) : q.obtained,
     }));
     const finalMarks = updatedQs.reduce((s, q) => s + (q.obtained ?? 0), 0);
+    updateScriptStatus(paper.id, "completed", finalMarks, remarksInput[paper.id] || paper.remarks);
     setData(prev => {
       if (!prev) return prev;
       const newPapers = prev.papers.map(p =>
@@ -118,8 +154,12 @@ function PaperEvaluationPage() {
           evaluatedAt: new Date().toISOString().slice(0, 10),
         } : p
       );
-      const newEvaluated = newPapers.filter(p => p.status === "completed").length;
-      const newStatus = newEvaluated >= prev.submittedCount ? "completed" as const : "evaluating" as const;
+      const dynamicPaperIds = new Set(dynamicPapers.map(dp => dp.id));
+      const dynCount = newPapers.filter(p => dynamicPaperIds.has(p.id) && p.status === "completed").length;
+      const staticCount = newPapers.filter(p => !dynamicPaperIds.has(p.id) && p.status === "completed").length;
+      const newEvaluated = staticCount + dynCount;
+      const totalSubmitted = prev.submittedCount;
+      const newStatus = newEvaluated >= totalSubmitted ? "completed" as const : "evaluating" as const;
       return {
         ...prev,
         papers: newPapers,
@@ -167,16 +207,36 @@ function PaperEvaluationPage() {
                   {fullscreen ? <Minimize className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}
                 </Button>
               </div>
-              <div className="flex items-center justify-center bg-muted/10" style={{ minHeight: fullscreen ? "70vh" : "400px" }}>
-                <div className="text-center p-8" style={{ transform: `scale(${zoom / 100}) rotate(${rotation}deg)` }}>
-                  <FileText className="h-16 w-16 mx-auto text-muted-foreground" />
-                  <p className="text-sm font-medium mt-4">Answer Script Preview</p>
-                  <p className="text-xs text-muted-foreground">{selectedPaper.studentName} · {data.examName}</p>
-                  <div className="flex gap-2 justify-center mt-4">
-                    <Button variant="outline" size="sm"><Eye className="h-4 w-4 mr-1" />View Script</Button>
-                    <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-1" />Download</Button>
+              <div className="flex items-center justify-center bg-muted/10 relative" style={{ minHeight: fullscreen ? "70vh" : "400px" }}>
+                {selectedPaper.scriptFile ? (
+                  <>
+                    <embed
+                      src={selectedPaper.scriptFile}
+                      type="application/pdf"
+                      className="w-full h-full absolute inset-0"
+                      style={{ transform: `scale(${zoom / 100}) rotate(${rotation}deg)`, transformOrigin: "center center" }}
+                    />
+                    <div className="absolute bottom-3 right-3 flex gap-2 z-10">
+                      <Button variant="secondary" size="sm" className="shadow-md" onClick={() => window.open(selectedPaper.scriptFile, "_blank")}>
+                        <Eye className="h-4 w-4 mr-1" />View Script
+                      </Button>
+                      <Button variant="secondary" size="sm" className="shadow-md" onClick={() => {
+                        const a = document.createElement("a");
+                        a.href = selectedPaper.scriptFile!;
+                        a.download = `${selectedPaper.studentName}_script.pdf`;
+                        a.click();
+                      }}>
+                        <Download className="h-4 w-4 mr-1" />Download
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center p-8">
+                    <FileText className="h-16 w-16 mx-auto text-muted-foreground" />
+                    <p className="text-sm font-medium mt-4">No script file available</p>
+                    <p className="text-xs text-muted-foreground">{selectedPaper.studentName} · {data.examName}</p>
                   </div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -351,7 +411,14 @@ function PaperEvaluationPage() {
                         <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setSelectedPaperId(p.id)}>
                           <Eye className="h-3 w-3 mr-1" />View
                         </Button>
-                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => {
+                          const scriptUrl = p.scriptFile;
+                          if (!scriptUrl) { toast.error("No script file available"); return; }
+                          const a = document.createElement("a");
+                          a.href = scriptUrl;
+                          a.download = `${p.studentName}_script.pdf`;
+                          a.click();
+                        }}>
                           <Download className="h-3 w-3 mr-1" />Download
                         </Button>
                       </div>

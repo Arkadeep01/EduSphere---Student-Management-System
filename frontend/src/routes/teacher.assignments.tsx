@@ -9,11 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Upload, MessageSquare, Eye, Download, ArrowLeft, FileText, CheckCircle } from "lucide-react";
+import { Upload, MessageSquare, Eye, Download, ArrowLeft, FileText } from "lucide-react";
 import { teacherAssignments, teacherSubjectData, classStudents } from "@/lib/mock-data";
+import { getSubmissions, updateMarks } from "@/lib/assignment-store";
 import { toast } from "sonner";
 import { useState } from "react";
 import type { Assignment } from "@/lib/mock-data";
+import { teacherAssignmentApi } from "@/services/teacherApi";
 
 function getAssignmentStatus(a: Assignment): "active" | "closed" | "marked" {
   const dueDate = new Date(a.due);
@@ -24,36 +26,37 @@ function getAssignmentStatus(a: Assignment): "active" | "closed" | "marked" {
   return "marked";
 }
 
-function StudentDocViewer({ filename, onClose }: { filename: string; onClose: () => void }) {
+function StudentDocViewer({ filename, fileUrl }: { filename: string; fileUrl?: string; onClose: () => void }) {
   const ext = filename.split(".").pop()?.toLowerCase() || "";
-  const isPreviewable = ["pdf", "docx", "pptx", "ppt"].includes(ext);
+  const isPdf = ext === "pdf";
+  const href = fileUrl || `http://localhost:8000/media/student_submissions/${filename}`;
 
   return (
-    <Dialog open onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-3xl max-h-[80vh]">
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-4xl max-h-[85vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             {filename}
           </DialogTitle>
         </DialogHeader>
-        <div className="flex items-center justify-center border-2 border-dashed rounded-lg p-12 bg-muted/30 min-h-[300px]">
-          <div className="text-center">
-            <FileText className="h-16 w-16 mx-auto text-muted-foreground" />
-            <p className="text-sm font-medium mt-3">{filename}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {isPreviewable
-                ? "Preview available in supported browsers"
-                : "Preview not available for this format"}
-            </p>
-            <Button variant="outline" className="mt-4" asChild>
-              <a href="#" onClick={(e) => { e.preventDefault(); toast.success(`Downloading ${filename}`); }}>
-                <Download className="mr-2 h-4 w-4" />Download
-              </a>
-            </Button>
-          </div>
+        <div className="min-h-[400px] w-full bg-muted/10 rounded-lg overflow-hidden">
+          {isPdf ? (
+            <iframe src={href} className="w-full h-[65vh] border-0" title={filename} />
+          ) : (
+            <div className="flex items-center justify-center h-[400px]">
+              <div className="text-center">
+                <FileText className="h-16 w-16 mx-auto text-muted-foreground" />
+                <p className="text-sm font-medium mt-3">{filename}</p>
+                <p className="text-xs text-muted-foreground mt-1">Preview not available for this format</p>
+              </div>
+            </div>
+          )}
         </div>
-        <DialogFooter>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" asChild>
+            <a href={href} download={filename}><Download className="mr-2 h-4 w-4" />Download</a>
+          </Button>
           <Button variant="outline" onClick={onClose}>Close</Button>
         </DialogFooter>
       </DialogContent>
@@ -68,7 +71,7 @@ function TeacherAssignmentsComponent() {
   const [form, setForm] = useState({ title: "", description: "", targetClass: "", dueDate: "" });
   const [marksInput, setMarksInput] = useState<Record<string, string>>({});
   const [remarksInput, setRemarksInput] = useState<Record<string, string>>({});
-  const [docViewerFile, setDocViewerFile] = useState<string | null>(null);
+  const [docViewerFile, setDocViewerFile] = useState<{ filename: string; url?: string } | null>(null);
   const [assignments, setAssignments] = useState<Assignment[]>(teacherAssignments);
   const [uploading, setUploading] = useState(false);
 
@@ -86,7 +89,7 @@ function TeacherAssignmentsComponent() {
     setForm({ title: "", description: "", targetClass: "", dueDate: "" });
   };
 
-  function handleUploadMarks(asgn: Assignment) {
+  async function handleUploadMarks(asgn: Assignment) {
     setUploading(true);
     const studentIds = Object.keys(marksInput);
     if (studentIds.length === 0) {
@@ -94,36 +97,55 @@ function TeacherAssignmentsComponent() {
       setUploading(false);
       return;
     }
-    setTimeout(() => {
-      setAssignments(prev => prev.map(a => {
-        if (a.id !== asgn.id) return a;
-        const newMarks = { ...(a.marks || {}) };
-        studentIds.forEach(sid => {
-          const m = parseFloat(marksInput[sid]);
-          if (!isNaN(m)) {
-            newMarks[sid] = {
-              marks: m,
-              total: 100,
-              remarks: remarksInput[sid] || "No remarks",
-              evaluatedAt: new Date().toISOString().split("T")[0],
-            };
-          }
-        });
-        const newGraded = Object.keys(newMarks).length;
-        return { ...a, marks: newMarks, graded: newGraded };
-      }));
-      setMarksInput({});
-      setRemarksInput({});
-      setUploading(false);
-      toast.success(`Marks uploaded for ${studentIds.length} student(s)`);
-    }, 800);
+    try {
+      const submissions = await teacherAssignmentApi.listSubmissions(asgn.id);
+      if (submissions) {
+        await Promise.all(
+          submissions
+            .filter(s => studentIds.includes(s.student.toString()))
+            .map(s => teacherAssignmentApi.submitMarks(s.id, parseFloat(marksInput[s.student.toString()] || "0"), remarksInput[s.student.toString()] || "")),
+        );
+      }
+    } catch {
+      console.log("Teacher API unavailable, updating local state only");
+    }
+    studentIds.forEach(sid => {
+      const m = parseFloat(marksInput[sid]);
+      if (!isNaN(m)) {
+        updateMarks(asgn.title, asgn.class, sid, m, 100, remarksInput[sid] || "No remarks");
+      }
+    });
+    setAssignments(prev => prev.map(a => {
+      if (a.id !== asgn.id) return a;
+      const newMarks = { ...(a.marks || {}) };
+      studentIds.forEach(sid => {
+        const m = parseFloat(marksInput[sid]);
+        if (!isNaN(m)) {
+          newMarks[sid] = {
+            marks: m,
+            total: 100,
+            remarks: remarksInput[sid] || "No remarks",
+            evaluatedAt: new Date().toISOString().split("T")[0],
+          };
+        }
+      });
+      const newGraded = Object.keys(newMarks).length;
+      return { ...a, marks: newMarks, graded: newGraded };
+    }));
+    setMarksInput({});
+    setRemarksInput({});
+    setUploading(false);
+    toast.success(`Marks uploaded for ${studentIds.length} student(s)`);
   }
 
   if (selectedAssignment) {
     const asgn = assignments.find(a => a.id === selectedAssignment);
     if (!asgn) return null;
     const students = classStudents[asgn.class] || [];
+    const storeSubmissions = getSubmissions(asgn.title, asgn.class);
     const totalGraded = Object.keys(asgn.marks || {}).length;
+    const storeGraded = Object.values(storeSubmissions).filter(s => s.status === "evaluated").length;
+    const combinedGraded = Math.max(totalGraded, storeGraded);
 
     return (
       <PageWrapper>
@@ -138,9 +160,13 @@ function TeacherAssignmentsComponent() {
               <TableBody>
                 {students.map(s => {
                   const sid = s.id;
-                  const isSubmitted = asgn.submittedFiles && asgn.submittedFiles[sid];
-                  const marks = asgn.marks?.[sid];
-                  const status = marks ? "Marked" : isSubmitted ? "Submitted" : "Pending";
+                  const storeSub = storeSubmissions[sid];
+                  const hasStoreFiles = storeSub && storeSub.files.length > 0;
+                  const mockSubmitted = asgn.submittedFiles && asgn.submittedFiles[sid];
+                  const marks = asgn.marks?.[sid] || (storeSub?.status === "evaluated" ? { marks: storeSub.marks!, total: storeSub.totalMarks!, remarks: storeSub.remarks, evaluatedAt: storeSub.evaluatedAt! } : undefined);
+                  const status = marks ? "Marked" : (hasStoreFiles || mockSubmitted) ? "Submitted" : "Pending";
+                  const storeFiles = storeSub?.files || [];
+
                   return (
                     <TableRow key={sid}>
                       <TableCell className="font-medium">{s.name}</TableCell>
@@ -153,14 +179,30 @@ function TeacherAssignmentsComponent() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {isSubmitted ? (
-                          <div className="flex gap-1">
-                            <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setDocViewerFile(isSubmitted.filename)}>
-                              <Eye className="h-3 w-3 mr-1" />View
-                            </Button>
-                            <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => toast.success(`Downloading ${isSubmitted.filename}`)}>
-                              <Download className="h-3 w-3" />
-                            </Button>
+                        {(hasStoreFiles || mockSubmitted) ? (
+                          <div className="flex flex-col gap-1">
+                            {storeFiles.length > 0 ? (
+                              storeFiles.map((f, fi) => (
+                                <div key={f.id} className="flex items-center gap-1">
+                                  <span className="text-xs text-muted-foreground truncate max-w-[100px]">{f.originalName}</span>
+                                  <Button size="sm" variant="ghost" className="h-6 px-1.5" onClick={() => setDocViewerFile({ filename: f.originalName, url: f.dataUrl })}>
+                                    <Eye className="h-3 w-3" />
+                                  </Button>
+                                  <Button size="sm" variant="ghost" className="h-6 px-1.5" asChild>
+                                    <a href={f.dataUrl} download={f.originalName}><Download className="h-3 w-3" /></a>
+                                  </Button>
+                                </div>
+                              ))
+                            ) : mockSubmitted ? (
+                              <div className="flex gap-1">
+                                <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setDocViewerFile({ filename: mockSubmitted.filename, url: mockSubmitted.url })}>
+                                  <Eye className="h-3 w-3 mr-1" />View
+                                </Button>
+                                <Button size="sm" variant="ghost" className="h-7 px-2" asChild>
+                                  <a href={mockSubmitted.url} download={mockSubmitted.filename}><Download className="h-3 w-3" /></a>
+                                </Button>
+                              </div>
+                            ) : null}
                           </div>
                         ) : <span className="text-xs text-muted-foreground">—</span>}
                       </TableCell>
@@ -197,8 +239,8 @@ function TeacherAssignmentsComponent() {
           </CardContent></Card></StaggerItem>
           <StaggerItem><Card><CardContent className="p-6 space-y-4">
             <div><p className="text-sm text-muted-foreground">Submissions</p><p className="text-2xl font-bold">{asgn.submissions}/{asgn.total}</p></div>
-            <div><p className="text-sm text-muted-foreground">Marked</p><p className="text-2xl font-bold text-success">{totalGraded}/{asgn.submissions}</p></div>
-            <ProgressBar value={totalGraded} max={asgn.submissions} />
+            <div><p className="text-sm text-muted-foreground">Marked</p><p className="text-2xl font-bold text-success">{combinedGraded}/{asgn.submissions}</p></div>
+            <ProgressBar value={combinedGraded} max={asgn.submissions} />
             <Button
               className="w-full bg-gradient-brand border-0"
               onClick={() => handleUploadMarks(asgn)}
@@ -208,7 +250,7 @@ function TeacherAssignmentsComponent() {
             </Button>
           </CardContent></Card></StaggerItem>
         </StaggerContainer>
-        {docViewerFile && <StudentDocViewer filename={docViewerFile} onClose={() => setDocViewerFile(null)} />}
+        {docViewerFile && <StudentDocViewer filename={docViewerFile.filename} fileUrl={docViewerFile.url} onClose={() => setDocViewerFile(null)} />}
       </PageWrapper>
     );
   }
