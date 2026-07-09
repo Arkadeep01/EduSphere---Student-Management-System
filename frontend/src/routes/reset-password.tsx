@@ -62,10 +62,10 @@ function ResetPasswordPage() {
         <h1 className="text-2xl font-bold mt-6">Set a new password</h1>
         <p className="text-sm text-muted-foreground mt-1">Enter the OTP sent to your email and set a new password.</p>
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-          <div><Label>Email</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} required /></div>
-          <div><Label>OTP Code</Label><Input type="text" value={otpCode} onChange={e => setOtpCode(e.target.value)} placeholder="6-digit code" required maxLength={6} /></div>
-          <div><Label>New password</Label><Input type="password" value={newPwd} onChange={e => setNewPwd(e.target.value)} required /></div>
-          <div><Label>Confirm password</Label><Input type="password" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} required /></div>
+          <div className="space-y-2"><Label>Email</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} required /></div>
+          <div className="space-y-2"><Label>OTP Code</Label><Input type="text" value={otpCode} onChange={e => setOtpCode(e.target.value)} placeholder="6-digit code" required maxLength={6} /></div>
+          <div className="space-y-2"><Label>New password</Label><Input type="password" value={newPwd} onChange={e => setNewPwd(e.target.value)} required /></div>
+          <div className="space-y-2"><Label>Confirm password</Label><Input type="password" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} required /></div>
           <Button type="submit" className="w-full bg-gradient-brand border-0" disabled={loading}>
             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Update password

@@ -7,12 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Layers, Users, BookOpen, GraduationCap, ArrowLeft, Plus, AlertTriangle, Clock } from "lucide-react";
+import { Layers, Users, BookOpen, GraduationCap, ArrowLeft, Plus, AlertTriangle, Clock, Download } from "lucide-react";
 import { useState } from "react";
 import { classCards, classDetailsData, teachers, subjects } from "@/lib/mock-data";
 import { toast } from "sonner";
+import { ExportDialog } from "@/components/export";
+import { classExportConfig } from "@/components/export/moduleConfigs";
 
 function AdminClassesComponent() {
+  const [showExport, setShowExport] = useState(false);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [showAddClass, setShowAddClass] = useState(false);
   const [showAssignTeacher, setShowAssignTeacher] = useState<{ subject: string; class: string } | null>(null);
@@ -97,9 +100,9 @@ function AdminClassesComponent() {
         <Dialog open={!!showAssignTeacher} onOpenChange={o => { if (!o) setShowAssignTeacher(null); }}>
           <DialogContent><DialogHeader><DialogTitle>Assign Teacher</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <div><Label>Subject</Label><p className="text-sm font-medium">{showAssignTeacher?.subject}</p></div>
-              <div><Label>Class</Label><p className="text-sm font-medium">Class {showAssignTeacher?.class}</p></div>
-              <div><Label>Select Teacher</Label><Select><SelectTrigger><SelectValue placeholder="Choose teacher" /></SelectTrigger><SelectContent>{teachers.filter(t => t.subject === showAssignTeacher?.subject || !showAssignTeacher?.subject).map(t => (<SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>))}</SelectContent></Select></div>
+              <div className="space-y-2"><Label>Subject</Label><p className="text-sm font-medium">{showAssignTeacher?.subject}</p></div>
+              <div className="space-y-2"><Label>Class</Label><p className="text-sm font-medium">Class {showAssignTeacher?.class}</p></div>
+              <div className="space-y-2"><Label>Select Teacher</Label><Select><SelectTrigger><SelectValue placeholder="Choose teacher" /></SelectTrigger><SelectContent>{teachers.filter(t => t.subject === showAssignTeacher?.subject || !showAssignTeacher?.subject).map(t => (<SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>))}</SelectContent></Select></div>
             </div>
             <DialogFooter><Button variant="outline" onClick={() => setShowAssignTeacher(null)}>Cancel</Button><Button className="bg-gradient-brand border-0" onClick={() => { toast.success(`Teacher assigned to ${showAssignTeacher?.subject}`); setShowAssignTeacher(null); }}>Assign</Button></DialogFooter>
           </DialogContent>
@@ -112,7 +115,10 @@ function AdminClassesComponent() {
     <>
       <div className="flex items-center justify-between mb-6">
         <div><h2 className="text-xl font-bold">Classes</h2><p className="text-sm text-muted-foreground">{classCards.length} classes</p></div>
-        <Button size="sm" className="bg-gradient-brand border-0" onClick={() => setShowAddClass(true)}><Plus className="mr-2 h-4 w-4" />Add Class</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowExport(true)}><Download className="mr-2 h-4 w-4" />Export</Button>
+          <Button size="sm" className="bg-gradient-brand border-0" onClick={() => setShowAddClass(true)}><Plus className="mr-2 h-4 w-4" />Add Class</Button>
+        </div>
       </div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {classCards.map(c => (
@@ -137,13 +143,15 @@ function AdminClassesComponent() {
       <Dialog open={showAddClass} onOpenChange={setShowAddClass}>
         <DialogContent><DialogHeader><DialogTitle>Add Class</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>Class Name</Label><Input placeholder="e.g. 10" /></div>
-            <div><Label>Sections</Label><div className="flex flex-wrap gap-2">{["A", "B", "C"].map(s => (<Badge key={s} variant="outline" className="cursor-pointer">Section {s}</Badge>))}</div></div>
-            <div className="grid grid-cols-2 gap-3"><div><Label>Capacity per Section</Label><Input type="number" placeholder="40" /></div><div><Label>Academic Year</Label><Select defaultValue="2026-27"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="2026-27">2026-27</SelectItem><SelectItem value="2025-26">2025-26</SelectItem></SelectContent></Select></div></div>
+            <div className="space-y-2"><Label>Class Name</Label><Input placeholder="e.g. 10" /></div>
+            <div className="space-y-2"><Label>Sections</Label><div className="flex flex-wrap gap-2">{["A", "B", "C"].map(s => (<Badge key={s} variant="outline" className="cursor-pointer">Section {s}</Badge>))}</div></div>
+            <div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>Capacity per Section</Label><Input type="number" placeholder="40" /></div><div className="space-y-2"><Label>Academic Year</Label><Select defaultValue="2026-27"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="2026-27">2026-27</SelectItem><SelectItem value="2025-26">2025-26</SelectItem></SelectContent></Select></div></div>
           </div>
           <DialogFooter><Button variant="outline" onClick={() => setShowAddClass(false)}>Cancel</Button><Button className="bg-gradient-brand border-0" onClick={() => { toast.success("Class created successfully"); setShowAddClass(false); }}>Create Class</Button></DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ExportDialog open={showExport} onOpenChange={setShowExport} config={classExportConfig} />
     </>
   );
 }

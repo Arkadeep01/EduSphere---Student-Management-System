@@ -7,6 +7,8 @@ class ExportLog(models.Model):
         ("csv", "CSV"),
         ("excel", "Excel"),
         ("pdf", "PDF"),
+        ("zip", "ZIP"),
+        ("print", "Print"),
     ]
 
     user = models.ForeignKey(

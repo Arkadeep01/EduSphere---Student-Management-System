@@ -79,6 +79,16 @@ urlpatterns = [
     path("exports/students/", views.ExportStudentsView.as_view(), name="admin-export-students"),
     path("exports/teachers/", views.ExportTeachersView.as_view(), name="admin-export-teachers"),
     path("exports/attendance/", views.ExportAttendanceView.as_view(), name="admin-export-attendance"),
+    path("exports/classes/", views.ExportClassesView.as_view(), name="admin-export-classes"),
+    path("exports/exams/", views.ExportExamsView.as_view(), name="admin-export-exams"),
+    path("exports/admissions/", views.ExportAdmissionsView.as_view(), name="admin-export-admissions"),
+    path("exports/contacts/", views.ExportContactsView.as_view(), name="admin-export-contacts"),
+    path("exports/audit-logs/", views.ExportAuditLogsView.as_view(), name="admin-export-audit-logs"),
+    path("exports/documents/", views.ExportDocumentsView.as_view(), name="admin-export-documents"),
+    path("exports/print/", views.PrintView.as_view(), name="admin-export-print"),
+    path("exports/logs/", views.ExportLogListView.as_view(), name="admin-export-logs"),
+    path("exports/documents/zip/", views.DocumentZIPDownloadView.as_view(), name="admin-document-zip"),
+    path("exports/admissions/zip/", views.AdmissionZIPDownloadView.as_view(), name="admin-admission-zip"),
 
     # Documents
     path("documents/", views.DocumentListView.as_view(), name="admin-document-list"),

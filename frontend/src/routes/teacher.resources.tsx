@@ -356,9 +356,9 @@ function TeacherResourcesComponent() {
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Upload Resource</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div><Label>Title *</Label><Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g. Algebra Notes Chapter 1" /></div>
-            <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Brief description..." className="min-h-[60px]" /></div>
-            <div><Label>Type *</Label>
+            <div className="space-y-2"><Label>Title *</Label><Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g. Algebra Notes Chapter 1" /></div>
+            <div className="space-y-2"><Label>Description</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Brief description..." className="min-h-[60px]" /></div>
+            <div className="space-y-2"><Label>Type *</Label>
               <Select value={form.resourceType} onValueChange={v => setForm({ ...form, resourceType: v })}>
                 <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                 <SelectContent>
@@ -369,7 +369,7 @@ function TeacherResourcesComponent() {
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Target Class</Label>
+            <div className="space-y-2"><Label>Target Class</Label>
               <Select value={form.targetClass} onValueChange={v => setForm({ ...form, targetClass: v })}>
                 <SelectTrigger><SelectValue placeholder="All classes" /></SelectTrigger>
                 <SelectContent>
@@ -377,7 +377,7 @@ function TeacherResourcesComponent() {
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>File * (max {MAX_SIZE_MB} MB: {ALLOWED_EXTENSIONS.join(", ")})</Label>
+            <div className="space-y-2"><Label>File * (max {MAX_SIZE_MB} MB: {ALLOWED_EXTENSIONS.join(", ")})</Label>
               <Input ref={fileInputRef} type="file" accept={ALLOWED_EXTENSIONS.join(",")} onChange={handleFileSelect} />
               {selectedFile && <p className="text-xs text-muted-foreground mt-1">{selectedFile.name} ({formatSize(selectedFile.size)})</p>}
             </div>
@@ -395,9 +395,9 @@ function TeacherResourcesComponent() {
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Edit Resource</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div><Label>Title *</Label><Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} /></div>
-            <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="min-h-[60px]" /></div>
-            <div><Label>Type *</Label>
+            <div className="space-y-2"><Label>Title *</Label><Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} /></div>
+            <div className="space-y-2"><Label>Description</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="min-h-[60px]" /></div>
+            <div className="space-y-2"><Label>Type *</Label>
               <Select value={form.resourceType} onValueChange={v => setForm({ ...form, resourceType: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -408,7 +408,7 @@ function TeacherResourcesComponent() {
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Target Class</Label>
+            <div className="space-y-2"><Label>Target Class</Label>
               <Select value={form.targetClass} onValueChange={v => setForm({ ...form, targetClass: v })}>
                 <SelectTrigger><SelectValue placeholder="All classes" /></SelectTrigger>
                 <SelectContent>
@@ -416,7 +416,7 @@ function TeacherResourcesComponent() {
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Replace file (optional)</Label>
+            <div className="space-y-2"><Label>Replace file (optional)</Label>
               <Input ref={fileInputRef} type="file" accept={ALLOWED_EXTENSIONS.join(",")} onChange={handleFileSelect} />
               {selectedFile && <p className="text-xs text-muted-foreground mt-1">{selectedFile.name} ({formatSize(selectedFile.size)})</p>}
             </div>

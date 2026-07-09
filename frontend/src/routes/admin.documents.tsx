@@ -13,6 +13,8 @@ import { getAdminDocuments, addAdminDocument, replaceAdminDocument, deleteAdminD
 import { validateFile, generateMockUploadResponse, ALLOWED_RESOURCE_TYPES, MAX_RESOURCE_SIZE_BYTES, formatFileSize } from "@/lib/upload";
 import type { DocumentCategory } from "@/lib/admin-document-store";
 import { toast } from "sonner";
+import { ExportDialog } from "@/components/export";
+import { documentExportConfig } from "@/components/export/moduleConfigs";
 
 const categoryLabels: Record<DocumentCategory, string> = {
   circular: "Circular",
@@ -30,6 +32,7 @@ const categoryBadge: Record<DocumentCategory, { variant: "default" | "secondary"
 
 function AdminDocumentsComponent() {
   const [docs, setDocs] = useState(getAdminDocuments);
+  const [showExport, setShowExport] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [showReplace, setShowReplace] = useState<string | null>(null);
   const [uploadTitle, setUploadTitle] = useState("");
@@ -93,9 +96,12 @@ function AdminDocumentsComponent() {
     <>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
         <div><h3 className="text-lg font-semibold">Document Repository</h3></div>
-        <Button size="sm" className="bg-gradient-brand border-0" onClick={() => setShowUpload(true)}>
-          <Plus className="mr-2 h-4 w-4" />Upload Document
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowExport(true)}><Download className="mr-2 h-4 w-4" />Export</Button>
+          <Button size="sm" className="bg-gradient-brand border-0" onClick={() => setShowUpload(true)}>
+            <Plus className="mr-2 h-4 w-4" />Upload Document
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -169,8 +175,8 @@ function AdminDocumentsComponent() {
       <Dialog open={showUpload} onOpenChange={o => { if (!o) resetUpload(); }}>
         <DialogContent><DialogHeader><DialogTitle>Upload Document</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>Title</Label><Input placeholder="e.g. Summer Break Notice" value={uploadTitle} onChange={e => setUploadTitle(e.target.value)} /></div>
-            <div><Label>Category</Label>
+            <div className="space-y-2"><Label>Title</Label><Input placeholder="e.g. Summer Break Notice" value={uploadTitle} onChange={e => setUploadTitle(e.target.value)} /></div>
+            <div className="space-y-2"><Label>Category</Label>
               <Select value={uploadCategory} onValueChange={v => setUploadCategory(v as DocumentCategory)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -180,7 +186,7 @@ function AdminDocumentsComponent() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
+            <div className="space-y-2">
               <Label>File</Label>
               <div className="border-2 border-dashed rounded-lg p-6 text-center text-sm text-muted-foreground cursor-pointer hover:border-primary" onClick={() => fileInputRef.current?.click()}>
                 <Upload className="h-6 w-6 mx-auto mb-2" />
@@ -234,6 +240,8 @@ function AdminDocumentsComponent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ExportDialog open={showExport} onOpenChange={setShowExport} config={documentExportConfig} />
     </>
   );
 }

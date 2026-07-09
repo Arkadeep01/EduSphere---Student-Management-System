@@ -73,11 +73,11 @@ function AdminEventsComponent() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Create Event</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>Title</Label><Input placeholder="Event title" /></div>
-            <div><Label>Description</Label><Textarea placeholder="Event description" rows={3} /></div>
-            <div className="grid grid-cols-2 gap-3"><div><Label>Date</Label><Input type="date" /></div><div><Label>Venue</Label><Input placeholder="Event location" /></div></div>
-            <div><Label>Type</Label><select className="flex h-10 w-full rounded-lg border bg-background px-3 py-2 text-sm"><option>Academic</option><option>Sports</option><option>Cultural</option><option>Meeting</option><option>Ceremony</option><option>Workshop</option></select></div>
-            <div><Label>Banner Image</Label><div className="border-2 border-dashed rounded-lg p-6 text-center text-sm text-muted-foreground cursor-pointer"><Image className="h-5 w-5 mx-auto mb-1" /><p>Upload banner image</p></div></div>
+            <div className="space-y-2"><Label>Title</Label><Input placeholder="Event title" /></div>
+            <div className="space-y-2"><Label>Description</Label><Textarea placeholder="Event description" rows={3} /></div>
+            <div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>Date</Label><Input type="date" /></div><div className="space-y-2"><Label>Venue</Label><Input placeholder="Event location" /></div></div>
+            <div className="space-y-2"><Label>Type</Label><select className="flex h-10 w-full rounded-lg border bg-background px-3 py-2 text-sm"><option>Academic</option><option>Sports</option><option>Cultural</option><option>Meeting</option><option>Ceremony</option><option>Workshop</option></select></div>
+            <div className="space-y-2"><Label>Banner Image</Label><div className="border-2 border-dashed rounded-lg p-6 text-center text-sm text-muted-foreground cursor-pointer"><Image className="h-5 w-5 mx-auto mb-1" /><p>Upload banner image</p></div></div>
           </div>
           <DialogFooter><Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button><Button className="bg-gradient-brand border-0" onClick={() => { toast.success("Event created"); setShowCreate(false); }}>Create</Button></DialogFooter>
         </DialogContent>
@@ -86,9 +86,9 @@ function AdminEventsComponent() {
       <Dialog open={!!editingEvent} onOpenChange={o => { if (!o) setEditingEvent(null); }}>
         <DialogContent><DialogHeader><DialogTitle>Edit Event</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>Title</Label><Input defaultValue={editingEvent?.title} /></div>
-            <div><Label>Description</Label><Textarea defaultValue={editingEvent?.description} rows={3} /></div>
-            <div className="grid grid-cols-2 gap-3"><div><Label>Date</Label><Input type="date" defaultValue={editingEvent?.date} /></div><div><Label>Venue</Label><Input defaultValue={editingEvent?.location} /></div></div>
+            <div className="space-y-2"><Label>Title</Label><Input defaultValue={editingEvent?.title} /></div>
+            <div className="space-y-2"><Label>Description</Label><Textarea defaultValue={editingEvent?.description} rows={3} /></div>
+            <div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>Date</Label><Input type="date" defaultValue={editingEvent?.date} /></div><div className="space-y-2"><Label>Venue</Label><Input defaultValue={editingEvent?.location} /></div></div>
           </div>
           <DialogFooter><Button variant="outline" onClick={() => setEditingEvent(null)}>Cancel</Button><Button className="bg-gradient-brand border-0" onClick={() => { toast.success("Event updated"); setEditingEvent(null); }}>Save</Button></DialogFooter>
         </DialogContent>

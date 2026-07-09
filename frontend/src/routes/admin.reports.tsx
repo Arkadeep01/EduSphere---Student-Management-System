@@ -1,13 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts";
+import { Download } from "lucide-react";
+import { useState } from "react";
 import { studentGrowth, examPerformance, attendanceData } from "@/lib/mock-data";
+import { ExportDialog } from "@/components/export";
+import { auditLogExportConfig } from "@/components/export/moduleConfigs";
 
-export const Route = createFileRoute("/admin/reports")({
-  head: () => ({ meta: [{ title: "Reports — Admin" }] }),
-  component: () => (
+function AdminReportsComponent() {
+  const [showExport, setShowExport] = useState(false);
+
+  return (
     <>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold">System Reports</h2>
+        <Button variant="outline" size="sm" onClick={() => setShowExport(true)}><Download className="mr-2 h-4 w-4" />Export</Button>
+      </div>
       <Tabs defaultValue="growth">
         <TabsList><TabsTrigger value="growth">Growth</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger><TabsTrigger value="exams">Exams</TabsTrigger></TabsList>
         <TabsContent value="growth"><Card><CardContent className="p-6">
@@ -26,6 +36,13 @@ export const Route = createFileRoute("/admin/reports")({
           </ResponsiveContainer>
         </CardContent></Card></TabsContent>
       </Tabs>
+
+      <ExportDialog open={showExport} onOpenChange={setShowExport} config={auditLogExportConfig} />
     </>
-  ),
+  );
+}
+
+export const Route = createFileRoute("/admin/reports")({
+  head: () => ({ meta: [{ title: "Reports — Admin" }] }),
+  component: AdminReportsComponent,
 });

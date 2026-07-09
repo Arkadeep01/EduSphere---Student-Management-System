@@ -160,9 +160,106 @@ export interface PendingSubjectRequest {
   status: string;
 }
 
+// ---- Generic Download Helper ----
+
+async function downloadModule(
+  endpoint: string,
+  format: string,
+  fields: string[],
+  filters: Record<string, unknown>,
+  defaultPrefix: string,
+): Promise<{ blob: Blob; filename: string }> {
+  const token = localStorage.getItem("accessToken");
+  const res = await fetch(`${ADMIN_API_BASE}/exports/${endpoint}/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ format, fields, filters }),
+  });
+  if (!res.ok) throw new Error(`Export failed: ${res.status}`);
+  const blob = await res.blob();
+  const disposition = res.headers.get("Content-Disposition") || "";
+  const match = disposition.match(/filename="?(.+?)"?$/);
+  const filename = match ? match[1] : `${defaultPrefix}_${format}.${format === "excel" ? "xlsx" : format}`;
+  return { blob, filename };
+}
+
 // Exports
 export const exportApi = {
   students: (format = "csv") => `${ADMIN_API_BASE}/exports/students/?format=${format}`,
   teachers: (format = "csv") => `${ADMIN_API_BASE}/exports/teachers/?format=${format}`,
   attendance: (format = "csv") => `${ADMIN_API_BASE}/exports/attendance/?format=${format}`,
+  downloadStudents: (format: string, fields: string[], filters: Record<string, unknown>) =>
+    downloadModule("students", format, fields, filters, "Students"),
+  downloadTeachers: (format: string, fields: string[], filters: Record<string, unknown>) =>
+    downloadModule("teachers", format, fields, filters, "Teachers"),
+  downloadAttendance: (format: string, fields: string[], filters: Record<string, unknown>) =>
+    downloadModule("attendance", format, fields, filters, "Attendance"),
+  downloadClasses: (format: string, fields: string[], filters: Record<string, unknown>) =>
+    downloadModule("classes", format, fields, filters, "Classes"),
+  downloadExams: (format: string, fields: string[], filters: Record<string, unknown>) =>
+    downloadModule("exams", format, fields, filters, "Exams"),
+  downloadAdmissions: (format: string, fields: string[], filters: Record<string, unknown>) =>
+    downloadModule("admissions", format, fields, filters, "Admissions"),
+  downloadContacts: (format: string, fields: string[], filters: Record<string, unknown>) =>
+    downloadModule("contacts", format, fields, filters, "Contacts"),
+  downloadAuditLogs: (format: string, fields: string[], filters: Record<string, unknown>) =>
+    downloadModule("audit-logs", format, fields, filters, "AuditLogs"),
+  downloadDocuments: (format: string, fields: string[], filters: Record<string, unknown>) =>
+    downloadModule("documents", format, fields, filters, "Documents"),
+  downloadFees: (format: string, fields: string[], filters: Record<string, unknown>) =>
+    downloadModule("fees", format, fields, filters, "Fees"),
+  downloadSalary: (format: string, fields: string[], filters: Record<string, unknown>) =>
+    downloadModule("salary", format, fields, filters, "Salary"),
+  downloadReceipt: (format: string, fields: string[], filters: Record<string, unknown>) =>
+    downloadModule("receipt", format, fields, filters, "Receipt"),
+  downloadPrint: async (module: string, fields: string[], filters: Record<string, unknown>) => {
+    const token = localStorage.getItem("accessToken");
+    const res = await fetch(`${ADMIN_API_BASE}/exports/print/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ module, fields, filters }),
+    });
+    if (!res.ok) throw new Error(`Print failed: ${res.status}`);
+    return res.text();
+  },
+  downloadDocumentZIP: async (documentIds: number[]) => {
+    const token = localStorage.getItem("accessToken");
+    const res = await fetch(`${ADMIN_API_BASE}/exports/documents/zip/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ document_ids: documentIds }),
+    });
+    if (!res.ok) throw new Error(`ZIP download failed: ${res.status}`);
+    const blob = await res.blob();
+    const disposition = res.headers.get("Content-Disposition") || "";
+    const match = disposition.match(/filename="?(.+?)"?$/);
+    const filename = match ? match[1] : "Documents.zip";
+    return { blob, filename };
+  },
+  downloadAdmissionZIP: async (admissionIds: number[]) => {
+    const token = localStorage.getItem("accessToken");
+    const res = await fetch(`${ADMIN_API_BASE}/exports/admissions/zip/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ admission_ids: admissionIds }),
+    });
+    if (!res.ok) throw new Error(`ZIP download failed: ${res.status}`);
+    const blob = await res.blob();
+    const disposition = res.headers.get("Content-Disposition") || "";
+    const match = disposition.match(/filename="?(.+?)"?$/);
+    const filename = match ? match[1] : "AdmissionDocuments.zip";
+    return { blob, filename };
+  },
 };

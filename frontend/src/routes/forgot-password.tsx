@@ -52,7 +52,7 @@ function ForgotPasswordPage() {
           {sent ? "Check your email for the OTP code." : "Enter your email and we'll send a reset code."}
         </p>
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-          <div><Label>Email</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} required disabled={sent} /></div>
+          <div className="space-y-2"><Label>Email</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} required disabled={sent} /></div>
           <Button type="submit" className="w-full bg-gradient-brand border-0" disabled={loading || sent}>
             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             {sent ? "Email sent" : "Send reset code"}

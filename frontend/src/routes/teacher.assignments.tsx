@@ -261,9 +261,9 @@ function TeacherAssignmentsComponent() {
         <Card className="mb-6"><CardContent className="p-6">
           <h3 className="font-semibold mb-4">Create New Assignment</h3>
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl">
-            <div className="sm:col-span-2"><Label>Title *</Label><Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g. Quadratic Equations Problem Set" /></div>
-            <div className="sm:col-span-2"><Label>Description *</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Detailed instructions for the assignment..." className="min-h-[100px]" /></div>
-            <div><Label>Target Class</Label>
+            <div className="sm:col-span-2 space-y-2"><Label>Title *</Label><Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g. Quadratic Equations Problem Set" /></div>
+            <div className="sm:col-span-2 space-y-2"><Label>Description *</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Detailed instructions for the assignment..." className="min-h-[100px]" /></div>
+            <div className="space-y-2"><Label>Target Class</Label>
               <Select value={form.targetClass} onValueChange={v => setForm({ ...form, targetClass: v })}>
                 <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
                 <SelectContent>
@@ -271,7 +271,7 @@ function TeacherAssignmentsComponent() {
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Due Date *</Label><Input type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} /></div>
+            <div className="space-y-2"><Label>Due Date *</Label><Input type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} /></div>
             <div className="sm:col-span-2 flex gap-2">
               <Button onClick={handleCreate} className="bg-gradient-brand border-0">Create & Publish</Button>
               <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>

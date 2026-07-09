@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Users, UserCheck, UserX, TrendingUp, BarChart3, Calendar } from "lucide-react";
+import { Users, UserCheck, UserX, TrendingUp, BarChart3, Calendar, Download } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, LineChart, Line } from "recharts";
 import { attendanceData, facultyAttendanceData, attendanceAnalytics } from "@/lib/mock-data";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ExportDialog } from "@/components/export";
+import { attendanceExportConfig } from "@/components/export/moduleConfigs";
 
 const statusColors: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   present: "default",
@@ -27,8 +29,14 @@ function AdminAttendanceComponent() {
     toast.success("Attendance marked");
   };
 
+  const [showExport, setShowExport] = useState(false);
+
   return (
     <>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold">Attendance Management</h2>
+        <Button variant="outline" size="sm" onClick={() => setShowExport(true)}><Download className="mr-2 h-4 w-4" />Export</Button>
+      </div>
       <Tabs defaultValue="analytics">
         <TabsList className="mb-4"><TabsTrigger value="analytics"><BarChart3 className="mr-2 h-4 w-4" />Analytics</TabsTrigger><TabsTrigger value="faculty"><Users className="mr-2 h-4 w-4" />Faculty Attendance</TabsTrigger></TabsList>
 
@@ -108,6 +116,8 @@ function AdminAttendanceComponent() {
           </CardContent></Card>
         </TabsContent>
       </Tabs>
+
+      <ExportDialog open={showExport} onOpenChange={setShowExport} config={attendanceExportConfig} />
     </>
   );
 }

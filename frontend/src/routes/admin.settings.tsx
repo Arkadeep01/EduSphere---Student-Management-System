@@ -25,12 +25,12 @@ function AdminSettingsComponent() {
           <div className="space-y-4">
             <Card><CardContent className="p-5 space-y-4">
               <h3 className="font-semibold">About Content</h3>
-              <div><Label>Content</Label><Textarea defaultValue={content.about.content} rows={5} /></div>
+              <div className="space-y-2"><Label>Content</Label><Textarea defaultValue={content.about.content} rows={5} /></div>
             </CardContent></Card>
 
             <Card><CardContent className="p-5 space-y-4">
               <h3 className="font-semibold">Featured Video</h3>
-              <div className="grid grid-cols-2 gap-3"><div><Label>Video URL</Label><Input defaultValue={content.about.video} /></div><div><Label>Video Title</Label><Input defaultValue={content.about.videoTitle} /></div></div>
+              <div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>Video URL</Label><Input defaultValue={content.about.video} /></div><div className="space-y-2"><Label>Video Title</Label><Input defaultValue={content.about.videoTitle} /></div></div>
             </CardContent></Card>
 
             <Card><CardContent className="p-5 space-y-4">
@@ -118,9 +118,9 @@ function AdminSettingsComponent() {
           <div className="space-y-4">
             <Card><CardContent className="p-5 space-y-4">
               <h3 className="font-semibold">Banner Information</h3>
-              <div><Label>Banner Text</Label><Input defaultValue={content.admission.bannerInfo} /></div>
-              <div><Label>Application Fee ($)</Label><Input type="number" defaultValue={content.admission.fee} /></div>
-              <div><Label>Intake Capacity</Label><Input type="number" defaultValue={content.admission.intakeCapacity} /></div>
+              <div className="space-y-2"><Label>Banner Text</Label><Input defaultValue={content.admission.bannerInfo} /></div>
+              <div className="space-y-2"><Label>Application Fee ($)</Label><Input type="number" defaultValue={content.admission.fee} /></div>
+              <div className="space-y-2"><Label>Intake Capacity</Label><Input type="number" defaultValue={content.admission.intakeCapacity} /></div>
             </CardContent></Card>
 
             <Card><CardContent className="p-5 space-y-4">

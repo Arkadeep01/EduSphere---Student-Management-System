@@ -8,13 +8,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, MapPin, Clock, Plus, CheckCircle2, Archive, Eye, Upload, BarChart3, X, FileText } from "lucide-react";
+import { Calendar, MapPin, Clock, Plus, CheckCircle2, Archive, Eye, Upload, BarChart3, X, FileText, Download } from "lucide-react";
 import { useState, useRef } from "react";
 import { examsFull, answerScriptsFull, evaluationTracking, subjects, classCards, classStudents } from "@/lib/mock-data";
 import { addAnswerScript, getAnswerScripts } from "@/lib/script-store";
 import { validateFile, generateMockUploadResponse, ALLOWED_SCRIPT_TYPES, MAX_SCRIPT_SIZE_BYTES, formatFileSize } from "@/lib/upload";
 import type { UploadedFileInfo } from "@/lib/upload";
 import { toast } from "sonner";
+import { ExportDialog } from "@/components/export";
+import { examExportConfig } from "@/components/export/moduleConfigs";
 
 const statusBadge: Record<string, { variant: "default" | "secondary" | "outline" | "destructive", className: string }> = {
   draft: { variant: "secondary", className: "" },
@@ -30,6 +32,7 @@ const scriptStatusBadge: Record<string, { variant: "default" | "secondary" | "ou
 };
 
 function AdminExamsComponent() {
+  const [showExport, setShowExport] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [exams, setExams] = useState(examsFull);
@@ -60,7 +63,10 @@ function AdminExamsComponent() {
         <TabsContent value="exams">
           <div className="flex items-center justify-between mb-4">
             <div><h3 className="text-lg font-semibold">Exam Schedule</h3></div>
-            <Button size="sm" className="bg-gradient-brand border-0" onClick={() => setShowCreate(true)}><Plus className="mr-2 h-4 w-4" />Create Exam</Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowExport(true)}><Download className="mr-2 h-4 w-4" />Export</Button>
+              <Button size="sm" className="bg-gradient-brand border-0" onClick={() => setShowCreate(true)}><Plus className="mr-2 h-4 w-4" />Create Exam</Button>
+            </div>
           </div>
           <Card><CardContent className="p-0">
             <Table>
@@ -151,14 +157,14 @@ function AdminExamsComponent() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Create Exam</DialogTitle></DialogHeader>
           <div className="space-y-3 max-h-[60vh] overflow-y-auto">
-            <div><Label>Exam Name</Label><Input placeholder="e.g. Midterm — Mathematics" /></div>
+            <div className="space-y-2"><Label>Exam Name</Label><Input placeholder="e.g. Midterm — Mathematics" /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Date</Label><Input type="date" /></div>
-              <div><Label>Time</Label><Input type="time" /></div>
+              <div className="space-y-2"><Label>Date</Label><Input type="date" /></div>
+              <div className="space-y-2"><Label>Time</Label><Input type="time" /></div>
             </div>
-            <div className="grid grid-cols-2 gap-3"><div><Label>Duration</Label><Input placeholder="e.g. 2h" /></div><div><Label>Room</Label><Input placeholder="e.g. Hall A" /></div></div>
-            <div><Label>Classes</Label><div className="flex flex-wrap gap-2">{classCards.slice(0, 4).map(c => (<Badge key={c.name} variant="outline" className="cursor-pointer">Class {c.name}</Badge>))}</div></div>
-            <div><Label>Subjects</Label><Select><SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger><SelectContent>{subjects.map(s => (<SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>))}</SelectContent></Select></div>
+            <div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>Duration</Label><Input placeholder="e.g. 2h" /></div><div className="space-y-2"><Label>Room</Label><Input placeholder="e.g. Hall A" /></div></div>
+            <div className="space-y-2"><Label>Classes</Label><div className="flex flex-wrap gap-2">{classCards.slice(0, 4).map(c => (<Badge key={c.name} variant="outline" className="cursor-pointer">Class {c.name}</Badge>))}</div></div>
+            <div className="space-y-2"><Label>Subjects</Label><Select><SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger><SelectContent>{subjects.map(s => (<SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>))}</SelectContent></Select></div>
           </div>
           <DialogFooter><Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button><Button className="bg-gradient-brand border-0" onClick={() => { toast.success("Exam created"); setShowCreate(false); }}>Create</Button></DialogFooter>
         </DialogContent>
@@ -168,13 +174,13 @@ function AdminExamsComponent() {
         <DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Upload Answer Scripts</DialogTitle></DialogHeader>
           <div className="space-y-3 max-h-[60vh] overflow-y-auto">
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Class</Label>
+              <div className="space-y-2"><Label>Class</Label>
                 <Select value={uploadForm.className} onValueChange={v => { setUploadForm({ ...uploadForm, className: v }); setSelectedStudent(""); }}>
                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent>{classCards.map(c => (<SelectItem key={c.name} value={c.name}>Class {c.name}</SelectItem>))}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Section</Label>
+              <div className="space-y-2"><Label>Section</Label>
                 <Select value={uploadForm.section} onValueChange={v => setUploadForm({ ...uploadForm, section: v })}>
                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent><SelectItem value="A">A</SelectItem><SelectItem value="B">B</SelectItem></SelectContent>
@@ -182,13 +188,13 @@ function AdminExamsComponent() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Subject</Label>
+              <div className="space-y-2"><Label>Subject</Label>
                 <Select value={uploadForm.subject} onValueChange={v => setUploadForm({ ...uploadForm, subject: v })}>
                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent>{subjects.map(s => (<SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>))}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Exam</Label>
+              <div className="space-y-2"><Label>Exam</Label>
                 <Select value={uploadForm.examName} onValueChange={v => setUploadForm({ ...uploadForm, examName: v })}>
                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent>{exams.map(e => (<SelectItem key={e.id} value={e.name}>{e.name}</SelectItem>))}</SelectContent>
@@ -197,7 +203,7 @@ function AdminExamsComponent() {
             </div>
             <div className="border-t pt-3 space-y-3">
               <p className="text-xs font-medium text-muted-foreground">Add Script Entry</p>
-              <div><Label>Student</Label>
+              <div className="space-y-2"><Label>Student</Label>
                 <Select value={selectedStudent} onValueChange={setSelectedStudent} disabled={!uploadForm.className}>
                   <SelectTrigger><SelectValue placeholder={uploadForm.className ? "Select student" : "Select class first"} /></SelectTrigger>
                   <SelectContent>
@@ -208,7 +214,7 @@ function AdminExamsComponent() {
                 </Select>
               </div>
               <div className="flex items-end gap-2">
-                <div className="flex-1">
+                <div className="flex-1 space-y-2">
                   <Label>PDF File</Label>
                   <div className="border-2 border-dashed rounded-lg p-3 text-center text-xs text-muted-foreground cursor-pointer hover:border-primary mt-1" onClick={() => singleFileInputRef.current?.click()}>
                     <Upload className="h-4 w-4 mx-auto mb-1" />
@@ -311,6 +317,8 @@ function AdminExamsComponent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ExportDialog open={showExport} onOpenChange={setShowExport} config={examExportConfig} />
     </>
   );
 }

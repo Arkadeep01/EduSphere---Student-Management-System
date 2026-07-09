@@ -276,20 +276,20 @@ function PaperEvaluationPage() {
                 </div>
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <Label className="text-xs">Remarks</Label>
                 <Textarea
-                  className="min-h-[60px] text-sm mt-1"
+                  className="min-h-[60px] text-sm"
                   placeholder="Add remarks..."
                   value={remarksInput[selectedPaper.id] ?? selectedPaper.remarks ?? ""}
                   onChange={e => setRemarksInput(prev => ({ ...prev, [selectedPaper.id]: e.target.value }))}
                 />
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <Label className="text-xs">Temporary Notes</Label>
                 <Textarea
-                  className="min-h-[60px] text-sm mt-1"
+                  className="min-h-[60px] text-sm"
                   placeholder="Private notes (not shared with student)..."
                   value={notesInput[selectedPaper.id] ?? ""}
                   onChange={e => setNotesInput(prev => ({ ...prev, [selectedPaper.id]: e.target.value }))}

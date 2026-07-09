@@ -9,10 +9,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Search, MoreHorizontal, Eye, Trash2, Mail, Phone, CheckCircle2, RotateCcw } from "lucide-react";
+import { Search, MoreHorizontal, Eye, Trash2, Mail, Phone, CheckCircle2, RotateCcw, Download } from "lucide-react";
 import { useState } from "react";
 import { contactSubmissionsFull } from "@/lib/mock-data";
 import { toast } from "sonner";
+import { ExportDialog } from "@/components/export";
+import { contactExportConfig } from "@/components/export/moduleConfigs";
 
 const statusBadge: Record<string, { variant: "default" | "secondary" | "outline" | "destructive", className: string }> = {
   unread: { variant: "default", className: "bg-primary" },
@@ -25,6 +27,7 @@ function AdminContactsComponent() {
   const [submissions, setSubmissions] = useState(contactSubmissionsFull);
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showExport, setShowExport] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState<string | null>(null);
   const [replyMessage, setReplyMessage] = useState("");
 
@@ -51,6 +54,7 @@ function AdminContactsComponent() {
           <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
             <SelectContent><SelectItem value="all">All status</SelectItem><SelectItem value="unread">Unread</SelectItem><SelectItem value="read">Read</SelectItem><SelectItem value="pending">Pending</SelectItem><SelectItem value="resolved">Resolved</SelectItem></SelectContent>
           </Select>
+          <Button variant="outline" size="sm" onClick={() => setShowExport(true)}><Download className="mr-2 h-4 w-4" />Export</Button>
         </div>
         <div className="rounded-lg border overflow-x-auto">
           <Table>
@@ -88,13 +92,15 @@ function AdminContactsComponent() {
       <Dialog open={!!showEmailModal} onOpenChange={o => { if (!o) setShowEmailModal(null); }}>
         <DialogContent><DialogHeader><DialogTitle>Send Email</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>To</Label><p className="text-sm font-medium">{submissions.find(s => s.id === showEmailModal)?.email}</p></div>
-            <div><Label>Subject</Label><Input defaultValue={`Re: ${submissions.find(s => s.id === showEmailModal)?.subject || ""}`} /></div>
-            <div><Label>Message</Label><Textarea placeholder="Type your reply..." rows={5} value={replyMessage} onChange={e => setReplyMessage(e.target.value)} /></div>
+            <div className="space-y-2"><Label>To</Label><p className="text-sm font-medium">{submissions.find(s => s.id === showEmailModal)?.email}</p></div>
+            <div className="space-y-2"><Label>Subject</Label><Input defaultValue={`Re: ${submissions.find(s => s.id === showEmailModal)?.subject || ""}`} /></div>
+            <div className="space-y-2"><Label>Message</Label><Textarea placeholder="Type your reply..." rows={5} value={replyMessage} onChange={e => setReplyMessage(e.target.value)} /></div>
           </div>
           <DialogFooter><Button variant="outline" onClick={() => { setShowEmailModal(null); setReplyMessage(""); }}>Cancel</Button><Button className="bg-gradient-brand border-0" onClick={() => { toast.success("Email sent"); setShowEmailModal(null); setReplyMessage(""); }}>Send</Button></DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ExportDialog open={showExport} onOpenChange={setShowExport} config={contactExportConfig} />
     </>
   );
 }

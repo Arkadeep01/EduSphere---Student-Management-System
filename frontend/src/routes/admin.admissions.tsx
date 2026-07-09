@@ -16,6 +16,8 @@ import { getAdmissionApplications, updateAdmissionStatus, updateDocumentVerifica
 import type { AdmissionDocEntry } from "@/lib/upload";
 import { toast } from "sonner";
 import { StatCard } from "@/components/dashboard/StatCard";
+import { ExportDialog } from "@/components/export";
+import { admissionExportConfig } from "@/components/export/moduleConfigs";
 
 const statusBadge: Record<string, { variant: "default" | "destructive" | "secondary" | "outline", className: string }> = {
   pending: { variant: "secondary", className: "" },
@@ -49,6 +51,7 @@ function AdminAdmissionsComponent() {
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selected, setSelected] = useState<string | null>(null);
+  const [showExport, setShowExport] = useState(false);
   const [showDocViewer, setShowDocViewer] = useState(false);
   const [showRequestInfo, setShowRequestInfo] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
@@ -94,6 +97,7 @@ function AdminAdmissionsComponent() {
               <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
                 <SelectContent><SelectItem value="all">All status</SelectItem><SelectItem value="pending">Pending</SelectItem><SelectItem value="approved">Approved</SelectItem><SelectItem value="rejected">Rejected</SelectItem></SelectContent>
               </Select>
+              <Button variant="outline" size="sm" onClick={() => setShowExport(true)}><Download className="mr-2 h-4 w-4" />Export</Button>
             </div>
             <div className="rounded-lg border overflow-x-auto">
               <Table>
@@ -266,12 +270,14 @@ function AdminAdmissionsComponent() {
       <Dialog open={showRequestInfo} onOpenChange={o => { if (!o) { setShowRequestInfo(false); setRequestMessage(""); } }}>
         <DialogContent><DialogHeader><DialogTitle>Request More Information</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>Applicant</Label><p className="text-sm font-medium">{detail?.name}</p></div>
-            <div><Label>Message</Label><Textarea placeholder="Describe what additional information is needed..." rows={4} value={requestMessage} onChange={e => setRequestMessage(e.target.value)} /></div>
+            <div className="space-y-2"><Label>Applicant</Label><p className="text-sm font-medium">{detail?.name}</p></div>
+            <div className="space-y-2"><Label>Message</Label><Textarea placeholder="Describe what additional information is needed..." rows={4} value={requestMessage} onChange={e => setRequestMessage(e.target.value)} /></div>
           </div>
           <DialogFooter><Button variant="outline" onClick={() => { setShowRequestInfo(false); setRequestMessage(""); }}>Cancel</Button><Button className="bg-gradient-brand border-0" onClick={() => { toast.success("Request sent to applicant"); setShowRequestInfo(false); setRequestMessage(""); }}>Send</Button></DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ExportDialog open={showExport} onOpenChange={setShowExport} config={admissionExportConfig} />
     </>
   );
 }

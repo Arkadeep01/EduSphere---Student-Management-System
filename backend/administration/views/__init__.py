@@ -75,7 +75,21 @@ from .cms_admin import (
     AdmissionPageView,
 )
 
-from .export_admin import ExportStudentsView, ExportTeachersView, ExportAttendanceView
+from .export_admin import (
+    ExportStudentsView,
+    ExportTeachersView,
+    ExportAttendanceView,
+    ExportClassesView,
+    ExportExamsView,
+    ExportAdmissionsView,
+    ExportContactsView,
+    ExportAuditLogsView,
+    ExportDocumentsView,
+    PrintView,
+    ExportLogListView,
+    DocumentZIPDownloadView,
+    AdmissionZIPDownloadView,
+)
 
 from .document_admin import DocumentUploadView, DocumentListView, DocumentDeleteView
 
