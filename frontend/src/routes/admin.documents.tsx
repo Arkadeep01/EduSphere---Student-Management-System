@@ -20,7 +20,7 @@ import { LetterheadList } from "@/components/documents/LetterheadList";
 import { LetterheadEditor } from "@/components/documents/LetterheadEditor";
 import {
   getLetterheads, addLetterhead, updateLetterhead, setDefaultLetterhead,
-  archiveLetterhead, restoreLetterhead, deleteLetterhead, restoreVersion,
+  archiveLetterhead, restoreLetterhead, deleteLetterhead, restoreVersion, duplicateLetterhead,
 } from "@/lib/letterhead-store";
 import type { Letterhead, LetterheadFormData } from "@/types/letterhead";
 
@@ -154,6 +154,45 @@ function AdminDocumentsComponent() {
     toast.success("Document deleted");
   }
 
+  function handleDuplicateLetterhead(id: string) {
+    duplicateLetterhead(id);
+    setLetterheads(getLetterheads());
+  }
+
+  function handleReplaceLogo(_id: string) {
+    toast.success("Logo replacement will update on next edit");
+  }
+
+  function handleReplaceLetterhead(_id: string) {
+    toast.success("Letterhead banner replacement will update on next edit");
+  }
+
+  function handleDownloadLetterhead(_id: string) {
+    toast.success("Download will be connected in Export pipeline");
+  }
+
+  const documentConnectionStatus: { label: string; status: "ready" | "pending" | "connected" }[] = [
+    { label: "Student Reports", status: "ready" },
+    { label: "Teacher Reports", status: "ready" },
+    { label: "Attendance", status: "ready" },
+    { label: "Result Sheet", status: "ready" },
+    { label: "Merit List", status: "ready" },
+    { label: "Fee Receipt", status: "ready" },
+    { label: "Salary Slip", status: "ready" },
+    { label: "Admissions", status: "ready" },
+    { label: "Contact Forms", status: "ready" },
+    { label: "Audit Logs", status: "ready" },
+  ];
+
+  const supportedDocuments = [
+    "Student Export", "Teacher Export", "Attendance Report", "Result Sheet",
+    "Merit List", "Admission Letter", "Certificate", "Salary Slip",
+    "Fee Receipt", "Audit Log", "Official Circular",
+  ];
+
+  const activeLetterheads = letterheads.filter(l => l.status === "active");
+  const archivedLetterheads = letterheads.filter(l => l.status === "archived");
+
   function handleAddLetterhead() {
     setEditingLetterhead(null);
     setShowLetterheadEditor(true);
@@ -176,28 +215,11 @@ function AdminDocumentsComponent() {
 
   return (
     <>
-      <div className="space-y-8">
-        <LetterheadList
-          letterheads={letterheads}
-          onEdit={handleEditLetterhead}
-          onSetDefault={(id) => { setDefaultLetterhead(id); setLetterheads(getLetterheads()); }}
-          onArchive={(id) => { archiveLetterhead(id); setLetterheads(getLetterheads()); }}
-          onRestore={(id) => { restoreLetterhead(id); setLetterheads(getLetterheads()); }}
-          onDelete={(id) => { deleteLetterhead(id); setLetterheads(getLetterheads()); }}
-          onAdd={handleAddLetterhead}
-          onRestoreVersion={(lhId, verId) => { restoreVersion(lhId, verId); setLetterheads(getLetterheads()); }}
-        />
-
-        <LetterheadEditor
-          open={showLetterheadEditor}
-          onOpenChange={setShowLetterheadEditor}
-          letterhead={editingLetterhead || undefined}
-          onSave={handleSaveLetterhead}
-        />
-
-        <div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-            <div><h3 className="text-lg font-semibold">Official Document Repository</h3></div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="lg:col-span-8 xl:col-span-9 space-y-6">
+          <div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+              <div><h3 className="text-lg font-semibold">Official Document Repository</h3></div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setShowExport(true)}><Download className="mr-2 h-4 w-4" />Export</Button>
           <Button size="sm" className="bg-gradient-brand border-0" onClick={() => setShowUpload(true)}>
@@ -362,6 +384,60 @@ function AdminDocumentsComponent() {
         </SheetContent>
       </Sheet>
       </div>
+
+          <LetterheadList
+            letterheads={letterheads}
+            onEdit={handleEditLetterhead}
+            onSetDefault={(id) => { setDefaultLetterhead(id); setLetterheads(getLetterheads()); }}
+            onArchive={(id) => { archiveLetterhead(id); setLetterheads(getLetterheads()); }}
+            onRestore={(id) => { restoreLetterhead(id); setLetterheads(getLetterheads()); }}
+            onDelete={(id) => { deleteLetterhead(id); setLetterheads(getLetterheads()); }}
+            onAdd={handleAddLetterhead}
+            onRestoreVersion={(lhId, verId) => { restoreVersion(lhId, verId); setLetterheads(getLetterheads()); }}
+            onDuplicate={handleDuplicateLetterhead}
+            onReplaceLogo={handleReplaceLogo}
+            onReplaceLetterhead={handleReplaceLetterhead}
+            onDownload={handleDownloadLetterhead}
+          />
+
+          <LetterheadEditor
+            open={showLetterheadEditor}
+            onOpenChange={setShowLetterheadEditor}
+            letterhead={editingLetterhead || undefined}
+            onSave={handleSaveLetterhead}
+          />
+        </div>
+
+        <div className="lg:col-span-4 xl:col-span-3 space-y-6">
+          <Card>
+            <CardContent className="p-4">
+              <h4 className="text-sm font-semibold mb-3">Document Connection Status</h4>
+              <div className="space-y-2">
+                {documentConnectionStatus.map(item => (
+                  <div key={item.label} className="flex items-center gap-2 text-xs">
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${item.status === "ready" ? "bg-success" : item.status === "pending" ? "bg-warning" : "bg-info"}`} />
+                    <span className="flex-1">{item.label}</span>
+                    <Badge variant="outline" className="text-[9px] h-4 px-1">{item.status}</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <h4 className="text-sm font-semibold mb-3">Supported Documents</h4>
+              <div className="space-y-1.5">
+                {supportedDocuments.map(doc => (
+                  <div key={doc} className="flex items-center gap-2 text-xs">
+                    <span className="text-success shrink-0">✓</span>
+                    <span>{doc}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </>
   );

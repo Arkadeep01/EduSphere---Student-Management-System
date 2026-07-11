@@ -106,13 +106,13 @@ export function LetterheadEditor({ open, onOpenChange, letterhead, onSave }: Let
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[min(90vw,1600px)] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{letterhead ? `Edit: ${letterhead.name}` : "New Letterhead"}</DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
+          <div className="lg:col-span-5 space-y-4 overflow-y-auto pr-1">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="w-full">
                 <TabsTrigger value="basic" className="flex-1">Basic</TabsTrigger>
@@ -261,9 +261,9 @@ export function LetterheadEditor({ open, onOpenChange, letterhead, onSave }: Let
             </Tabs>
           </div>
 
-          <div className="border rounded-lg overflow-hidden bg-white">
-            <div className="p-2 bg-muted text-xs font-medium text-muted-foreground border-b">Live Preview</div>
-            <div className="overflow-auto max-h-[600px]">
+          <div className="lg:col-span-7 border rounded-lg overflow-hidden bg-white flex flex-col min-h-0">
+            <div className="p-3 bg-muted text-xs font-medium text-muted-foreground border-b">Live Preview</div>
+            <div className="flex-1 overflow-y-auto p-3 flex items-start justify-center">
               <LetterheadPreview formData={form} />
             </div>
           </div>
