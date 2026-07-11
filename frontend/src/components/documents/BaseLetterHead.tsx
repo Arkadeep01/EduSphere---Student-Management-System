@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { DocumentHeader } from "./DocumentHeader";
 import { DocumentMeta } from "./DocumentMeta";
 import { DocumentFooter } from "./DocumentFooter";
+import type { BrandingConfig } from "@/types/letterhead";
 
 export interface BaseLetterHeadProps {
   title: string;
@@ -16,6 +17,9 @@ export interface BaseLetterHeadProps {
   documentId?: string;
   showSignature?: boolean;
   showMeta?: boolean;
+  branding?: BrandingConfig;
+  primaryColor?: string;
+  logoUrl?: string;
 }
 
 export function BaseLetterHead({
@@ -31,7 +35,11 @@ export function BaseLetterHead({
   documentId,
   showSignature = true,
   showMeta = true,
+  branding,
+  primaryColor,
+  logoUrl,
 }: BaseLetterHeadProps) {
+  const color = primaryColor || "#1e3a5f";
   return (
     <div
       className={`
@@ -40,11 +48,21 @@ export function BaseLetterHead({
       `}
     >
       <div className="min-h-screen flex flex-col p-[15mm] print:p-[15mm]">
-        <DocumentHeader academicSession={academicSession} />
+        <DocumentHeader
+          academicSession={academicSession || branding?.academicSession}
+          schoolName={branding?.schoolName}
+          schoolAddress={branding?.address}
+          schoolPhone={branding?.phone}
+          schoolEmail={branding?.email}
+          schoolWebsite={branding?.website}
+          logoUrl={logoUrl}
+          primaryColor={color}
+          motto={branding?.motto}
+        />
 
-        <div className="border-b-2 border-[#1e3a5f] my-4" />
+        <div className="border-b-2 my-4" style={{ borderColor: color }} />
 
-        <h1 className="text-xl font-bold text-[#1e3a5f] text-center mb-4">
+        <h1 className="text-xl font-bold text-center mb-4" style={{ color }}>
           {title}
         </h1>
 
@@ -54,7 +72,7 @@ export function BaseLetterHead({
             generatedBy={generatedBy}
             generatedDate={generatedDate}
             generatedTime={generatedTime}
-            academicSession={academicSession}
+            academicSession={academicSession || branding?.academicSession}
             moduleName={moduleName}
             totalRecords={totalRecords}
             documentId={documentId}
@@ -73,7 +91,7 @@ export function BaseLetterHead({
                 <div className="border-t border-gray-400 mt-8 pt-1 text-xs text-gray-500">Verified By</div>
               </div>
               <div className="text-center">
-                <div className="border-t border-gray-400 mt-8 pt-1 text-xs text-gray-500">Principal</div>
+                <div className="border-t border-gray-400 mt-8 pt-1 text-xs text-gray-500">{branding?.principalName || "Principal"}</div>
               </div>
               <div className="text-center">
                 <div className="border-t border-gray-400 mt-8 pt-1 text-xs text-gray-500">Administrator</div>
@@ -85,7 +103,12 @@ export function BaseLetterHead({
           </div>
         )}
 
-        <DocumentFooter generatedDate={generatedDate} moduleName={moduleName} />
+        <DocumentFooter
+          generatedDate={generatedDate}
+          moduleName={moduleName}
+          schoolName={branding?.shortName || branding?.schoolName}
+          footerText={branding?.documentWatermark}
+        />
       </div>
     </div>
   );

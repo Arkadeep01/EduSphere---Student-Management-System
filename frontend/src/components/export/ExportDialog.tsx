@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -13,13 +13,22 @@ interface ExportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   config: ModuleExportConfig;
+  renderScopeInputs?: (scope: string, filterValues: Record<string, string>, setFilterValues: React.Dispatch<React.SetStateAction<Record<string, string>>>) => React.ReactNode;
 }
 
-export function ExportDialog({ open, onOpenChange, config }: ExportDialogProps) {
+export function ExportDialog({ open, onOpenChange, config, renderScopeInputs }: ExportDialogProps) {
   const [exportScope, setExportScope] = useState<ExportScope>("school");
   const [exportFormat, setExportFormat] = useState<ExportFormat>("csv");
   const [selectedFields, setSelectedFields] = useState<string[]>([...config.defaultFields]);
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+
+  function getFilterValue(key: string): string {
+    return filterValues[key] || "all";
+  }
+
+  function isFilterActive(key: string): boolean {
+    return !!filterValues[key] && filterValues[key] !== "all";
+  }
   const [showConfirm, setShowConfirm] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [showLargeWarning, setShowLargeWarning] = useState(false);
@@ -40,7 +49,12 @@ export function ExportDialog({ open, onOpenChange, config }: ExportDialogProps) 
   }
 
   function buildFilters(): Record<string, unknown> {
-    const f: Record<string, unknown> = { ...filterValues };
+    const f: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(filterValues)) {
+      if (value && value !== "all") {
+        f[key] = value;
+      }
+    }
     if (exportScope && exportScope !== "school") {
       f.scope = exportScope;
     }
@@ -53,6 +67,10 @@ export function ExportDialog({ open, onOpenChange, config }: ExportDialogProps) 
       return;
     }
     const totalRecords = config.estimateRecordCount ? config.estimateRecordCount() : 0;
+    if (totalRecords === 0) {
+      toast.error("No records match your filters.");
+      return;
+    }
     if (totalRecords > 500) {
       setShowLargeWarning(true);
       setPendingLargeExport(true);
@@ -101,6 +119,19 @@ export function ExportDialog({ open, onOpenChange, config }: ExportDialogProps) 
     setShowLargeWarning(false);
   }
 
+  const totalRecords = useMemo(() => config.estimateRecordCount ? config.estimateRecordCount() : 0, [filterValues, exportScope, config]);
+
+  const estimatedFileSize = useMemo(() => {
+    if (config.estimateFileSize) {
+      return config.estimateFileSize(exportFormat, selectedFields);
+    }
+    const bytesPerField = exportFormat === "pdf" ? 200 : 50;
+    const totalBytes = totalRecords * selectedFields.length * bytesPerField;
+    if (totalBytes < 1024) return "< 1 KB";
+    if (totalBytes < 1024 * 1024) return `≈ ${Math.round(totalBytes / 1024)} KB`;
+    return `≈ ${(totalBytes / (1024 * 1024)).toFixed(1)} MB`;
+  }, [totalRecords, selectedFields, exportFormat, config]);
+
   const allFormats: ExportFormat[] = config.allowedFormats || ["csv", "excel", "pdf"];
 
   return (
@@ -127,6 +158,22 @@ export function ExportDialog({ open, onOpenChange, config }: ExportDialogProps) 
             </div>
           </div>
 
+          {/* Preview Stats */}
+          <div className="rounded-lg border bg-muted/30 p-3 grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <p className="text-xs text-muted-foreground">Matching Records</p>
+              <p className="font-semibold text-base">{totalRecords.toLocaleString()}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Estimated File Size</p>
+              <p className="font-semibold text-base">{estimatedFileSize}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Export Format</p>
+              <p className="font-semibold text-base capitalize">{exportFormat === "csv" ? "CSV" : exportFormat === "excel" ? "Excel" : "PDF"}</p>
+            </div>
+          </div>
+
           {/* Scope */}
           {config.scopes.length > 0 && (
             <div className="space-y-2">
@@ -139,12 +186,7 @@ export function ExportDialog({ open, onOpenChange, config }: ExportDialogProps) 
                   ))}
                 </SelectContent>
               </Select>
-              {exportScope !== "school" && config.scopes.filter(s => s.value !== "school").map(s => {
-                if (s.value === exportScope && exportScope.includes("_")) {
-                  return null;
-                }
-                return null;
-              })}
+              {exportScope !== "school" && renderScopeInputs && renderScopeInputs(exportScope, filterValues, setFilterValues)}
             </div>
           )}
 
@@ -158,12 +200,12 @@ export function ExportDialog({ open, onOpenChange, config }: ExportDialogProps) 
                     <Label className="text-xs">{filter.label}</Label>
                     {filter.type === "select" ? (
                       <Select
-                        value={filterValues[filter.key] || ""}
+                        value={getFilterValue(filter.key)}
                         onValueChange={v => setFilterValues(prev => ({ ...prev, [filter.key]: v }))}
                       >
                         <SelectTrigger><SelectValue placeholder={`All ${filter.label.toLowerCase()}`} /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">All</SelectItem>
+                          <SelectItem value="all">All</SelectItem>
                           {(filter.options || []).map(o => (
                             <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                           ))}
@@ -237,7 +279,7 @@ export function ExportDialog({ open, onOpenChange, config }: ExportDialogProps) 
                 <span className="text-muted-foreground">Scope</span>
                 <span className="font-medium capitalize">{exportScope.replace("_", " ")}</span>
               </div>
-              {Object.entries(filterValues).filter(([, v]) => v).map(([k, v]) => (
+              {Object.entries(filterValues).filter(([, v]) => v && v !== "all").map(([k, v]) => (
                 <div key={k} className="flex justify-between">
                   <span className="text-muted-foreground capitalize">{k.replace("_", " ")}</span>
                   <span className="font-medium">{v}</span>

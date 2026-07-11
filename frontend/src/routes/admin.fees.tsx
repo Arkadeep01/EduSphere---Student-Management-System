@@ -54,8 +54,8 @@ function AdminFeesComponent() {
   const [structureForm, setStructureForm] = useState<{ className: string; lateFinePerDay: number; gstEnabled: boolean; components: Omit<FeeComponent, "id">[] }>({ className: "", lateFinePerDay: 50, gstEnabled: false, components: [] });
 
   // Fee payments filters
-  const [feeClassFilter, setFeeClassFilter] = useState("");
-  const [feeMonthFilter, setFeeMonthFilter] = useState("");
+  const [feeClassFilter, setFeeClassFilter] = useState("all_classes");
+  const [feeMonthFilter, setFeeMonthFilter] = useState("all_months");
   const [feeStatusFilter, setFeeStatusFilter] = useState<string>("all");
 
   // Verification dialog
@@ -88,8 +88,8 @@ function AdminFeesComponent() {
 
   const filteredPayments = useMemo(() => {
     let list = allPayments;
-    if (feeClassFilter) list = list.filter(p => p.className === feeClassFilter);
-    if (feeMonthFilter) list = list.filter(p => p.month === feeMonthFilter);
+    if (feeClassFilter && feeClassFilter !== "all_classes") list = list.filter(p => p.className === feeClassFilter);
+    if (feeMonthFilter && feeMonthFilter !== "all_months") list = list.filter(p => p.month === feeMonthFilter);
     if (feeStatusFilter !== "all") list = list.filter(p => p.status === feeStatusFilter);
     return list;
   }, [allPayments, feeClassFilter, feeMonthFilter, feeStatusFilter]);
@@ -406,14 +406,14 @@ function AdminFeesComponent() {
             <Select value={feeClassFilter} onValueChange={setFeeClassFilter}>
               <SelectTrigger className="w-36"><SelectValue placeholder="All Classes" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Classes</SelectItem>
+                <SelectItem value="all_classes">All Classes</SelectItem>
                 {["9", "10", "11", "12"].map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={feeMonthFilter} onValueChange={setFeeMonthFilter}>
               <SelectTrigger className="w-36"><SelectValue placeholder="All Months" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Months</SelectItem>
+                <SelectItem value="all_months">All Months</SelectItem>
                 {MONTHS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
               </SelectContent>
             </Select>

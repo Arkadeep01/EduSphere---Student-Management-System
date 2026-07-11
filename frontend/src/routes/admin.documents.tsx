@@ -5,16 +5,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, Download, RefreshCw, Trash2, Plus, Search } from "lucide-react";
+import { Upload, FileText, Download, RefreshCw, Trash2, Plus, Search, Eye } from "lucide-react";
 import { useState, useRef } from "react";
 import { getAdminDocuments, addAdminDocument, replaceAdminDocument, deleteAdminDocument } from "@/lib/admin-document-store";
 import { validateFile, generateMockUploadResponse, ALLOWED_RESOURCE_TYPES, MAX_RESOURCE_SIZE_BYTES, formatFileSize } from "@/lib/upload";
-import type { DocumentCategory } from "@/lib/admin-document-store";
+import type { DocumentCategory, AdminDocument } from "@/lib/admin-document-store";
 import { toast } from "sonner";
 import { ExportDialog } from "@/components/export";
 import { documentExportConfig } from "@/components/export/moduleConfigs";
+import { LetterheadList } from "@/components/documents/LetterheadList";
+import { LetterheadEditor } from "@/components/documents/LetterheadEditor";
+import {
+  getLetterheads, addLetterhead, updateLetterhead, setDefaultLetterhead,
+  archiveLetterhead, restoreLetterhead, deleteLetterhead, restoreVersion,
+} from "@/lib/letterhead-store";
+import type { Letterhead, LetterheadFormData } from "@/types/letterhead";
 
 const categoryLabels: Record<DocumentCategory, string> = {
   circular: "Circular",
@@ -30,11 +38,65 @@ const categoryBadge: Record<DocumentCategory, { variant: "default" | "secondary"
   official: { variant: "default", className: "bg-success" },
 };
 
+function DocumentPreview({ doc }: { doc: AdminDocument }) {
+  const ext = doc.file.extension.toLowerCase();
+  const isPDF = ext === ".pdf";
+  const isImage = [".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(ext);
+  const isOffice = [".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx"].includes(ext);
+  const isZIP = ext === ".zip";
+
+  function handleDownload() {
+    window.open(doc.file.download_url, "_blank");
+  }
+
+  if (isPDF) {
+    return (
+      <iframe
+        src={doc.file.download_url}
+        className="w-full flex-1 rounded border"
+        title={doc.title}
+      />
+    );
+  }
+
+  if (isImage) {
+    return (
+      <div className="flex flex-1 items-center justify-center overflow-auto">
+        <img
+          src={doc.file.preview_url || doc.file.download_url}
+          alt={doc.title}
+          className="max-w-full max-h-full object-contain"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
+      <FileText className="h-16 w-16 text-muted-foreground/40" />
+      <div>
+        <p className="text-sm font-medium">{doc.file.original_name}</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          {formatFileSize(doc.file.size)} {'\u00B7'} {isOffice ? "Office Document" : isZIP ? "ZIP Archive" : "Unknown Format"}
+        </p>
+      </div>
+      <p className="text-xs text-muted-foreground">Preview not available for this file type.</p>
+      <Button size="sm" variant="outline" onClick={handleDownload}>
+        <Download className="mr-2 h-4 w-4" />Download to View
+      </Button>
+    </div>
+  );
+}
+
 function AdminDocumentsComponent() {
   const [docs, setDocs] = useState(getAdminDocuments);
   const [showExport, setShowExport] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [showReplace, setShowReplace] = useState<string | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<AdminDocument | null>(null);
+  const [letterheads, setLetterheads] = useState(getLetterheads);
+  const [showLetterheadEditor, setShowLetterheadEditor] = useState(false);
+  const [editingLetterhead, setEditingLetterhead] = useState<Letterhead | null>(null);
   const [uploadTitle, setUploadTitle] = useState("");
   const [uploadCategory, setUploadCategory] = useState<DocumentCategory>("circular");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -92,10 +154,50 @@ function AdminDocumentsComponent() {
     toast.success("Document deleted");
   }
 
+  function handleAddLetterhead() {
+    setEditingLetterhead(null);
+    setShowLetterheadEditor(true);
+  }
+
+  function handleEditLetterhead(lh: Letterhead) {
+    setEditingLetterhead(lh);
+    setShowLetterheadEditor(true);
+  }
+
+  function handleSaveLetterhead(data: LetterheadFormData) {
+    if (editingLetterhead) {
+      updateLetterhead(editingLetterhead.id, data, "Admin");
+    } else {
+      addLetterhead(data, "Admin");
+    }
+    setLetterheads(getLetterheads());
+    toast.success(editingLetterhead ? "Letterhead updated" : "Letterhead created");
+  }
+
   return (
     <>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-        <div><h3 className="text-lg font-semibold">Document Repository</h3></div>
+      <div className="space-y-8">
+        <LetterheadList
+          letterheads={letterheads}
+          onEdit={handleEditLetterhead}
+          onSetDefault={(id) => { setDefaultLetterhead(id); setLetterheads(getLetterheads()); }}
+          onArchive={(id) => { archiveLetterhead(id); setLetterheads(getLetterheads()); }}
+          onRestore={(id) => { restoreLetterhead(id); setLetterheads(getLetterheads()); }}
+          onDelete={(id) => { deleteLetterhead(id); setLetterheads(getLetterheads()); }}
+          onAdd={handleAddLetterhead}
+          onRestoreVersion={(lhId, verId) => { restoreVersion(lhId, verId); setLetterheads(getLetterheads()); }}
+        />
+
+        <LetterheadEditor
+          open={showLetterheadEditor}
+          onOpenChange={setShowLetterheadEditor}
+          letterhead={editingLetterhead || undefined}
+          onSave={handleSaveLetterhead}
+        />
+
+        <div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+            <div><h3 className="text-lg font-semibold">Official Document Repository</h3></div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setShowExport(true)}><Download className="mr-2 h-4 w-4" />Export</Button>
           <Button size="sm" className="bg-gradient-brand border-0" onClick={() => setShowUpload(true)}>
@@ -124,7 +226,7 @@ function AdminDocumentsComponent() {
         {filtered.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-3 opacity-40" />
-            <p>No documents yet. Click "Upload Document" to add one.</p>
+            <p>No documents have been uploaded yet.</p>
           </div>
         ) : (
           <Table>
@@ -154,6 +256,9 @@ function AdminDocumentsComponent() {
                   <TableCell className="text-xs text-muted-foreground">{new Date(d.uploadedAt).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setPreviewDoc(d)}>
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
                       <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => window.open(d.file.download_url, "_blank")}>
                         <Download className="h-3.5 w-3.5" />
                       </Button>
@@ -242,6 +347,22 @@ function AdminDocumentsComponent() {
       </Dialog>
 
       <ExportDialog open={showExport} onOpenChange={setShowExport} config={documentExportConfig} />
+
+      <Sheet open={!!previewDoc} onOpenChange={o => { if (!o) setPreviewDoc(null); }}>
+        <SheetContent side="right" className="sm:max-w-2xl w-full flex flex-col">
+          <SheetHeader>
+            <SheetTitle>{previewDoc?.title}</SheetTitle>
+            <SheetDescription>
+              {previewDoc && (
+                <span>{categoryLabels[previewDoc.category]} {'\u00B7'} {previewDoc.file.original_name}</span>
+              )}
+            </SheetDescription>
+          </SheetHeader>
+          {previewDoc && <DocumentPreview doc={previewDoc} />}
+        </SheetContent>
+      </Sheet>
+      </div>
+      </div>
     </>
   );
 }

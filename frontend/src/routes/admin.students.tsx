@@ -8,94 +8,16 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, ArrowLeft, Users, UserCheck, Download, Plus, ToggleLeft, ToggleRight, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { Search, ArrowLeft, Users, UserCheck, Download, Plus, ToggleLeft, ToggleRight, CheckCircle, XCircle } from "lucide-react";
 import { useState } from "react";
 import { students, classCards, classDetailsData, feeStatusData, subjectRequestRecords, notificationRecords } from "@/lib/mock-data";
 import type { SubjectRequestRecord } from "@/lib/mock-data";
 import { toast } from "sonner";
 import { StatCard } from "@/components/dashboard/StatCard";
-import { exportApi } from "@/services/adminApi";
+import { ExportDialog } from "@/components/export";
+import { studentExportConfig } from "@/components/export/moduleConfigs";
 
 type ViewMode = "classes" | "class-detail" | "student-detail" | "fee-report";
-
-type ExportFormat = "csv" | "excel" | "pdf";
-type ExportScope = "school" | "class" | "section" | "selected" | "multiple";
-
-const FIELD_GROUPS: { group: string; fields: { key: string; label: string }[] }[] = [
-  {
-    group: "Personal Information",
-    fields: [
-      { key: "name", label: "Name" },
-      { key: "username", label: "Username" },
-      { key: "email", label: "Email" },
-      { key: "phone", label: "Phone" },
-      { key: "gender", label: "Gender" },
-      { key: "date_of_birth", label: "Date of Birth" },
-    ],
-  },
-  {
-    group: "Academic",
-    fields: [
-      { key: "roll_number", label: "Roll Number" },
-      { key: "admission_number", label: "Admission Number" },
-      { key: "class_assigned", label: "Class" },
-      { key: "section", label: "Section" },
-      { key: "academic_session", label: "Academic Session" },
-    ],
-  },
-  {
-    group: "Guardian",
-    fields: [
-      { key: "father_name", label: "Father Name" },
-      { key: "mother_name", label: "Mother Name" },
-      { key: "guardian_contact", label: "Guardian Contact" },
-    ],
-  },
-  {
-    group: "Subjects",
-    fields: [
-      { key: "core_subjects", label: "Core Subjects" },
-      { key: "specialized_subjects", label: "Specialized Subjects" },
-      { key: "enriched_subjects", label: "Enriched Subjects" },
-    ],
-  },
-  {
-    group: "Attendance",
-    fields: [
-      { key: "attendance_percentage", label: "Attendance Percentage" },
-      { key: "present_days", label: "Present Days" },
-      { key: "absent_days", label: "Absent Days" },
-    ],
-  },
-  {
-    group: "Performance",
-    fields: [
-      { key: "gpa", label: "GPA" },
-      { key: "overall_percentage", label: "Overall Percentage" },
-      { key: "rank", label: "Rank" },
-      { key: "assignment_average", label: "Assignment Average" },
-      { key: "exam_average", label: "Exam Average" },
-    ],
-  },
-  {
-    group: "Fees",
-    fields: [
-      { key: "fees_paid", label: "Paid" },
-      { key: "fees_pending", label: "Pending" },
-      { key: "fees_total_due", label: "Total Due" },
-    ],
-  },
-  {
-    group: "Verification",
-    fields: [
-      { key: "admission_status", label: "Admission Status" },
-      { key: "document_verification", label: "Document Verification" },
-    ],
-  },
-];
-
-const ALL_FIELD_KEYS = FIELD_GROUPS.flatMap(g => g.fields.map(f => f.key));
-const DEFAULT_FIELDS = ["name", "email", "roll_number", "class_assigned", "section"];
 
 function AdminStudentsComponent() {
   const [view, setView] = useState<ViewMode>("classes");
@@ -105,16 +27,6 @@ function AdminStudentsComponent() {
   const [requests, setRequests] = useState<SubjectRequestRecord[]>(subjectRequestRecords);
   const [showAddStudent, setShowAddStudent] = useState(false);
   const [showExport, setShowExport] = useState(false);
-  const [exportScope, setExportScope] = useState<ExportScope>("school");
-  const [exportFormat, setExportFormat] = useState<ExportFormat>("csv");
-  const [exportClass, setExportClass] = useState("");
-  const [exportSection, setExportSection] = useState("");
-  const [exportStatus, setExportStatus] = useState("");
-  const [selectedFields, setSelectedFields] = useState<string[]>(DEFAULT_FIELDS);
-  const [showExportConfirm, setShowExportConfirm] = useState(false);
-  const [exporting, setExporting] = useState(false);
-  const [showLargeWarning, setShowLargeWarning] = useState(false);
-  const [pendingLargeExport, setPendingLargeExport] = useState(false);
   const [feeFilter, setFeeFilter] = useState<"all" | "paid" | "unpaid">("all");
   const [q, setQ] = useState("");
   const [cls, setCls] = useState("all");
@@ -174,85 +86,57 @@ function AdminStudentsComponent() {
   const classStudents = students.filter(s => s.class.startsWith(selectedClass || ""));
   const classPendingReqs = selectedClass ? pendingRequests.filter(r => r.class.startsWith(selectedClass)) : [];
 
-  function toggleField(key: string) {
-    setSelectedFields(prev =>
-      prev.includes(key) ? prev.filter(f => f !== key) : [...prev, key]
+  function renderStudentScopeInputs(scope: string, fv: Record<string, string>, setFv: React.Dispatch<React.SetStateAction<Record<string, string>>>): React.ReactNode {
+    return (
+      <div className="space-y-2">
+        {scope === "class" && (
+          <div>
+            <Label className="text-xs">Class</Label>
+            <Select value={fv["class_assigned"] || ""} onValueChange={v => setFv(prev => ({ ...prev, class_assigned: v }))}>
+              <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                {classCards.map(c => <SelectItem key={c.name} value={c.name}>Class {c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        {scope === "section" && (
+          <>
+            <div>
+              <Label className="text-xs">Class</Label>
+              <Select value={fv["class_assigned"] || ""} onValueChange={v => setFv(prev => ({ ...prev, class_assigned: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {classCards.map(c => <SelectItem key={c.name} value={c.name}>Class {c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Section</Label>
+              <Select value={fv["section"] || ""} onValueChange={v => setFv(prev => ({ ...prev, section: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {["A", "B", "C"].map(s => <SelectItem key={s} value={s}>Section {s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        )}
+        {scope === "multiple" && (
+          <div>
+            <Label className="text-xs">Classes (comma-separated)</Label>
+            <Input
+              placeholder="e.g. X-A, X-B, IX-A"
+              value={fv["class_names"] || ""}
+              onChange={e => setFv(prev => ({ ...prev, class_names: e.target.value }))}
+            />
+          </div>
+        )}
+      </div>
     );
-  }
-
-  function selectAllFields() {
-    setSelectedFields([...ALL_FIELD_KEYS]);
-  }
-
-  function deselectAllFields() {
-    setSelectedFields([]);
-  }
-
-  function buildExportFilters(): Record<string, unknown> {
-    const f: Record<string, unknown> = {};
-    if (exportScope === "class" && exportClass) {
-      f.class_assigned = exportClass;
-    }
-    if (exportScope === "section") {
-      if (exportClass) f.class_assigned = exportClass;
-      if (exportSection) f.section = exportSection;
-    }
-    if (exportScope === "multiple" && exportClass) {
-      const names = exportClass.split(",").map(s => s.trim()).filter(Boolean);
-      if (names.length > 0) f.class_names = names;
-    }
-    if (exportStatus) {
-      f.status = exportStatus;
-    }
-    return f;
-  }
-
-  function handleProceedToConfirm() {
-    if (selectedFields.length === 0) {
-      toast.error("Please select at least one field to export");
-      return;
-    }
-    const totalRecords = students.length;
-    if (totalRecords > 500) {
-      setShowLargeWarning(true);
-      setPendingLargeExport(true);
-    } else {
-      setShowExportConfirm(true);
-    }
-  }
-
-  function handleLargeConfirm() {
-    setShowLargeWarning(false);
-    setPendingLargeExport(false);
-    setShowExportConfirm(true);
-  }
-
-  function handleLargeCancel() {
-    setShowLargeWarning(false);
-    setPendingLargeExport(false);
-  }
-
-  async function handleExport() {
-    setExporting(true);
-    try {
-      const filters = buildExportFilters();
-      const { blob, filename } = await exportApi.downloadStudents(exportFormat, selectedFields, filters);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-      setShowExportConfirm(false);
-      setShowExport(false);
-      toast.success(`Exported ${filename}`);
-    } catch {
-      toast.error("Export failed. Please try again.");
-    } finally {
-      setExporting(false);
-    }
   }
 
   if (view === "class-detail" && selectedClass && classDetail) {
@@ -554,184 +438,7 @@ function AdminStudentsComponent() {
         </DialogContent>
       </Dialog>
 
-      {/* Export Dialog */}
-      <Dialog open={showExport} onOpenChange={o => { if (!o) { setShowExport(false); setShowExportConfirm(false); setShowLargeWarning(false); } }}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Export Student Data</DialogTitle></DialogHeader>
-
-          {/* Section 1: Export Format */}
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">Export Format</Label>
-            <div className="flex gap-2">
-              {(["csv", "excel", "pdf"] as ExportFormat[]).map(fmt => (
-                <Button
-                  key={fmt}
-                  size="sm"
-                  variant={exportFormat === fmt ? "default" : "outline"}
-                  onClick={() => setExportFormat(fmt)}
-                  className="capitalize"
-                >
-                  {fmt === "csv" ? "CSV (.csv)" : fmt === "excel" ? "Excel (.xlsx)" : "PDF (.pdf)"}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Section 2: Export Scope */}
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">Export Scope</Label>
-            <Select value={exportScope} onValueChange={v => setExportScope(v as ExportScope)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="school">Entire School</SelectItem>
-                <SelectItem value="class">Single Class</SelectItem>
-                <SelectItem value="section">Single Section</SelectItem>
-                <SelectItem value="multiple">Multiple Classes</SelectItem>
-              </SelectContent>
-            </Select>
-            {exportScope !== "school" && (
-              <div className="mt-2 space-y-2">
-                <div>
-                  <Label>Class{exportScope === "multiple" ? "es (comma-separated)" : ""}</Label>
-                  {exportScope === "multiple" ? (
-                    <Input
-                      placeholder="e.g. X-A, X-B, IX-A"
-                      value={exportClass}
-                      onChange={e => setExportClass(e.target.value)}
-                    />
-                  ) : (
-                    <Select value={exportClass} onValueChange={setExportClass}>
-                      <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
-                      <SelectContent>
-                        {classCards.map(c => (
-                          <SelectItem key={c.name} value={c.name}>Class {c.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                </div>
-                {exportScope === "section" && (
-                  <div>
-                    <Label>Section</Label>
-                    <Select value={exportSection} onValueChange={setExportSection}>
-                      <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
-                      <SelectContent>
-                        {["A", "B", "C"].map(s => (
-                          <SelectItem key={s} value={s}>Section {s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Section 3: Filter Options */}
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">Filter Options</Label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <Label className="text-xs">Student Status</Label>
-                <Select value={exportStatus} onValueChange={setExportStatus}>
-                  <SelectTrigger><SelectValue placeholder="All statuses" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All statuses</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 4: Field Selection Panel */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-semibold">Fields to Export</Label>
-              <div className="flex gap-1">
-                <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={selectAllFields}>Select All</Button>
-                <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={deselectAllFields}>Deselect All</Button>
-              </div>
-            </div>
-            <div className="space-y-3 max-h-60 overflow-y-auto border rounded-lg p-3">
-              {FIELD_GROUPS.map(group => (
-                <div key={group.group}>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">{group.group}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {group.fields.map(f => (
-                      <Badge
-                        key={f.key}
-                        variant={selectedFields.includes(f.key) ? "default" : "outline"}
-                        className={`cursor-pointer text-xs ${selectedFields.includes(f.key) ? "bg-primary" : ""}`}
-                        onClick={() => toggleField(f.key)}
-                      >
-                        {selectedFields.includes(f.key) ? "☑" : "☐"} {f.label}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowExport(false)}>Cancel</Button>
-            <Button className="bg-gradient-brand border-0" onClick={handleProceedToConfirm}>
-              Review & Export
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Export Confirmation Dialog */}
-      <Dialog open={showExportConfirm} onOpenChange={setShowExportConfirm}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Confirm Export</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div className="rounded-lg border p-4 space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Format</span><span className="font-medium capitalize">{exportFormat === "csv" ? "CSV (.csv)" : exportFormat === "excel" ? "Excel (.xlsx)" : "PDF (.pdf)"}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Scope</span><span className="font-medium capitalize">{exportScope.replace("_", " ")}</span></div>
-              {exportClass && <div className="flex justify-between"><span className="text-muted-foreground">Class</span><span className="font-medium">{exportClass}</span></div>}
-              {exportSection && <div className="flex justify-between"><span className="text-muted-foreground">Section</span><span className="font-medium">{exportSection}</span></div>}
-              {exportStatus && <div className="flex justify-between"><span className="text-muted-foreground">Status</span><span className="font-medium capitalize">{exportStatus}</span></div>}
-              <div className="flex justify-between"><span className="text-muted-foreground">Records</span><span className="font-medium">{students.length} students</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Fields</span><span className="font-medium">{selectedFields.length} selected</span></div>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {exportFormat === "csv" && "CSV files can be opened in Excel, Google Sheets, or any text editor."}
-              {exportFormat === "excel" && "Excel files include formatted headers and auto-filter."}
-              {exportFormat === "pdf" && "PDF will be generated in landscape orientation with a table layout."}
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowExportConfirm(false)}>Cancel</Button>
-            <Button className="bg-gradient-brand border-0" onClick={handleExport} disabled={exporting}>
-              {exporting ? "Exporting..." : "Export"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Large Export Warning */}
-      <Dialog open={showLargeWarning} onOpenChange={o => { if (!o) { setShowLargeWarning(false); setPendingLargeExport(false); } }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-warning" />
-              Large Export
-            </DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            You are about to export <strong>{students.length}</strong> student records.
-            This may take a moment depending on the selected fields and format.
-          </p>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleLargeCancel}>Cancel</Button>
-            <Button className="bg-gradient-brand border-0" onClick={handleLargeConfirm}>Continue</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ExportDialog open={showExport} onOpenChange={setShowExport} config={studentExportConfig} renderScopeInputs={renderStudentScopeInputs} />
     </>
   );
 }

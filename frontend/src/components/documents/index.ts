@@ -7,3 +7,6 @@ export { DocumentTable } from "./DocumentTable";
 export type { DocumentTableColumn } from "./DocumentTable";
 export { SignatureSection } from "./SignatureSection";
 export { PageBreak } from "./PageBreak";
+export { LetterheadEditor } from "./LetterheadEditor";
+export { LetterheadList } from "./LetterheadList";
+export { LetterheadPreview } from "./LetterheadPreview";

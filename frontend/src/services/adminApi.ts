@@ -1,4 +1,6 @@
 import { request, ADMIN_API_BASE } from "./request";
+import { isMockExportMode } from "@/lib/app-config";
+import { generateMockExport } from "@/lib/mock-export";
 
 // Dashboard
 export const dashboardApi = {
@@ -169,6 +171,9 @@ async function downloadModule(
   filters: Record<string, unknown>,
   defaultPrefix: string,
 ): Promise<{ blob: Blob; filename: string }> {
+  if (isMockExportMode()) {
+    return generateMockExport(endpoint, format, fields, filters);
+  }
   const token = localStorage.getItem("accessToken");
   const res = await fetch(`${ADMIN_API_BASE}/exports/${endpoint}/`, {
     method: "POST",

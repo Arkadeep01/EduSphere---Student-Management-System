@@ -61,6 +61,7 @@ import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminClassesRouteImport } from './routes/admin.classes'
 import { Route as AdminAttendanceRouteImport } from './routes/admin.attendance'
 import { Route as AdminContactsRouteImport } from './routes/admin.contacts'
+import { Route as AdminDocumentsRouteImport } from './routes/admin.documents'
 import { Route as AdminAdmissionsRouteImport } from './routes/admin.admissions'
 
 const TeachersRoute = TeachersRouteImport.update({
@@ -327,6 +328,12 @@ const AdminContactsRoute = AdminContactsRouteImport.update({
   getParentRoute: () => AdminRoute,
 } as any)
 
+const AdminDocumentsRoute = AdminDocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => AdminRoute,
+} as any)
+
 const AdminAdmissionsRoute = AdminAdmissionsRouteImport.update({
   id: '/admissions',
   path: '/admissions',
@@ -356,6 +363,7 @@ export interface FileRoutesByFullPath {
   '/admin/attendance': typeof AdminAttendanceRoute
   '/admin/classes': typeof AdminClassesRoute
   '/admin/contacts': typeof AdminContactsRoute
+  '/admin/documents': typeof AdminDocumentsRoute
   '/admin/admissions': typeof AdminAdmissionsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/events': typeof AdminEventsRoute
@@ -411,6 +419,7 @@ export interface FileRoutesByTo {
   '/admin/attendance': typeof AdminAttendanceRoute
   '/admin/classes': typeof AdminClassesRoute
   '/admin/contacts': typeof AdminContactsRoute
+  '/admin/documents': typeof AdminDocumentsRoute
   '/admin/admissions': typeof AdminAdmissionsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/events': typeof AdminEventsRoute
@@ -465,6 +474,7 @@ export interface FileRoutesById {
   '/admin/attendance': typeof AdminAttendanceRoute
   '/admin/classes': typeof AdminClassesRoute
   '/admin/contacts': typeof AdminContactsRoute
+  '/admin/documents': typeof AdminDocumentsRoute
   '/admin/admissions': typeof AdminAdmissionsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/events': typeof AdminEventsRoute
@@ -519,6 +529,7 @@ export interface FileRouteTypes {
     | '/admin/attendance'
     | '/admin/classes'
     | '/admin/contacts'
+    | '/admin/documents'
     | '/admin/admissions'
     | '/admin/dashboard'
     | '/admin/events'
@@ -572,6 +583,7 @@ export interface FileRouteTypes {
     | '/admin/attendance'
     | '/admin/classes'
     | '/admin/contacts'
+    | '/admin/documents'
     | '/admin/admissions'
     | '/admin/dashboard'
     | '/admin/events'
@@ -625,6 +637,7 @@ export interface FileRouteTypes {
     | '/admin/attendance'
     | '/admin/classes'
     | '/admin/contacts'
+    | '/admin/documents'
     | '/admin/admissions'
     | '/admin/dashboard'
     | '/admin/events'
@@ -1045,6 +1058,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminContactsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/documents': {
+      id: '/admin/documents'
+      path: '/documents'
+      fullPath: '/admin/documents'
+      preLoaderRoute: typeof AdminDocumentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/admissions': {
       id: '/admin/admissions'
       path: '/admissions'
@@ -1059,6 +1079,7 @@ interface AdminRouteChildren {
   AdminAttendanceRoute: typeof AdminAttendanceRoute
   AdminClassesRoute: typeof AdminClassesRoute
   AdminContactsRoute: typeof AdminContactsRoute
+  AdminDocumentsRoute: typeof AdminDocumentsRoute
   AdminAdmissionsRoute: typeof AdminAdmissionsRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminEventsRoute: typeof AdminEventsRoute
@@ -1075,6 +1096,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAttendanceRoute: AdminAttendanceRoute,
   AdminClassesRoute: AdminClassesRoute,
   AdminContactsRoute: AdminContactsRoute,
+  AdminDocumentsRoute: AdminDocumentsRoute,
   AdminAdmissionsRoute: AdminAdmissionsRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminEventsRoute: AdminEventsRoute,

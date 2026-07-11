@@ -1,5 +1,122 @@
 import { exportApi } from "@/services/adminApi";
 import type { ModuleExportConfig, ExportFieldGroup } from "./exportConfig";
+import { students, teachers, admissionSubmissions, contactSubmissions, fees } from "@/lib/mock-data";
+
+// ---- Students ----
+
+const STUDENT_FIELD_GROUPS: ExportFieldGroup[] = [
+  { group: "Personal Information", fields: [
+    { key: "name", label: "Name" },
+    { key: "username", label: "Username" },
+    { key: "email", label: "Email" },
+    { key: "phone", label: "Phone" },
+    { key: "gender", label: "Gender" },
+    { key: "date_of_birth", label: "Date of Birth" },
+  ]},
+  { group: "Academic", fields: [
+    { key: "roll_number", label: "Roll Number" },
+    { key: "admission_number", label: "Admission Number" },
+    { key: "class_assigned", label: "Class" },
+    { key: "section", label: "Section" },
+    { key: "academic_session", label: "Academic Session" },
+  ]},
+  { group: "Guardian", fields: [
+    { key: "father_name", label: "Father Name" },
+    { key: "mother_name", label: "Mother Name" },
+    { key: "guardian_contact", label: "Guardian Contact" },
+  ]},
+  { group: "Subjects", fields: [
+    { key: "core_subjects", label: "Core Subjects" },
+    { key: "specialized_subjects", label: "Specialized Subjects" },
+    { key: "enriched_subjects", label: "Enriched Subjects" },
+  ]},
+  { group: "Performance", fields: [
+    { key: "gpa", label: "GPA" },
+    { key: "overall_percentage", label: "Overall Percentage" },
+    { key: "rank", label: "Rank" },
+    { key: "assignment_average", label: "Assignment Average" },
+    { key: "exam_average", label: "Exam Average" },
+  ]},
+  { group: "Fees", fields: [
+    { key: "fees_paid", label: "Paid" },
+    { key: "fees_pending", label: "Pending" },
+    { key: "fees_total_due", label: "Total Due" },
+  ]},
+];
+
+export const studentExportConfig: ModuleExportConfig = {
+  moduleName: "students",
+  label: "Student Data",
+  fieldGroups: STUDENT_FIELD_GROUPS,
+  defaultFields: ["name", "email", "roll_number", "class_assigned", "section"],
+  scopes: [
+    { value: "school", label: "Entire School" },
+    { value: "class", label: "Single Class" },
+    { value: "section", label: "Single Section" },
+    { value: "multiple", label: "Multiple Classes" },
+  ],
+  filters: [
+    { key: "status", label: "Status", type: "select",
+      options: [{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }] },
+  ],
+  estimateRecordCount: () => students.length,
+  downloadFn: (format, fields, filters) => exportApi.downloadStudents(format, fields, filters),
+};
+
+// ---- Teachers ----
+
+const TEACHER_FIELD_GROUPS: ExportFieldGroup[] = [
+  { group: "Personal Information", fields: [
+    { key: "name", label: "Name" },
+    { key: "employee_id", label: "Employee ID" },
+    { key: "username", label: "Username" },
+    { key: "email", label: "Email" },
+    { key: "phone", label: "Phone" },
+    { key: "gender", label: "Gender" },
+  ]},
+  { group: "Professional Information", fields: [
+    { key: "qualification", label: "Qualification" },
+    { key: "experience", label: "Experience" },
+    { key: "date_of_joining", label: "Date of Joining" },
+    { key: "employment_status", label: "Employment Status" },
+  ]},
+  { group: "Academic Information", fields: [
+    { key: "assigned_subject", label: "Assigned Subject" },
+    { key: "assigned_classes", label: "Assigned Classes" },
+    { key: "assigned_sections", label: "Assigned Sections" },
+    { key: "class_teacher_of", label: "Class Teacher Of" },
+  ]},
+  { group: "Statistics", fields: [
+    { key: "total_students", label: "Total Students" },
+    { key: "pending_evaluations", label: "Pending Evaluations" },
+    { key: "assignments_created", label: "Assignments Created" },
+    { key: "attendance_taken", label: "Attendance Taken" },
+  ]},
+  { group: "System Information", fields: [
+    { key: "last_login", label: "Last Login" },
+    { key: "performance_rating", label: "Performance Rating" },
+  ]},
+];
+
+export const teacherExportConfig: ModuleExportConfig = {
+  moduleName: "teachers",
+  label: "Teacher Data",
+  fieldGroups: TEACHER_FIELD_GROUPS,
+  defaultFields: ["name", "employee_id", "email", "assigned_subject", "experience"],
+  scopes: [
+    { value: "school", label: "All Teachers" },
+    { value: "subject", label: "By Subject" },
+    { value: "class", label: "By Class" },
+    { value: "class_teacher", label: "Class Teachers Only" },
+    { value: "non_class_teacher", label: "Non Class Teachers" },
+  ],
+  filters: [
+    { key: "status", label: "Status", type: "select",
+      options: [{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }] },
+  ],
+  estimateRecordCount: () => teachers.length,
+  downloadFn: (format, fields, filters) => exportApi.downloadTeachers(format, fields, filters),
+};
 
 // ---- Classes ----
 
@@ -144,6 +261,7 @@ export const admissionExportConfig: ModuleExportConfig = {
       ] },
     { key: "stream", label: "Stream", type: "text" },
   ],
+  estimateRecordCount: () => admissionSubmissions.length,
   downloadFn: (format, fields, filters) => exportApi.downloadAdmissions(format, fields, filters),
 };
 
@@ -176,6 +294,7 @@ export const contactExportConfig: ModuleExportConfig = {
       ] },
   ],
   allowedFormats: ["pdf"],
+  estimateRecordCount: () => contactSubmissions.length,
   downloadFn: (format, fields, filters) => exportApi.downloadContacts(format, fields, filters),
 };
 
@@ -285,5 +404,91 @@ export const feeExportConfig: ModuleExportConfig = {
         { value: "rejected", label: "Rejected" },
       ] },
   ],
+  estimateRecordCount: () => fees.length,
   downloadFn: (format, fields, filters) => exportApi.downloadFees(format, fields, filters),
+};
+
+// ---- Salary ----
+
+const SALARY_FIELD_GROUPS: ExportFieldGroup[] = [
+  { group: "Employee Info", fields: [
+    { key: "employee_name", label: "Employee Name" },
+    { key: "employee_id", label: "Employee ID" },
+    { key: "department", label: "Department" },
+    { key: "designation", label: "Designation" },
+  ]},
+  { group: "Salary Details", fields: [
+    { key: "month", label: "Month" },
+    { key: "year", label: "Year" },
+    { key: "basic_pay", label: "Basic Pay" },
+    { key: "allowances", label: "Allowances" },
+    { key: "deductions", label: "Deductions" },
+    { key: "net_salary", label: "Net Salary" },
+    { key: "status", label: "Status" },
+  ]},
+];
+
+export const salaryExportConfig: ModuleExportConfig = {
+  moduleName: "salary",
+  label: "Salary Report",
+  fieldGroups: SALARY_FIELD_GROUPS,
+  defaultFields: ["employee_name", "employee_id", "month", "net_salary", "status"],
+  scopes: [
+    { value: "school", label: "All Employees" },
+    { value: "department", label: "By Department" },
+  ],
+  filters: [
+    { key: "month", label: "Month", type: "text" },
+    { key: "status", label: "Status", type: "select",
+      options: [
+        { value: "paid", label: "Paid" },
+        { value: "pending", label: "Pending" },
+      ] },
+  ],
+  downloadFn: (format, fields, filters) => exportApi.downloadSalary(format, fields, filters),
+};
+
+// ---- Receipt ----
+
+const RECEIPT_FIELD_GROUPS: ExportFieldGroup[] = [
+  { group: "Receipt Info", fields: [
+    { key: "receipt_number", label: "Receipt Number" },
+    { key: "student_name", label: "Student Name" },
+    { key: "admission_number", label: "Admission Number" },
+    { key: "class", label: "Class" },
+  ]},
+  { group: "Payment Details", fields: [
+    { key: "amount", label: "Amount" },
+    { key: "payment_method", label: "Payment Method" },
+    { key: "transaction_id", label: "Transaction ID" },
+    { key: "payment_date", label: "Payment Date" },
+    { key: "status", label: "Status" },
+  ]},
+];
+
+export const receiptExportConfig: ModuleExportConfig = {
+  moduleName: "receipt",
+  label: "Receipt Report",
+  fieldGroups: RECEIPT_FIELD_GROUPS,
+  defaultFields: ["receipt_number", "student_name", "amount", "payment_date", "status"],
+  scopes: [
+    { value: "school", label: "All Receipts" },
+    { value: "student", label: "By Student" },
+  ],
+  filters: [
+    { key: "payment_method", label: "Payment Method", type: "select",
+      options: [
+        { value: "cash", label: "Cash" },
+        { value: "card", label: "Card" },
+        { value: "bank_transfer", label: "Bank Transfer" },
+        { value: "online", label: "Online" },
+      ] },
+    { key: "status", label: "Status", type: "select",
+      options: [
+        { value: "verified", label: "Verified" },
+        { value: "pending_verification", label: "Pending Verification" },
+        { value: "rejected", label: "Rejected" },
+      ] },
+  ],
+  downloadFn: (format, fields, filters) => exportApi.downloadReceipt(format, fields, filters),
 };
