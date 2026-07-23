@@ -2,33 +2,20 @@ import { createContext, useContext, useEffect, useState, useCallback, type React
 import { useNavigate } from "@tanstack/react-router";
 
 const API_BASE = "http://localhost:8000";
+const TOKEN_KEY = "accessToken";
+const REFRESH_KEY = "refreshToken";
 
 export interface User {
   id: number;
   email: string;
   first_name: string;
   last_name: string;
-  role: "student" | "teacher" | "admin";
+  role: "student" | "teacher" | "admin" | "staff";
   is_active: boolean;
   is_staff: boolean;
   is_superuser: boolean;
   date_joined: string;
 }
-
-const MOCK_CREDENTIALS: Record<string, { password: string; user: User }> = {
-  "admin@edusphere.edu": {
-    password: "admin123",
-    user: { id: 1, email: "admin@edusphere.edu", first_name: "Alex", last_name: "Morgan", role: "admin", is_active: true, is_staff: true, is_superuser: true, date_joined: "2026-01-01" },
-  },
-  "teacher@edusphere.edu": {
-    password: "teacher123",
-    user: { id: 2, email: "teacher@edusphere.edu", first_name: "Anika", last_name: "Rao", role: "teacher", is_active: true, is_staff: true, is_superuser: false, date_joined: "2026-01-01" },
-  },
-  "student@edusphere.edu": {
-    password: "student123",
-    user: { id: 3, email: "student@edusphere.edu", first_name: "Aarav", last_name: "Sharma", role: "student", is_active: true, is_staff: false, is_superuser: false, date_joined: "2026-01-01" },
-  },
-};
 
 interface LoginParams {
   email: string;
@@ -58,15 +45,26 @@ interface AuthCtx {
 
 function getRoleRedirect(role: string): string {
   switch (role) {
-    case "admin":
-      return "/admin/dashboard";
-    case "teacher":
-      return "/teacher/dashboard";
-    case "student":
-      return "/student/dashboard";
-    default:
-      return "/login";
+    case "admin": return "/admin/dashboard";
+    case "teacher": return "/teacher/dashboard";
+    case "student": return "/student/dashboard";
+    case "staff": return "/staff/dashboard";
+    default: return "/login";
   }
+}
+
+function storeTokens(access: string, refresh: string): void {
+  localStorage.setItem(TOKEN_KEY, access);
+  localStorage.setItem(REFRESH_KEY, refresh);
+}
+
+function clearTokens(): void {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(REFRESH_KEY);
+}
+
+function getAccessToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
 }
 
 const Ctx = createContext<AuthCtx | null>(null);
@@ -77,8 +75,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const refreshSession = useCallback(async () => {
+    const token = getAccessToken();
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     try {
       const res = await fetch(`${API_BASE}/api/me/`, {
+        headers: { Authorization: `Bearer ${token}` },
         credentials: "include",
       });
       const data = await res.json();
@@ -86,14 +90,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(data.user);
       } else {
         setUser(null);
+        clearTokens();
       }
     } catch {
-      const raw = localStorage.getItem("edusphere_mock_user");
-      if (raw) {
-        try { setUser(JSON.parse(raw)); } catch { setUser(null); }
-      } else {
-        setUser(null);
-      }
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -107,18 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const entry = MOCK_CREDENTIALS[params.email];
-      if (entry) {
-        if (entry.password !== params.password) {
-          const msg = "Invalid email or password.";
-          setError(msg);
-          throw new Error(msg);
-        }
-        setUser(entry.user);
-        localStorage.setItem("edusphere_mock_user", JSON.stringify(entry.user));
-        return entry.user;
-      }
-      const body = { email: params.email, password: params.password, portal: params.portal || "" };
+      const body = { email: params.email, password: params.password, portal: params.portal || "student" };
       const res = await fetch(`${API_BASE}/api/login/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -127,16 +116,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       const data = await res.json();
       if (data.success) {
+        storeTokens(data.access, data.refresh);
         setUser(data.user);
         return data.user;
-      } else {
-        setError(data.message);
-        throw new Error(data.message);
       }
+      const msg = data.message || "Login failed.";
+      setError(msg);
+      throw new Error(msg);
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      }
+      if (err instanceof Error) setError(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -155,27 +143,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       const data = await res.json();
       if (data.success) {
-        setUser(data.user);
         return data.user;
-      } else {
-        setError(data.message);
-        throw new Error(data.message);
       }
+      const msg = data.message || "Registration failed.";
+      setError(msg);
+      throw new Error(msg);
     } catch (err) {
-      const newUser: User = {
-        id: Date.now(),
-        email: params.email,
-        first_name: params.first_name,
-        last_name: params.last_name,
-        role: params.role,
-        is_active: true,
-        is_staff: false,
-        is_superuser: false,
-        date_joined: new Date().toISOString(),
-      };
-      setUser(newUser);
-      localStorage.setItem("edusphere_mock_user", JSON.stringify(newUser));
-      return newUser;
+      if (err instanceof Error) setError(err.message);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -192,7 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Ignore logout errors
     } finally {
       setUser(null);
-      localStorage.removeItem("edusphere_mock_user");
+      clearTokens();
       setLoading(false);
     }
   }, []);
@@ -219,27 +194,18 @@ export function useAuth() {
 export function useRequireAuth() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-
   useEffect(() => {
-    if (!loading && !user) {
-      navigate({ to: "/login" });
-    }
+    if (!loading && !user) navigate({ to: "/login" });
   }, [user, loading, navigate]);
-
   return { user, loading };
 }
 
-export function useRequireRole(role: "student" | "teacher" | "admin") {
+export function useRequireRole(role: User["role"]) {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-
   useEffect(() => {
-    if (!loading && !user) {
-      navigate({ to: "/login" });
-    } else if (!loading && user && user.role !== role) {
-      navigate({ to: getRoleRedirect(user.role) });
-    }
+    if (!loading && !user) navigate({ to: "/login" });
+    else if (!loading && user && user.role !== role) navigate({ to: getRoleRedirect(user.role) });
   }, [user, loading, role, navigate]);
-
   return { user, loading, authorized: !loading && !!user && user.role === role };
 }

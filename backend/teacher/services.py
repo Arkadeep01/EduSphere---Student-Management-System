@@ -5,8 +5,9 @@ from django.utils import timezone
 
 from .models import (
     TeacherProfile, TeacherClassAssignment, TimetableEntry,
-    LibrarySession, Resource, AnswerScript,
+    LibrarySession, Resource,
 )
+from administration.models import AnswerScriptUpload
 from student.models import Attendance, StudentProfile, Subject
 
 
@@ -81,6 +82,12 @@ def convert_to_library_session(timetable_entry, date):
 
 def toggle_attendance(student_profile, date, status, marked_by_user):
     """Mark or update attendance for a student."""
+    from datetime import timedelta
+    from django.utils import timezone
+    cutoff = timezone.now().date() - timedelta(days=7)
+    if date < cutoff:
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied("Cannot mark attendance for dates more than 7 days in the past.")
     attendance, created = Attendance.objects.update_or_create(
         student=student_profile,
         date=date,
@@ -122,11 +129,12 @@ def submit_evaluation(answer_script, marks, total_marks, remarks):
     answer_script.total_marks = total_marks
     answer_script.remarks = remarks
     answer_script.evaluation_status = "completed"
+    answer_script.upload_status = "evaluation_completed"
     answer_script.evaluated_at = timezone.now()
     answer_script.save(
         update_fields=[
             "marks_obtained", "total_marks", "remarks",
-            "evaluation_status", "evaluated_at",
+            "evaluation_status", "upload_status", "evaluated_at",
         ]
     )
     return answer_script

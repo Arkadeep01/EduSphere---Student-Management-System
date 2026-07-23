@@ -60,6 +60,11 @@ def validate_elective_counts(student_profile, subject_ids):
         raise serializers.ValidationError(errors)
 
 
+def get_current_session():
+    from administration.models import AcademicSession
+    return AcademicSession.objects.filter(is_current=True).first()
+
+
 def add_student_subject_selection(student_profile, subject_ids):
     """Student selects elective subjects (pending admin approval)."""
     validate_elective_counts(student_profile, subject_ids)
@@ -74,6 +79,8 @@ def add_student_subject_selection(student_profile, subject_ids):
         status="pending",
     ).delete()
 
+    current_session = get_current_session()
+
     # Create new pending entries
     for subj_id in subject_ids:
         subject = Subject.objects.get(id=subj_id)
@@ -81,7 +88,11 @@ def add_student_subject_selection(student_profile, subject_ids):
             StudentSubject.objects.get_or_create(
                 student=student_profile,
                 subject=subject,
-                defaults={"status": "pending", "assigned_by_admin": False},
+                defaults={
+                    "status": "pending",
+                    "assigned_by_admin": False,
+                    "academic_session": current_session,
+                },
             )
 
 
@@ -116,13 +127,19 @@ def admin_assign_subjects(student_profile, subject_ids):
         subject__tier__in=tiers,
     ).delete()
 
+    current_session = get_current_session()
+
     for subj_id in subject_ids:
         subject = Subject.objects.get(id=subj_id)
         if subject.tier != "core":
             StudentSubject.objects.get_or_create(
                 student=student_profile,
                 subject=subject,
-                defaults={"status": "approved", "assigned_by_admin": True},
+                defaults={
+                    "status": "approved",
+                    "assigned_by_admin": True,
+                    "academic_session": current_session,
+                },
             )
 
 

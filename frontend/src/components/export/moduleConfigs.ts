@@ -336,10 +336,12 @@ export const documentExportConfig: ModuleExportConfig = {
 const AUDIT_FIELD_GROUPS: ExportFieldGroup[] = [
   { group: "Audit Log Details", fields: [
     { key: "user", label: "User" },
+    { key: "action", label: "Action" },
     { key: "model_name", label: "Model" },
-    { key: "export_type", label: "Export Type" },
-    { key: "file_path", label: "File Path" },
-    { key: "exported_at", label: "Exported At" },
+    { key: "object_id", label: "Object ID" },
+    { key: "description", label: "Description" },
+    { key: "ip_address", label: "IP Address" },
+    { key: "created_at", label: "Timestamp" },
   ]},
 ];
 
@@ -347,16 +349,20 @@ export const auditLogExportConfig: ModuleExportConfig = {
   moduleName: "audit_logs",
   label: "Audit Logs",
   fieldGroups: AUDIT_FIELD_GROUPS,
-  defaultFields: ["user", "model_name", "export_type", "exported_at"],
+  defaultFields: ["user", "action", "model_name", "description", "created_at"],
   scopes: [],
   filters: [
     { key: "model_name", label: "Module", type: "text" },
-    { key: "export_type", label: "Export Type", type: "select",
+    { key: "action", label: "Action", type: "select",
       options: [
-        { value: "csv", label: "CSV" },
-        { value: "excel", label: "Excel" },
-        { value: "pdf", label: "PDF" },
-        { value: "zip", label: "ZIP" },
+        { value: "create", label: "Create" },
+        { value: "update", label: "Update" },
+        { value: "delete", label: "Delete" },
+        { value: "login", label: "Login" },
+        { value: "logout", label: "Logout" },
+        { value: "export", label: "Export" },
+        { value: "upload", label: "Upload" },
+        { value: "download", label: "Download" },
       ] },
   ],
   downloadFn: (format, fields, filters) => exportApi.downloadAuditLogs(format, fields, filters),
@@ -492,3 +498,5 @@ export const receiptExportConfig: ModuleExportConfig = {
   ],
   downloadFn: (format, fields, filters) => exportApi.downloadReceipt(format, fields, filters),
 };
+
+

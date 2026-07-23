@@ -10,13 +10,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Search, MoreHorizontal, Eye, Trash2, Mail, Phone, CheckCircle2, RotateCcw, Download } from "lucide-react";
-import { useState } from "react";
-import { contactSubmissionsFull } from "@/lib/mock-data";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { contactAdminApi } from "@/services/adminApi";
 import { ExportDialog } from "@/components/export";
 import { contactExportConfig } from "@/components/export/moduleConfigs";
 
-const statusBadge: Record<string, { variant: "default" | "secondary" | "outline" | "destructive", className: string }> = {
+interface ContactItem {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+  status: string;
+  created_at: string;
+  submittedAt: string;
+}
+
+const statusBadge: Record<string, { variant: "default" | "secondary" | "outline" | "destructive"; className: string }> = {
   unread: { variant: "default", className: "bg-primary" },
   read: { variant: "secondary", className: "" },
   pending: { variant: "outline", className: "border-warning text-warning" },
@@ -24,27 +36,55 @@ const statusBadge: Record<string, { variant: "default" | "secondary" | "outline"
 };
 
 function AdminContactsComponent() {
-  const [submissions, setSubmissions] = useState(contactSubmissionsFull);
+  const [submissions, setSubmissions] = useState<ContactItem[]>([]);
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showExport, setShowExport] = useState(false);
-  const [showEmailModal, setShowEmailModal] = useState<string | null>(null);
+  const [showEmailModal, setShowEmailModal] = useState<number | null>(null);
   const [replyMessage, setReplyMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const fetchContacts = async () => {
+    try {
+      const data = await contactAdminApi.list();
+      setSubmissions((data as ContactItem[]) || []);
+    } catch {
+      toast.error("Failed to load contacts");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchContacts(); }, []);
 
   const filtered = submissions.filter(s =>
-    (s.name.toLowerCase().includes(q.toLowerCase()) || s.email.toLowerCase().includes(q.toLowerCase()) || s.subject.toLowerCase().includes(q.toLowerCase()))
+    (s.name?.toLowerCase().includes(q.toLowerCase()) || s.email?.toLowerCase().includes(q.toLowerCase()) || s.subject?.toLowerCase().includes(q.toLowerCase()))
     && (statusFilter === "all" || s.status === statusFilter)
   );
 
-  const updateStatus = (id: string, status: "read" | "resolved" | "pending") => {
-    setSubmissions(prev => prev.map(s => s.id === id ? { ...s, status } : s));
-    toast.success(`Marked as ${status}`);
+  const updateStatus = async (id: number, status: string) => {
+    try {
+      await contactAdminApi.updateStatus(id, status);
+      setSubmissions(prev => prev.map(s => s.id === id ? { ...s, status } : s));
+      toast.success(`Marked as ${status}`);
+    } catch {
+      toast.error("Failed to update status");
+    }
   };
 
-  const deleteSubmission = (id: string) => {
-    setSubmissions(prev => prev.filter(s => s.id !== id));
-    toast.success("Submission deleted");
+  const deleteSubmission = async (id: number) => {
+    try {
+      await contactAdminApi.delete(id);
+      setSubmissions(prev => prev.filter(s => s.id !== id));
+      toast.success("Submission deleted");
+    } catch {
+      toast.error("Failed to delete submission");
+    }
   };
+
+  if (loading) {
+    return <div className="text-center py-8 text-muted-foreground">Loading contacts...</div>;
+  }
 
   return (
     <>
@@ -65,10 +105,10 @@ function AdminContactsComponent() {
                 <TableRow key={s.id}>
                   <TableCell className="font-medium">{s.name}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">{s.email}</TableCell>
-                  <TableCell className="text-sm">{s.phone}</TableCell>
+                  <TableCell className="text-sm">{s.phone || "--"}</TableCell>
                   <TableCell className="max-w-[160px] truncate">{s.subject}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{new Date(s.submittedAt).toLocaleDateString()}</TableCell>
-                  <TableCell><Badge variant={statusBadge[s.status].variant} className={statusBadge[s.status].className}>{s.status}</Badge></TableCell>
+                  <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{new Date(s.submittedAt || s.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell><Badge variant={statusBadge[s.status]?.variant || "secondary"} className={statusBadge[s.status]?.className || ""}>{s.status}</Badge></TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>

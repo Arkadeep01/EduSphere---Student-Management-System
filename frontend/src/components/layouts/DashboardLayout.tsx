@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/context/AuthContext";
-import { useTheme } from "@/lib/auth";
+import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,11 +29,14 @@ const navByRole: Record<Role, NavItem[]> = {
     { label: "Attendance", to: "/admin/attendance", icon: ClipboardCheck },
     { label: "Examinations", to: "/admin/exams", icon: FileText },
     { label: "Fees & Finance", to: "/admin/fees", icon: DollarSign },
+    { label: "Notifications", to: "/admin/notifications", icon: Bell },
     { label: "Events", to: "/admin/events", icon: CalendarDays },
+    { label: "Audit Logs", to: "/admin/audit-logs", icon: ClipboardList },
     { label: "Contact Submissions", to: "/admin/contacts", icon: Mail },
     { label: "Admission Forms", to: "/admin/admissions", icon: ClipboardList },
     { label: "Documents", to: "/admin/documents", icon: FolderOpen },
     { label: "Reports", to: "/admin/reports", icon: BarChart3 },
+    { label: "Subjects", to: "/admin/subjects", icon: BookOpen },
     { label: "Settings", to: "/admin/settings", icon: Settings },
     { label: "Profile", to: "/admin/profile", icon: User },
   ],
@@ -60,6 +63,14 @@ const navByRole: Record<Role, NavItem[]> = {
     { label: "Notifications", to: "/student/notifications", icon: Bell },
     { label: "Profile", to: "/student/profile", icon: User },
   ],
+  staff: [
+    { label: "Dashboard", to: "/staff/dashboard", icon: LayoutDashboard },
+    { label: "Upload Tasks", to: "/staff/upload-tasks", icon: ClipboardCheck },
+    { label: "Upload Scripts", to: "/staff/upload", icon: FileText },
+    { label: "Upload History", to: "/staff/history", icon: Clock },
+    { label: "Rejected", to: "/staff/rejected", icon: FileCheck },
+    { label: "Profile", to: "/staff/profile", icon: User },
+  ],
 };
 
 export function  DashboardLayout({ role }: { role: Role }) {
@@ -76,6 +87,7 @@ export function  DashboardLayout({ role }: { role: Role }) {
     "subjects": "Subjects",
     "assignments": "Assignments",
     "attendance": "Attendance",
+    "audit-logs": "Audit Logs",
     "exams": "Examinations",
     "results": "Results",
     "fees": "Fees & Finance",
@@ -90,7 +102,13 @@ export function  DashboardLayout({ role }: { role: Role }) {
     "admissions": "Admission Forms",
     "documents": "Document Repository",
     "reports": "Reports",
+    "subjects": "Subject Management",
+    "notifications": "Notification Broadcast",
     "settings": "Settings",
+    "upload-tasks": "Upload Tasks",
+    "upload": "Upload Scripts",
+    "history": "Upload History",
+    "rejected": "Rejected Uploads",
   };
   const currentPage = pathname.split("/").pop() || "";
   const pageTitle = pageTitleMap[currentPage] || currentPage.charAt(0).toUpperCase() + currentPage.slice(1);
@@ -100,7 +118,7 @@ export function  DashboardLayout({ role }: { role: Role }) {
     navigate({ to: "/login" });
   };
 
-  const roleLabels = { admin: "Administrator", teacher: "Teacher", student: "Student" };
+  const roleLabels: Record<string, string> = { admin: "Administrator", teacher: "Teacher", student: "Student", staff: "Staff" };
 
   return (
     <div className="flex min-h-screen bg-muted/30">

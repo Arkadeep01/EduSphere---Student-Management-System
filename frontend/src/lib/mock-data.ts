@@ -1,5 +1,5 @@
 // Centralized mock data for EduSphere demo
-export type Role = "admin" | "teacher" | "student";
+export type Role = "admin" | "teacher" | "student" | "staff";
 
 export const stats = {
   students: 1248,

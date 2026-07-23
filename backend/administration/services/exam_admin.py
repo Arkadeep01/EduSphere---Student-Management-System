@@ -1,6 +1,9 @@
+import uuid
+
 from django.db import transaction
 from django.utils import timezone
 
+from administration.models.audit_log import AuditLog
 from administration.models.exam import (
     Exam,
     ExamSchedule,
@@ -34,8 +37,23 @@ class ExamAdminService:
         return schedule
 
     @staticmethod
-    def upload_answer_script(data):
-        script = AnswerScriptUpload.objects.create(**data)
+    def upload_answer_script(data, user=None):
+        batch_id = f"ADMIN-BATCH-{uuid.uuid4().hex[:8].upper()}"
+        now = timezone.now()
+        script = AnswerScriptUpload.objects.create(
+            **data,
+            uploaded_by=user,
+            uploaded_at=now,
+            upload_status="uploaded",
+            batch_id=batch_id,
+        )
+        AuditLog.objects.create(
+            action="upload",
+            model_name="AnswerScriptUpload",
+            object_id=str(script.id),
+            user=user,
+            description=f"Admin uploaded script via legacy upload - {script.exam.name}",
+        )
         return script
 
     @staticmethod

@@ -1,4 +1,4 @@
-import { request, ADMIN_API_BASE } from "./request";
+import { request, ADMIN_API_BASE, STAFF_API_BASE } from "./request";
 import { isMockExportMode } from "@/lib/app-config";
 import { generateMockExport } from "@/lib/mock-export";
 
@@ -132,6 +132,68 @@ export const cmsApi = {
   },
 };
 
+// Fees
+export const feeApi = {
+  structures: {
+    list: () => request<unknown[]>("/fees/structures/"),
+    create: (data: Record<string, unknown>) =>
+      request("/fees/structures/", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: number, data: Record<string, unknown>) =>
+      request(`/fees/structures/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
+    delete: (id: number) => request(`/fees/structures/${id}/`, { method: "DELETE" }),
+    duplicate: (fromClass: string, toClass: string) =>
+      request("/fees/structures/duplicate/", { method: "POST", body: JSON.stringify({ from_class: fromClass, to_class: toClass }) }),
+  },
+  payments: {
+    list: (params?: Record<string, string>) => {
+      const qs = params ? `?${new URLSearchParams(params)}` : "";
+      return request<unknown[]>(`/fees/payments/${qs}`);
+    },
+    verify: (id: number) => request(`/fees/payments/${id}/verify/`, { method: "POST" }),
+    reject: (id: number) => request(`/fees/payments/${id}/reject/`, { method: "POST" }),
+    initiateRefund: (id: number) => request(`/fees/payments/${id}/refund/initiate/`, { method: "POST" }),
+    completeRefund: (id: number) => request(`/fees/payments/${id}/refund/complete/`, { method: "POST" }),
+  },
+  scholarships: {
+    list: () => request<unknown[]>("/fees/scholarships/"),
+    grant: (data: Record<string, unknown>) =>
+      request("/fees/scholarships/", { method: "POST", body: JSON.stringify(data) }),
+    revoke: (id: number) => request(`/fees/scholarships/${id}/revoke/`, { method: "POST" }),
+  },
+  analytics: () => request<unknown>("/fees/analytics/"),
+  activityLog: () => request<unknown[]>("/fees/activity-log/"),
+  myLedger: () => request<unknown>("/fees/my-ledger/"),
+  recordOffline: (data: Record<string, unknown>) =>
+    request("/fees/my-ledger/", { method: "POST", body: JSON.stringify(data) }),
+};
+
+// Letterheads
+export const letterheadApi = {
+  list: () => request<unknown[]>("/letterheads/"),
+  create: (data: Record<string, unknown>) =>
+    request("/letterheads/", { method: "POST", body: JSON.stringify(data) }),
+  update: (id: number, data: Record<string, unknown>) =>
+    request(`/letterheads/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
+  delete: (id: number) => request(`/letterheads/${id}/`, { method: "DELETE" }),
+};
+
+// Documents
+export const documentApi = {
+  list: (params?: Record<string, string>) => {
+    const qs = params ? `?${new URLSearchParams(params)}` : "";
+    return request<unknown[]>(`/documents/${qs}`);
+  },
+  upload: (formData: FormData) => {
+    const token = localStorage.getItem("accessToken");
+    return fetch(`${ADMIN_API_BASE}/documents/upload/`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    }).then(r => { if (!r.ok) throw new Error("Upload failed"); return r.json(); });
+  },
+  delete: (id: number) => request(`/documents/${id}/`, { method: "DELETE" }),
+};
+
 // Subject Request Control
 export const subjectRequestApi = {
   get: () => request<{ enabled: boolean }>("/subject-request-control/"),
@@ -160,6 +222,66 @@ export interface PendingSubjectRequest {
   subject_category: string;
   requested_on: string;
   status: string;
+}
+
+// Subject Management
+export const subjectAdminApi = {
+  list: () => request<SubjectItem[]>("/subjects/"),
+  create: (data: Partial<SubjectItem>) =>
+    request<SubjectItem>("/subjects/", { method: "POST", body: JSON.stringify(data) }),
+  detail: (id: number) => request<SubjectItem>(`/subjects/${id}/`),
+  update: (id: number, data: Partial<SubjectItem>) =>
+    request<SubjectItem>(`/subjects/${id}/`, { method: "PATCH", body: JSON.stringify(data) }),
+  delete: (id: number) => request(`/subjects/${id}/`, { method: "DELETE" }),
+};
+
+export interface SubjectItem {
+  id: number;
+  name: string;
+  code: string;
+  tier: string;
+  teacher_name: string;
+  description: string;
+  color: string;
+  progress: number;
+}
+
+// Notification Broadcasts
+export interface NotificationBroadcast {
+  id: number;
+  title: string;
+  message: string;
+  recipient_type: string;
+  target_class: string;
+  recipient_ids: number[];
+  status: string;
+  sent_by: number | null;
+  sent_at: string | null;
+  created_at: string;
+}
+
+export const notificationBroadcastApi = {
+  list: () => request<NotificationBroadcast[]>("/notifications/"),
+  create: (data: Partial<NotificationBroadcast>) =>
+    request<NotificationBroadcast>("/notifications/", { method: "POST", body: JSON.stringify(data) }),
+  send: (id: number) =>
+    request<NotificationBroadcast>(`/notifications/${id}/send/`, { method: "POST" }),
+};
+
+// Audit Logs
+export const auditLogApi = {
+  list: () => request<AuditLogEntry[]>("/audit-logs/"),
+};
+
+interface AuditLogEntry {
+  id: number;
+  user: string | null;
+  action: string;
+  model_name: string;
+  object_id: string;
+  description: string;
+  ip_address: string | null;
+  created_at: string;
 }
 
 // ---- Generic Download Helper ----
@@ -267,4 +389,32 @@ export const exportApi = {
     const filename = match ? match[1] : "AdmissionDocuments.zip";
     return { blob, filename };
   },
+};
+
+// Staff API
+export const staffApi = {
+  dashboard: () => request<Record<string, unknown>>("/dashboard/", undefined, STAFF_API_BASE),
+  uploadTasks: () => request<unknown[]>("/upload-tasks/", undefined, STAFF_API_BASE),
+  uploadScript: (formData: FormData) =>
+    request<Record<string, unknown>>("/upload/", { method: "POST", body: formData }, STAFF_API_BASE),
+  uploadScriptDetail: (id: number) =>
+    request<Record<string, unknown>>(`/upload/${id}/`, undefined, STAFF_API_BASE),
+  replaceScript: (id: number, formData: FormData) =>
+    request<Record<string, unknown>>(`/upload/${id}/`, { method: "PUT", body: formData }, STAFF_API_BASE),
+  deleteScript: (id: number) =>
+    request<Record<string, unknown>>(`/upload/${id}/`, { method: "DELETE" }, STAFF_API_BASE),
+  uploadHistory: (status?: string) => {
+    const qs = status ? `?status=${status}` : "";
+    return request<unknown[]>(`/history/${qs}`, undefined, STAFF_API_BASE);
+  },
+  pendingUploads: (examId?: number, subjectId?: number) => {
+    const params = new URLSearchParams();
+    if (examId) params.set("exam", String(examId));
+    if (subjectId) params.set("subject", String(subjectId));
+    const qs = params.toString() ? `?${params.toString()}` : "";
+    return request<unknown[]>(`/upload/${qs}`, undefined, STAFF_API_BASE);
+  },
+  profile: () => request<Record<string, unknown>>("/profile/", undefined, STAFF_API_BASE),
+  updateProfile: (data: Record<string, unknown>) =>
+    request<Record<string, unknown>>("/profile/", { method: "PUT", body: JSON.stringify(data) }, STAFF_API_BASE),
 };

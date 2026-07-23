@@ -8,6 +8,10 @@ urlpatterns = [
     path("dashboard/attendance/", views.DashboardAttendanceView.as_view(), name="admin-dashboard-attendance"),
     path("dashboard/exam-performance/", views.DashboardExamPerformanceView.as_view(), name="admin-dashboard-exam-performance"),
 
+    # Subjects
+    path("subjects/", views.SubjectAdminListView.as_view(), name="admin-subject-list"),
+    path("subjects/<int:subject_id>/", views.SubjectAdminDetailView.as_view(), name="admin-subject-detail"),
+
     # Subject Request Control
     path("subject-request-control/", views.SubjectRequestControlView.as_view(), name="admin-subject-request-control"),
 
@@ -31,6 +35,10 @@ urlpatterns = [
     path("teacher-allocations/", views.TeacherAllocationsView.as_view(), name="admin-teacher-allocations"),
     path("class-teacher-assignments/", views.TeacherClassTeacherAssignmentsView.as_view(), name="admin-class-teacher-assignments"),
 
+    # Academic Sessions
+    path("sessions/", views.AcademicSessionListView.as_view(), name="admin-session-list"),
+    path("sessions/<int:session_id>/", views.AcademicSessionDetailView.as_view(), name="admin-session-detail"),
+
     # Classes
     path("classes/", views.ClassListView.as_view(), name="admin-class-list"),
     path("classes/<str:class_name>/", views.ClassDetailView.as_view(), name="admin-class-detail"),
@@ -48,6 +56,10 @@ urlpatterns = [
     path("exams/evaluation-tracking/", views.EvaluationTrackingView.as_view(), name="admin-evaluation-tracking"),
     path("exams/publish-result/", views.PublishedResultCreateView.as_view(), name="admin-publish-result"),
     path("exams/analytics/", views.ExamAnalyticsView.as_view(), name="admin-exam-analytics"),
+    path("exams/staff-batches/", views.AdminStaffUploadBatchesView.as_view(), name="admin-staff-batches"),
+    path("exams/batches/<str:batch_id>/verify/", views.AdminVerifyBatchView.as_view(), name="admin-batch-verify"),
+    path("exams/batches/<str:batch_id>/reject/", views.AdminRejectBatchView.as_view(), name="admin-batch-reject"),
+    path("exams/assign-scripts/", views.AdminAssignScriptsView.as_view(), name="admin-assign-scripts"),
 
     # Events
     path("events/", views.EventListView.as_view(), name="admin-event-list"),
@@ -85,6 +97,9 @@ urlpatterns = [
     path("exports/contacts/", views.ExportContactsView.as_view(), name="admin-export-contacts"),
     path("exports/audit-logs/", views.ExportAuditLogsView.as_view(), name="admin-export-audit-logs"),
     path("exports/documents/", views.ExportDocumentsView.as_view(), name="admin-export-documents"),
+    path("exports/fees/", views.ExportFeesView.as_view(), name="admin-export-fees"),
+    path("exports/receipt/", views.ExportReceiptView.as_view(), name="admin-export-receipt"),
+    path("exports/salary/", views.ExportSalaryView.as_view(), name="admin-export-salary"),
     path("exports/print/", views.PrintView.as_view(), name="admin-export-print"),
     path("exports/logs/", views.ExportLogListView.as_view(), name="admin-export-logs"),
     path("exports/documents/zip/", views.DocumentZIPDownloadView.as_view(), name="admin-document-zip"),
@@ -95,7 +110,46 @@ urlpatterns = [
     path("documents/upload/", views.DocumentUploadView.as_view(), name="admin-document-upload"),
     path("documents/<int:doc_id>/", views.DocumentDeleteView.as_view(), name="admin-document-delete"),
 
+    # Audit Logs
+    path("audit-logs/", views.AuditLogListView.as_view(), name="admin-audit-log-list"),
+
     # Notifications
     path("notifications/", views.NotificationBroadcastListView.as_view(), name="admin-notification-list"),
     path("notifications/<int:broadcast_id>/send/", views.NotificationBroadcastSendView.as_view(), name="admin-notification-send"),
+
+    # Letterheads
+    path("letterheads/", views.LetterheadListView.as_view(), name="admin-letterhead-list"),
+    path("letterheads/<int:letterhead_id>/", views.LetterheadDetailView.as_view(), name="admin-letterhead-detail"),
+
+    # Fees
+    path("fees/structures/", views.FeeStructureListView.as_view(), name="admin-fee-structures"),
+    path("fees/structures/<int:structure_id>/", views.FeeStructureDetailView.as_view(), name="admin-fee-structure-detail"),
+    path("fees/structures/duplicate/", views.FeeStructureDuplicateView.as_view(), name="admin-fee-structure-duplicate"),
+    path("fees/payments/", views.FeePaymentListView.as_view(), name="admin-fee-payments"),
+    path("fees/payments/<int:payment_id>/verify/", views.FeePaymentVerifyView.as_view(), name="admin-fee-payment-verify"),
+    path("fees/payments/<int:payment_id>/reject/", views.FeePaymentRejectView.as_view(), name="admin-fee-payment-reject"),
+    path("fees/payments/<int:payment_id>/refund/initiate/", views.FeeRefundInitiateView.as_view(), name="admin-fee-refund-initiate"),
+    path("fees/payments/<int:payment_id>/refund/complete/", views.FeeRefundCompleteView.as_view(), name="admin-fee-refund-complete"),
+    path("fees/scholarships/", views.ScholarshipListView.as_view(), name="admin-fee-scholarships"),
+    path("fees/scholarships/<int:scholarship_id>/revoke/", views.ScholarshipRevokeView.as_view(), name="admin-fee-scholarship-revoke"),
+    path("fees/analytics/", views.FeeAnalyticsView.as_view(), name="admin-fee-analytics"),
+    path("fees/activity-log/", views.FeeActivityLogView.as_view(), name="admin-fee-activity-log"),
+    path("fees/my-ledger/", views.StudentFeeLedgerView.as_view(), name="admin-fee-my-ledger"),
+    path("fees/receipt/<int:payment_id>/", views.FeeReceiptView.as_view(), name="admin-fee-receipt"),
+
+    # Result Engine
+    path("results/grade-boundaries/", views.GradeBoundaryListView.as_view(), name="admin-grade-boundaries"),
+    path("results/publications/", views.ResultPublicationCreateView.as_view(), name="admin-result-publication-create"),
+    path("results/publications/list/", views.ResultPublicationListView.as_view(), name="admin-result-publication-list"),
+    path("results/publications/<int:pub_id>/", views.ResultPublicationDetailView.as_view(), name="admin-result-publication-detail"),
+    path("results/publications/<int:pub_id>/generate/", views.GenerateResultsView.as_view(), name="admin-result-generate"),
+    path("results/publications/<int:pub_id>/results/", views.StudentResultListView.as_view(), name="admin-student-result-list"),
+    path("results/publications/<int:pub_id>/transition/", views.WorkflowTransitionView.as_view(), name="admin-result-transition"),
+    path("results/publications/<int:pub_id>/bulk-publish/", views.BulkPublishView.as_view(), name="admin-result-bulk-publish"),
+    path("results/publications/<int:pub_id>/compute-ranks/", views.ComputeRankView.as_view(), name="admin-result-compute-ranks"),
+    path("results/publications/<int:pub_id>/subject-ranks/", views.SubjectRankView.as_view(), name="admin-result-subject-ranks"),
+    path("results/pdf/report-card/<int:student_result_id>/", views.ReportCardPDFView.as_view(), name="admin-result-report-card-pdf"),
+    path("results/pdf/marksheet/<int:pub_id>/", views.MarksheetPDFView.as_view(), name="admin-result-marksheet-pdf"),
+    path("results/pdf/transcript/<int:student_result_id>/", views.TranscriptPDFView.as_view(), name="admin-result-transcript-pdf"),
+    path("results/pdf/printable/<int:student_result_id>/", views.PrintableResultPDFView.as_view(), name="admin-result-printable-pdf"),
 ]

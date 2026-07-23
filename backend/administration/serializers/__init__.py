@@ -27,3 +27,11 @@ from .cms import (
 from .export import ExportLogSerializer
 from .document import DocumentStorageSerializer
 from .notification import NotificationBroadcastSerializer
+from .fee import (
+    FeeStructureSerializer,
+    FeeComponentSerializer,
+    StudentFeePaymentSerializer,
+    StudentScholarshipSerializer,
+    FinanceActivityLogSerializer,
+)
+from .letterhead import LetterheadSerializer

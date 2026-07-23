@@ -49,12 +49,46 @@ class DashboardService:
 
     @staticmethod
     def get_student_growth():
-        return []
+        today = timezone.now().date()
+        months = []
+        for i in range(6):
+            month_start = today.replace(day=1) - timedelta(days=30 * i)
+            month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+            count = StudentProfile.objects.filter(
+                user__date_joined__date__lte=month_end
+            ).count()
+            months.append({
+                "month": month_start.strftime("%b"),
+                "students": count,
+                "revenue": 0,
+            })
+        months.reverse()
+        return months
 
     @staticmethod
     def get_attendance_data():
-        return []
+        today = timezone.now().date()
+        days = []
+        for i in range(7):
+            date = today - timedelta(days=6 - i)
+            day_att = Attendance.objects.filter(date=date)
+            total = day_att.count()
+            present = day_att.filter(status="present").count()
+            days.append({
+                "day": date.strftime("%a"),
+                "present": present,
+                "absent": total - present,
+                "total": total,
+            })
+        return days
 
     @staticmethod
     def get_exam_performance():
-        return []
+        from administration.models.exam import PublishedResult
+        results = PublishedResult.objects.values("exam__subject__name").annotate(
+            avg_score=Avg("marks_obtained"),
+        )[:10]
+        return [
+            {"subject": r["exam__subject__name"], "average": float(r["avg_score"])}
+            for r in results if r["exam__subject__name"]
+        ]

@@ -1,5 +1,5 @@
 export const appConfig = {
-  mockExportMode: true,
+  mockExportMode: false,
 } as const;
 
 export function isMockExportMode(): boolean {

@@ -3,7 +3,7 @@ import { useState, type ReactNode } from "react";
 import { Menu, X, Moon, Sun } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/lib/auth";
+import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 const nav: any[] = [

@@ -1,23 +1,16 @@
-# Set base image
-FROM python:3.10-slim
+FROM python:3.12-slim
 
-# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Set work directory
-WORKDIR /app
+WORKDIR /app/backend
 
-# Install dependencies
-COPY requirements.txt /app/
-RUN pip install --upgrade pip && pip install -r requirements.txt
-RUN pip install gunicorn  # Ensure gunicorn is installed
-# Copy project
-COPY . /app/
+COPY backend/requirements.txt /app/backend/
+RUN pip install --upgrade pip && pip install -r requirements.txt gunicorn
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
+COPY backend/ /app/backend/
 
-# Run Django server with Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "Home.wsgi:application"]
+RUN python manage.py collectstatic --noinput 2>/dev/null || true
+
+CMD ["gunicorn", "eduSphere.wsgi:application", "--bind", "0.0.0.0:8000"]
 

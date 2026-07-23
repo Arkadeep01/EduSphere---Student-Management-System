@@ -7,16 +7,17 @@ from rest_framework import status
 from .permissions import IsStudent
 from .models import (
     Subject, StudentProfile, StudentSubject, AdmissionDocument,
-    Assignment, AssignmentSubmission, SubmissionFile, Attendance, Result, Timetable,
+    Assignment, AssignmentSubmission, SubmissionFile, Attendance, Timetable,
     Notification,
 )
 from .serializers import (
     SubjectSerializer, StudentProfileSerializer, StudentSubjectSerializer,
     AdmissionDocumentSerializer, AssignmentSubmissionSerializer,
     SubmissionFileSerializer,
-    AttendanceSerializer, ResultSerializer, TimetableSerializer,
+    AttendanceSerializer, TimetableSerializer,
     NotificationSerializer,
 )
+from administration.serializers.exam import PublishedResultSerializer
 from .services import (
     add_student_subject_selection, submit_assignment,
     add_submission_file, remove_submission_file,
@@ -43,8 +44,11 @@ class StudentDashboard(APIView):
             )
         data = get_student_dashboard_data(profile)
         serializer = StudentProfileSerializer(profile)
+        from .serializers import SubjectSerializer
+        subjects_data = SubjectSerializer(data["subjects"], many=True).data
         return Response({
-            **data,
+            **{k: v for k, v in data.items() if k != "subjects"},
+            "subjects": subjects_data,
             "profile": serializer.data,
         })
 
@@ -107,11 +111,23 @@ class SubjectSelectionView(APIView):
     permission_classes = [IsAuthenticated, IsStudent]
 
     def post(self, request):
+        from django.utils import timezone
         from administration.models.subject_request import SubjectRequestControl
         ctrl, _ = SubjectRequestControl.objects.get_or_create(pk=1)
         if not ctrl.enabled:
             return Response(
                 {"error": "Subject enrollment requests are currently closed by the administration."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        now = timezone.now()
+        if ctrl.start_date and now < ctrl.start_date:
+            return Response(
+                {"error": "Subject enrollment has not opened yet."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        if ctrl.end_date and now > ctrl.end_date:
+            return Response(
+                {"error": "Subject enrollment deadline has passed."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         profile = StudentProfile.objects.filter(user=request.user).first()
@@ -285,7 +301,7 @@ class ResultView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
         results = get_results_for_student(profile)
-        serializer = ResultSerializer(results, many=True)
+        serializer = PublishedResultSerializer(results, many=True)
         return Response(serializer.data)
 
 
@@ -351,3 +367,29 @@ class SubjectRequestStatusView(APIView):
         from administration.models.subject_request import SubjectRequestControl
         obj, _ = SubjectRequestControl.objects.get_or_create(pk=1)
         return Response({"enabled": obj.enabled})
+
+
+class SubjectChaptersView(APIView):
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get(self, request, subject_id):
+        from teacher.models import Chapter
+        chapters = Chapter.objects.filter(subject_id=subject_id).prefetch_related("topics")
+        from teacher.serializers import ChapterSerializer
+        serializer = ChapterSerializer(chapters, many=True)
+        return Response(serializer.data)
+
+
+class StudentExamListView(APIView):
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get(self, request):
+        from administration.models import Exam
+        profile = StudentProfile.objects.filter(user=request.user).first()
+        if not profile:
+            return Response({"error": "Profile not found"}, status=404)
+        student_class = profile.class_assigned
+        exams = Exam.objects.filter(classes__contains=[student_class]).order_by("-date")
+        from administration.serializers import ExamSerializer
+        serializer = ExamSerializer(exams, many=True)
+        return Response(serializer.data)

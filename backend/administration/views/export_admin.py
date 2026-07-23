@@ -186,6 +186,32 @@ class PrintView(APIView):
         return HttpResponse(html)
 
 
+# ---- Fee Export View ----
+
+class ExportFeesView(GenericModuleExportView):
+    def get_module_name(self):
+        return "fees"
+
+
+# ---- Receipt Export View ----
+
+class ExportReceiptView(GenericModuleExportView):
+    def get_module_name(self):
+        return "receipt"
+
+
+# ---- Salary Export (stub — no salary model yet) ----
+
+class ExportSalaryView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        return Response({"message": "Salary export not yet available", "data": []})
+
+    def post(self, request):
+        return Response({"message": "Salary export not yet available", "data": []})
+
+
 # ---- Export Log View ----
 
 class ExportLogListView(APIView):

@@ -1,67 +1,73 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageWrapper, StaggerContainer, StaggerItem, HoverLift } from "@/components/brand/animations";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, MapPin, AlertCircle } from "lucide-react";
-import { exams } from "@/lib/mock-data";
-import { useState, useEffect } from "react";
+import { Calendar, Clock, MapPin } from "lucide-react";
+import { toast } from "sonner";
+import { studentExamApi } from "@/services/studentApi";
 
-function StudentExamsComponent() {
-  const [examType ] = useState("all");
-  const [timeLeft, setTimeLeft] = useState("");
-
-  const nextExam = exams[0];
-  useEffect(() => {
-    const target = new Date(exams.length > 0 ? `${exams[0].date}T${exams[0].time.replace(" ", "0").padStart(5, "0")}:00` : "2026-06-12T09:00:00").getTime();
-    const interval = setInterval(() => {
-      const now = new Date().getTime();
-      const diff = target - now;
-      if (diff <= 0) { setTimeLeft("Ongoing"); clearInterval(interval); return; }
-      const d = Math.floor(diff / 86400000);
-      const h = Math.floor((diff % 86400000) / 3600000);
-      setTimeLeft(`${d}d ${h}h remaining`);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const filtered = examType === "all" ? exams : exams.filter(e => e.name.toLowerCase().includes(examType));
-  const today = new Date();
-  const tomorrow = new Date(today.getTime() + 86400000);
-
-  return (
-    <PageWrapper>
-      <Card className="mb-6"><CardContent className="p-4 flex items-center gap-3">
-        <AlertCircle className="h-5 w-5 text-warning" />
-        <div><p className="text-sm font-medium">Next Exam: {nextExam.name}</p><p className="text-xs text-muted-foreground">{nextExam.date} · {timeLeft}</p></div>
-      </CardContent></Card>
-
-      <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map(e => {
-          const isPast = new Date(e.date) < today;
-          return (
-            <StaggerItem key={e.id}><HoverLift><Card className={`overflow-hidden ${isPast ? "opacity-60" : ""}`}>
-              <div className="h-1 bg-gradient-brand" />
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between">
-                  <Badge variant={isPast ? "secondary" : "outline"}>{isPast ? "Completed" : "Upcoming"}</Badge>
-                  {new Date(e.date).toDateString() === tomorrow.toDateString() && <Badge className="bg-brand/10 text-brand border-0 text-[10px]">Tomorrow</Badge>}
-                </div>
-                <h3 className="font-semibold text-lg mt-3">{e.name}</h3>
-                <div className="mt-3 space-y-1 text-sm text-muted-foreground">
-                  <p className="flex items-center gap-2"><Calendar className="h-4 w-4" />{e.date}</p>
-                  <p className="flex items-center gap-2"><Clock className="h-4 w-4" />{e.time} · {e.duration}</p>
-                  <p className="flex items-center gap-2"><MapPin className="h-4 w-4" />{e.room}</p>
-                </div>
-              </CardContent>
-            </Card></HoverLift></StaggerItem>
-          );
-        })}
-      </StaggerContainer>
-    </PageWrapper>
-  );
+interface Exam {
+  id: number; name: string; date: string; time: string | null;
+  room: string; duration: string; status: string; classes: string[];
 }
 
 export const Route = createFileRoute("/student/exams")({
-  head: () => ({ meta: [{ title: "Exam Schedule — Student" }] }),
-  component: StudentExamsComponent,
+  head: () => ({ meta: [{ title: "Exams — Student" }] }),
+  component: () => {
+    const [exams, setExams] = useState<Exam[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      studentExamApi.list()
+        .then(d => setExams(d as Exam[]))
+        .catch(() => toast.error("Failed to load exams"))
+        .finally(() => setLoading(false));
+    }, []);
+
+    if (loading) return <div className="text-center py-8 text-muted-foreground">Loading exams...</div>;
+
+    const nextExam = exams.filter(e => e.status !== "archived")[0];
+    const daysLeft = nextExam ? Math.max(0, Math.ceil((new Date(nextExam.date).getTime() - Date.now()) / 86400000)) : 0;
+
+    return (
+      <div className="space-y-6">
+        <div><h2 className="text-xl font-bold">Examination Schedule</h2></div>
+        {nextExam && (
+          <Card className="bg-gradient-brand border-0 text-white">
+            <CardContent className="p-4">
+              <p className="text-xs uppercase tracking-wider opacity-80">Next Exam</p>
+              <p className="text-lg font-bold mt-1">{nextExam.name}</p>
+              <div className="flex flex-wrap gap-4 mt-2 text-sm">
+                <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{nextExam.date}</span>
+                {nextExam.time && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{nextExam.time}</span>}
+                {nextExam.room && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{nextExam.room}</span>}
+                {nextExam.duration && <span>{nextExam.duration}</span>}
+              </div>
+              <div className="mt-3 flex items-center gap-2"><div className="text-3xl font-bold">{daysLeft}</div><div className="text-xs opacity-80">days left</div></div>
+            </CardContent>
+          </Card>
+        )}
+        <div className="grid gap-3 sm:grid-cols-2">
+          {exams.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground col-span-2">No exams scheduled</div>
+          ) : exams.map(exam => (
+            <Card key={exam.id}>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div><h3 className="font-semibold">{exam.name}</h3><p className="text-xs text-muted-foreground mt-1">{exam.classes?.join(", ")}</p></div>
+                  <Badge variant={exam.status === "published" ? "default" : "secondary"}>{exam.status}</Badge>
+                </div>
+                <div className="flex flex-wrap gap-3 mt-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{exam.date}</span>
+                  {exam.time && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{exam.time}</span>}
+                  {exam.room && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{exam.room}</span>}
+                  {exam.duration && <span>{exam.duration}</span>}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  },
 });

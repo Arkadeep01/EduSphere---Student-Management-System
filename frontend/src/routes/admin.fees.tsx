@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,44 +9,54 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { DollarSign, TrendingUp, AlertCircle, Wallet, CheckCircle2, XCircle, RotateCcw, Plus, Pencil, Trash2, Copy, Eye, Download, Ban, Clock, History, CalendarDays, Receipt, UserCheck } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { DollarSign, TrendingUp, AlertCircle, Wallet, CheckCircle2, XCircle, RotateCcw, Plus, Pencil, Trash2, Copy, Eye, Download, Ban, History, CalendarDays, Receipt, Search } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { toast } from "sonner";
 import { ExportDialog } from "@/components/export";
 import { feeExportConfig } from "@/components/export/moduleConfigs";
-import {
-  getFinanceSummary, getMonthlyCollectionData, getClassWiseCollection,
-  getFeeStructures, getFeeStructureByClass, addFeeStructure, updateFeeStructure, deleteFeeStructure, duplicateFeeStructure,
-  getAllFeePayments, getFeePaymentsByClass, getFeePaymentsByMonth,
-  updatePaymentStatus, initiateRefund, completeRefund,
-  getAdmissionFeeRecords, verifyAdmissionFee, rejectAdmissionFee,
-  getTeacherSalaries, payTeacherSalary,
-  getScholarships, addScholarship, revokeScholarship,
-  getDueDateCalendar, getActivityLog,
-  generateReceiptNumber,
-  type FeeStructure, type FeeComponent, type FeePayment, type ScholarshipOrConcession, type PaymentStatus,
-  type AdmissionFeeRecord, type TeacherSalary,
-} from "@/lib/fee-store";
+import { feeApi } from "@/services/adminApi";
 
 const COLORS = ["oklch(0.48 0.18 265)", "oklch(0.65 0.13 230)", "oklch(0.7 0.17 50)", "oklch(0.62 0.16 155)", "oklch(0.55 0.15 340)", "oklch(0.5 0.1 200)"];
 
 const MONTHS = ["April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March"];
 
-function statusBadge(status: PaymentStatus) {
-  const map: Record<PaymentStatus, { label: string; cls: string }> = {
+interface FeeStructure {
+  id: number; class_name: string; academic_session: string; late_fine_per_day: string; gst_enabled: boolean; is_active: boolean; components: FeeComponent[];
+}
+interface FeeComponent { id: number; name: string; amount: string; frequency: string; is_optional: boolean; is_active: boolean; }
+interface FeePayment {
+  id: number; student_name: string; class_name: string; section: string; admission_number: string;
+  month: string; total_fee: string; paid_amount: string; fine: string; gst: string; status: string;
+  payment_method: string | null; transaction_ref: string | null; receipt_number: string | null;
+  advance_payment: string; refund_status: string; paid_at: string | null;
+}
+interface Scholarship { id: number; student_name: string; class_name: string; type: string; value: string; reason: string; is_active: boolean; }
+interface AnalyticsData { summary: { total_collection: number; pending_fees: number; monthly_collection: number }; monthly: { month: string; collection: number; pending: number }[]; class_wise: { class_name: string; collection: number; pending: number; total: number }[]; }
+interface ActivityLog { id: number; action: string; admin_name: string; student_name: string | null; amount: string; created_at: string; }
+
+function statusBadge(status: string) {
+  const map: Record<string, { label: string; cls: string }> = {
     paid: { label: "Paid", cls: "bg-success text-success-foreground" },
     not_paid: { label: "Not Paid", cls: "bg-muted text-muted-foreground" },
     pending_verification: { label: "Pending", cls: "bg-warning text-warning-foreground" },
     rejected: { label: "Rejected", cls: "bg-destructive text-destructive-foreground" },
   };
-  const s = map[status];
+  const s = map[status] || { label: status, cls: "" };
   return <Badge className={s.cls}>{s.label}</Badge>;
 }
 
 function AdminFeesComponent() {
   const [activeTab, setActiveTab] = useState("overview");
   const [showExport, setShowExport] = useState(false);
+
+  // data
+  const [structures, setStructures] = useState<FeeStructure[]>([]);
+  const [payments, setPayments] = useState<FeePayment[]>([]);
+  const [scholarships, setScholarships] = useState<Scholarship[]>([]);
+  const [activityLog, setActivityLog] = useState<ActivityLog[]>([]);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Fee Structure state
   const [showCreateStructure, setShowCreateStructure] = useState(false);
@@ -58,200 +68,155 @@ function AdminFeesComponent() {
   const [feeMonthFilter, setFeeMonthFilter] = useState("all_months");
   const [feeStatusFilter, setFeeStatusFilter] = useState<string>("all");
 
-  // Verification dialog
-  const [verifyDialog, setVerifyDialog] = useState<{ open: boolean; payment: FeePayment | null }>({ open: false, payment: null });
-
-  // Refund dialog
-  const [refundDialog, setRefundDialog] = useState<{ open: boolean; payment: FeePayment | null }>({ open: false, payment: null });
-
-  // Admission fee verification
-  const [admissionFeeVerify, setAdmissionFeeVerify] = useState<{ open: boolean; record: AdmissionFeeRecord | null }>({ open: false, record: null });
-
   // Scholarship
   const [showScholarshipDialog, setShowScholarshipDialog] = useState(false);
   const [scholarshipForm, setScholarshipForm] = useState<{ studentId: string; studentName: string; className: string; type: "percentage" | "fixed"; value: number; reason: string }>({ studentId: "", studentName: "", className: "", type: "percentage", value: 0, reason: "" });
 
-  // Salary pay dialog
-  const [salaryPayDialog, setSalaryPayDialog] = useState<{ open: boolean; salary: TeacherSalary | null }>({ open: false, salary: null });
+  const f = async () => {
+    setLoading(true);
+    try {
+      const [s, p, sch, logs, an] = await Promise.all([
+        feeApi.structures.list().catch(() => []),
+        feeApi.payments.list().catch(() => []),
+        feeApi.scholarships.list().catch(() => []),
+        feeApi.activityLog().catch(() => []),
+        feeApi.analytics().catch(() => ({ summary: { total_collection: 0, pending_fees: 0, monthly_collection: 0 }, monthly: [], class_wise: [] })),
+      ]);
+      setStructures(s as FeeStructure[]);
+      setPayments(p as FeePayment[]);
+      setScholarships(sch as Scholarship[]);
+      setActivityLog(logs as ActivityLog[]);
+      setAnalytics(an as AnalyticsData);
+    } catch { toast.error("Failed to load fee data"); }
+    finally { setLoading(false); }
+  };
 
-  // data
-  const summary = useMemo(() => getFinanceSummary(), []);
-  const monthlyData = useMemo(() => getMonthlyCollectionData(), []);
-  const classWiseData = useMemo(() => getClassWiseCollection(), []);
-  const feeStructures = useMemo(() => getFeeStructures(), []);
-  const allPayments = useMemo(() => getAllFeePayments(), []);
-  const admissionFeeRecords = useMemo(() => getAdmissionFeeRecords(), []);
-  const scholarships = useMemo(() => getScholarships(), []);
-  const salaries = useMemo(() => getTeacherSalaries(), []);
-  const calendar = useMemo(() => getDueDateCalendar(), []);
-  const activityLog = useMemo(() => getActivityLog(), []);
+  useEffect(() => { f(); }, []);
 
   const filteredPayments = useMemo(() => {
-    let list = allPayments;
-    if (feeClassFilter && feeClassFilter !== "all_classes") list = list.filter(p => p.className === feeClassFilter);
+    let list = payments;
+    if (feeClassFilter && feeClassFilter !== "all_classes") list = list.filter(p => p.class_name === feeClassFilter);
     if (feeMonthFilter && feeMonthFilter !== "all_months") list = list.filter(p => p.month === feeMonthFilter);
     if (feeStatusFilter !== "all") list = list.filter(p => p.status === feeStatusFilter);
     return list;
-  }, [allPayments, feeClassFilter, feeMonthFilter, feeStatusFilter]);
+  }, [payments, feeClassFilter, feeMonthFilter, feeStatusFilter]);
 
   const revenueMixData = useMemo(() => {
     const totals: Record<string, number> = {};
-    allPayments.filter(p => p.status === "paid").forEach(p => {
-      p.components.forEach(c => {
-        totals[c.name] = (totals[c.name] || 0) + c.amount;
-      });
+    payments.filter(p => p.status === "paid").forEach(p => {
+      const key = `${p.class_name} - ${p.month}`;
+      totals[key] = (totals[key] || 0) + Number(p.paid_amount);
     });
-    return Object.entries(totals).map(([name, value]) => ({ name, value }));
-  }, [allPayments]);
+    return Object.entries(totals).slice(0, 10).map(([name, value]) => ({ name, value }));
+  }, [payments]);
 
-  function handleCreateStructure() {
-    const className = structureForm.className;
-    if (!className) { toast.error("Select a class"); return; }
+  async function handleCreateStructure() {
+    if (!structureForm.className) { toast.error("Select a class"); return; }
     if (structureForm.components.length === 0) { toast.error("Add at least one fee component"); return; }
-    const totalMonthly = structureForm.components.filter(c => c.frequency === "monthly").reduce((s, c) => s + c.amount, 0);
-    const totalAnnual = totalMonthly * 12 + structureForm.components.filter(c => c.frequency === "annual").reduce((s, c) => s + c.amount, 0);
-    const newFs: FeeStructure = {
-      id: `fs_${Date.now()}`,
-      className,
-      academicSession: "2026-27",
-      components: structureForm.components.map((c, i) => ({ ...c, id: `fc_${Date.now()}_${i}` })),
-      totalMonthly,
-      totalAnnual,
-      lateFinePerDay: structureForm.lateFinePerDay,
-      gstEnabled: structureForm.gstEnabled,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    addFeeStructure(newFs);
-    setShowCreateStructure(false);
-    setStructureForm({ className: "", lateFinePerDay: 50, gstEnabled: false, components: [] });
-    toast.success("Fee structure created");
+    try {
+      if (editingStructure) {
+        await feeApi.structures.update(editingStructure.id, {
+          class_name: structureForm.className,
+          late_fine_per_day: structureForm.lateFinePerDay,
+          gst_enabled: structureForm.gstEnabled,
+          components: structureForm.components.map(c => ({ name: c.name, amount: c.amount, frequency: c.frequency, is_optional: c.is_optional })),
+        });
+        toast.success("Structure updated");
+      } else {
+        await feeApi.structures.create({
+          class_name: structureForm.className,
+          late_fine_per_day: structureForm.lateFinePerDay,
+          gst_enabled: structureForm.gstEnabled,
+          components: structureForm.components.map(c => ({ name: c.name, amount: c.amount, frequency: c.frequency, is_optional: c.is_optional })),
+        });
+        toast.success("Fee structure created");
+      }
+      setShowCreateStructure(false);
+      setEditingStructure(null);
+      setStructureForm({ className: "", lateFinePerDay: 50, gstEnabled: false, components: [] });
+      f();
+    } catch { toast.error("Failed to save structure"); }
   }
 
-  function handleDuplicateStructure(fromClass: string) {
+  async function handleDuplicateStructure(fromClass: string) {
     const toClass = prompt(`Duplicate ${fromClass} structure to which class?`);
     if (!toClass) return;
-    const result = duplicateFeeStructure(fromClass, toClass);
-    if (result) toast.success(`Duplicated to Class ${toClass}`);
-    else toast.error("Source structure not found");
+    try { await feeApi.structures.duplicate(fromClass, toClass); toast.success(`Duplicated to Class ${toClass}`); f(); } catch { toast.error("Failed"); }
   }
 
-  function handleVerifyPayment(payment: FeePayment) {
-    setVerifyDialog({ open: true, payment });
+  async function handleDeleteStructure(id: number) {
+    try { await feeApi.structures.delete(id); toast.success("Structure deleted"); f(); } catch { toast.error("Failed"); }
   }
 
-  function confirmVerifyPayment() {
-    if (!verifyDialog.payment) return;
-    updatePaymentStatus(verifyDialog.payment.id, "paid", "Admin", generateReceiptNumber());
-    setVerifyDialog({ open: false, payment: null });
-    toast.success("Payment verified");
+  async function handleVerifyPayment(id: number) {
+    try { await feeApi.payments.verify(id); toast.success("Payment verified"); f(); } catch { toast.error("Failed"); }
   }
 
-  function handleRejectPayment(payment: FeePayment) {
-    updatePaymentStatus(payment.id, "rejected", "Admin");
-    toast.success("Payment rejected");
+  async function handleRejectPayment(id: number) {
+    try { await feeApi.payments.reject(id); toast.success("Payment rejected"); f(); } catch { toast.error("Failed"); }
   }
 
-  function handleInitiateRefund(payment: FeePayment) {
-    initiateRefund(payment.id, "Admin");
-    setRefundDialog({ open: false, payment: null });
-    toast.success("Refund initiated");
+  async function handleInitiateRefund(id: number) {
+    try { await feeApi.payments.initiateRefund(id); toast.success("Refund initiated"); f(); } catch { toast.error("Failed"); }
   }
 
-  function handleCompleteRefund(payment: FeePayment) {
-    completeRefund(payment.id, "Admin");
-    toast.success("Refund completed");
+  async function handleCompleteRefund(id: number) {
+    try { await feeApi.payments.completeRefund(id); toast.success("Refund completed"); f(); } catch { toast.error("Failed"); }
   }
 
-  function handleVerifyAdmissionFee(record: AdmissionFeeRecord) {
-    verifyAdmissionFee(record.id, "Admin");
-    setAdmissionFeeVerify({ open: false, record: null });
-    toast.success("Admission fee verified");
-  }
-
-  function handleRejectAdmissionFee(record: AdmissionFeeRecord) {
-    rejectAdmissionFee(record.id, "Admin");
-    toast.success("Admission fee rejected");
-  }
-
-  function handleAddScholarship() {
+  async function handleGrantScholarship() {
     if (!scholarshipForm.studentName) { toast.error("Enter student name"); return; }
-    const newScholarship: ScholarshipOrConcession = {
-      id: `sch_${Date.now()}`,
-      studentId: scholarshipForm.studentId,
-      studentName: scholarshipForm.studentName,
-      className: scholarshipForm.className,
-      type: scholarshipForm.type,
-      value: scholarshipForm.value,
-      reason: scholarshipForm.reason,
-      approvedBy: "Admin",
-      approvedAt: new Date().toISOString(),
-      isActive: true,
-      history: [{ action: "Granted", timestamp: new Date().toISOString(), admin: "Admin" }],
-    };
-    addScholarship(newScholarship);
-    setShowScholarshipDialog(false);
-    setScholarshipForm({ studentId: "", studentName: "", className: "", type: "percentage", value: 0, reason: "" });
-    toast.success("Scholarship granted");
+    try {
+      await feeApi.scholarships.grant({
+        student_id: parseInt(scholarshipForm.studentId) || 0,
+        type: scholarshipForm.type,
+        value: scholarshipForm.value,
+        reason: scholarshipForm.reason,
+      });
+      toast.success("Scholarship granted");
+      setShowScholarshipDialog(false);
+      setScholarshipForm({ studentId: "", studentName: "", className: "", type: "percentage", value: 0, reason: "" });
+      f();
+    } catch { toast.error("Failed"); }
   }
 
-  function handlePaySalary(salary: TeacherSalary) {
-    payTeacherSalary(salary.id);
-    setSalaryPayDialog({ open: false, salary: null });
-    toast.success("Salary paid");
+  async function handleRevokeScholarship(id: number) {
+    try { await feeApi.scholarships.revoke(id); toast.success("Scholarship revoked"); f(); } catch { toast.error("Failed"); }
   }
 
   function addComponentToForm() {
     setStructureForm(prev => ({
       ...prev,
-      components: [...prev.components, { name: "", amount: 0, frequency: "monthly" as const, isOptional: false, isActive: true }],
+      components: [...prev.components, { name: "", amount: 0, frequency: "monthly" as const, isOptional: false, is_active: true } as any],
     }));
   }
 
   function updateComponentInForm(index: number, field: string, value: unknown) {
     setStructureForm(prev => {
       const comps = [...prev.components];
-      comps[index] = { ...comps[index], [field]: value } as FeeComponent;
+      comps[index] = { ...comps[index], [field]: value } as any;
       return { ...prev, components: comps };
     });
   }
 
   function removeComponentFromForm(index: number) {
     setStructureForm(prev => ({
-      ...prev,
-      components: prev.components.filter((_, i) => i !== index),
+      ...prev, components: prev.components.filter((_, i) => i !== index),
     }));
   }
 
-  const feeStructureChart = useMemo(() => {
-    return feeStructures.map(fs => ({
-      name: `Class ${fs.className}`,
-      monthly: fs.totalMonthly,
-      annual: fs.totalAnnual,
-    }));
-  }, [feeStructures]);
+  if (loading) {
+    return <div className="text-center py-8 text-muted-foreground">Loading fee data...</div>;
+  }
 
   return (
     <>
-      {activeTab !== "overview" && (
-        <div className="flex items-center justify-between mb-4">
-          <div />
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowExport(true)}><Download className="h-4 w-4 mr-1" />Export</Button>
-          </div>
-        </div>
-      )}
-
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="structures">Fee Structures</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
-          <TabsTrigger value="admission">Admission Fees</TabsTrigger>
-          <TabsTrigger value="salary">Salaries</TabsTrigger>
           <TabsTrigger value="scholarships">Scholarships</TabsTrigger>
-          <TabsTrigger value="calendar">Calendar</TabsTrigger>
           <TabsTrigger value="activity">Activity Log</TabsTrigger>
         </TabsList>
 
@@ -262,90 +227,60 @@ function AdminFeesComponent() {
             <Button variant="outline" size="sm" onClick={() => setShowExport(true)}><Download className="h-4 w-4 mr-1" />Export Report</Button>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Total Collected" value={`₹${(summary.totalCollection / 100000).toFixed(1)}L`} icon={DollarSign} trend={`${((summary.monthlyCollection / (summary.totalCollection || 1)) * 100).toFixed(1)}% this month`} trendUp accent="success" />
-            <StatCard label="Pending Fees" value={`₹${summary.pendingFees.toLocaleString()}`} icon={AlertCircle} accent="warning" />
-            <StatCard label="Salaries Paid" value={`₹${(summary.salaryPaid / 100000).toFixed(1)}L`} icon={Wallet} accent="info" />
-            <StatCard label="Net Surplus" value={`₹${(summary.netSurplus / 100000).toFixed(1)}L`} icon={TrendingUp} trend={summary.netSurplus > 0 ? "Positive" : "Negative"} trendUp={summary.netSurplus > 0} accent="primary" />
+            <StatCard label="Total Collected" value={`₹${((analytics?.summary.total_collection || 0) / 100000).toFixed(1)}L`} icon={DollarSign} accent="success" />
+            <StatCard label="Pending Fees" value={`₹${(analytics?.summary.pending_fees || 0).toLocaleString()}`} icon={AlertCircle} accent="warning" />
+            <StatCard label="Monthly Collection" value={`₹${(analytics?.summary.monthly_collection || 0).toLocaleString()}`} icon={Wallet} accent="info" />
+            <StatCard label="Total Structures" value={`${structures.length}`} icon={TrendingUp} accent="primary" />
           </div>
-
-          <div className="grid lg:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader><CardTitle>Monthly Collection Trend</CardTitle></CardHeader>
+          {analytics?.monthly && analytics.monthly.length > 0 && (
+            <div className="grid lg:grid-cols-2 gap-4">
+              <Card><CardHeader><CardTitle>Monthly Collection Trend</CardTitle></CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <LineChart data={analytics.monthly}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                      <XAxis dataKey="month" /><YAxis />
+                      <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 8 }} />
+                      <Legend />
+                      <Line type="monotone" dataKey="collection" stroke="oklch(0.48 0.18 265)" strokeWidth={3} name="Collection" dot={{ r: 4 }} />
+                      <Line type="monotone" dataKey="pending" stroke="oklch(0.7 0.17 50)" strokeWidth={2} name="Pending" strokeDasharray="4 4" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+              <Card><CardHeader><CardTitle>Revenue Mix</CardTitle></CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <PieChart>
+                      <Pie data={revenueMixData.length > 0 ? revenueMixData : [{ name: "No Data", value: 1 }]} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90} paddingAngle={2}>
+                        {revenueMixData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+          {analytics?.class_wise && analytics.class_wise.length > 0 && (
+            <Card><CardHeader><CardTitle>Class-wise Collection</CardTitle></CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={280}>
-                  <LineChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 8 }} />
-                    <Legend />
-                    <Line type="monotone" dataKey="collection" stroke="oklch(0.48 0.18 265)" strokeWidth={3} name="Collection" dot={{ r: 4 }} />
-                    <Line type="monotone" dataKey="pending" stroke="oklch(0.7 0.17 50)" strokeWidth={2} name="Pending" strokeDasharray="4 4" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader><CardTitle>Revenue Mix</CardTitle></CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={280}>
-                  <PieChart>
-                    <Pie data={revenueMixData.length > 0 ? revenueMixData : [{ name: "No Data", value: 1 }]} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90} paddingAngle={2}>
-                      {revenueMixData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader><CardTitle>Class-wise Collection</CardTitle></CardHeader>
-            <CardContent>
-              <div className="rounded-lg border overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Class</TableHead>
-                      <TableHead className="text-right">Total Fee</TableHead>
-                      <TableHead className="text-right">Collected</TableHead>
-                      <TableHead className="text-right">Pending</TableHead>
-                      <TableHead className="text-right">Collection %</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {classWiseData.map(cw => (
-                      <TableRow key={cw.className}>
-                        <TableCell className="font-medium">Class {cw.className}</TableCell>
+                <div className="rounded-lg border overflow-x-auto">
+                  <Table><TableHeader><TableRow><TableHead>Class</TableHead><TableHead className="text-right">Total Fee</TableHead><TableHead className="text-right">Collected</TableHead><TableHead className="text-right">Pending</TableHead><TableHead className="text-right">Collection %</TableHead></TableRow></TableHeader>
+                    <TableBody>{analytics.class_wise.map(cw => (
+                      <TableRow key={cw.class_name}>
+                        <TableCell className="font-medium">Class {cw.class_name}</TableCell>
                         <TableCell className="text-right">₹{cw.total.toLocaleString()}</TableCell>
                         <TableCell className="text-right text-success">₹{cw.collection.toLocaleString()}</TableCell>
                         <TableCell className="text-right text-warning">₹{cw.pending.toLocaleString()}</TableCell>
                         <TableCell className="text-right">{cw.total > 0 ? ((cw.collection / cw.total) * 100).toFixed(1) : "0"}%</TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle>Fee Structure Comparison</CardTitle></CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={feeStructureChart}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="monthly" stroke="oklch(0.48 0.18 265)" strokeWidth={3} name="Monthly" dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="annual" stroke="oklch(0.65 0.13 230)" strokeWidth={3} name="Annual" dot={{ r: 4 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+                    ))}</TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* === FEE STRUCTURES TAB === */}
@@ -355,47 +290,26 @@ function AdminFeesComponent() {
             <Button size="sm" className="bg-gradient-brand border-0" onClick={() => setShowCreateStructure(true)}><Plus className="h-4 w-4 mr-1" />Create Structure</Button>
           </div>
           <div className="rounded-lg border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Session</TableHead>
-                  <TableHead className="text-right">Monthly</TableHead>
-                  <TableHead className="text-right">Annual</TableHead>
-                  <TableHead className="text-right">Fine/Day</TableHead>
-                  <TableHead>Components</TableHead>
-                  <TableHead>GST</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+            <Table><TableHeader><TableRow><TableHead>Class</TableHead><TableHead>Session</TableHead><TableHead className="text-right">Fine/Day</TableHead><TableHead>Components</TableHead><TableHead>GST</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+              <TableBody>{structures.length === 0 ? (
+                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No fee structures. Create one.</TableCell></TableRow>
+              ) : structures.map(fs => (
+                <TableRow key={fs.id}>
+                  <TableCell className="font-medium">Class {fs.class_name}</TableCell>
+                  <TableCell>{fs.academic_session}</TableCell>
+                  <TableCell className="text-right">₹{fs.late_fine_per_day}</TableCell>
+                  <TableCell><div className="flex flex-wrap gap-1">{fs.components.map(c => <Badge key={c.id} variant="outline" className="text-xs">{c.name}</Badge>)}</div></TableCell>
+                  <TableCell>{fs.gst_enabled ? <Badge className="bg-success text-success-foreground">Enabled</Badge> : <Badge variant="outline">Off</Badge>}</TableCell>
+                  <TableCell>{fs.is_active ? <Badge className="bg-success text-success-foreground">Active</Badge> : <Badge variant="secondary">Inactive</Badge>}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => handleDuplicateStructure(fs.class_name)}><Copy className="h-4 w-4" /></Button>
+                      <Button size="sm" variant="ghost" onClick={() => { setEditingStructure(fs); setStructureForm({ className: fs.class_name, lateFinePerDay: Number(fs.late_fine_per_day), gstEnabled: fs.gst_enabled, components: fs.components.map(c => ({ name: c.name, amount: Number(c.amount), frequency: c.frequency, isOptional: c.is_optional, is_active: c.is_active } as any)) }); setShowCreateStructure(true); }}><Pencil className="h-4 w-4" /></Button>
+                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDeleteStructure(fs.id)}><Trash2 className="h-4 w-4" /></Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {feeStructures.length === 0 ? (
-                  <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No fee structures. Create one.</TableCell></TableRow>
-                ) : feeStructures.map(fs => (
-                  <TableRow key={fs.id}>
-                    <TableCell className="font-medium">Class {fs.className}</TableCell>
-                    <TableCell>{fs.academicSession}</TableCell>
-                    <TableCell className="text-right">₹{fs.totalMonthly.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">₹{fs.totalAnnual.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">₹{fs.lateFinePerDay}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {fs.components.map(c => <Badge key={c.id} variant="outline" className="text-xs">{c.name}</Badge>)}
-                      </div>
-                    </TableCell>
-                    <TableCell>{fs.gstEnabled ? <Badge className="bg-success text-success-foreground">Enabled</Badge> : <Badge variant="outline">Off</Badge>}</TableCell>
-                    <TableCell>{fs.isActive ? <Badge className="bg-success text-success-foreground">Active</Badge> : <Badge variant="secondary">Inactive</Badge>}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        <Button size="sm" variant="ghost" onClick={() => handleDuplicateStructure(fs.className)}><Copy className="h-4 w-4" /></Button>
-                        <Button size="sm" variant="ghost" onClick={() => { setEditingStructure(fs); setStructureForm({ className: fs.className, lateFinePerDay: fs.lateFinePerDay, gstEnabled: fs.gstEnabled, components: fs.components.map(c => ({ name: c.name, amount: c.amount, frequency: c.frequency, isOptional: c.isOptional, isActive: c.isActive })) }); setShowCreateStructure(true); }}><Pencil className="h-4 w-4" /></Button>
-                        <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { deleteFeeStructure(fs.id); toast.success("Structure deleted"); }}><Trash2 className="h-4 w-4" /></Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
+              ))}</TableBody>
             </Table>
           </div>
         </TabsContent>
@@ -407,7 +321,7 @@ function AdminFeesComponent() {
               <SelectTrigger className="w-36"><SelectValue placeholder="All Classes" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all_classes">All Classes</SelectItem>
-                {["9", "10", "11", "12"].map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
+                {[...new Set(payments.map(p => p.class_name))].filter(Boolean).map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={feeMonthFilter} onValueChange={setFeeMonthFilter}>
@@ -430,153 +344,39 @@ function AdminFeesComponent() {
             <span className="text-sm text-muted-foreground">{filteredPayments.length} records</span>
           </div>
           <div className="rounded-lg border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Month</TableHead>
-                  <TableHead className="text-right">Total Fee</TableHead>
-                  <TableHead className="text-right">Paid</TableHead>
-                  <TableHead className="text-right">Pending</TableHead>
-                  <TableHead className="text-right">Fine</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Refund</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPayments.length === 0 ? (
-                  <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">No matching payments</TableCell></TableRow>
-                ) : filteredPayments.map(p => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium">{p.studentName}</TableCell>
-                    <TableCell>{p.className}-{p.section}</TableCell>
-                    <TableCell>{p.month}</TableCell>
-                    <TableCell className="text-right">₹{p.totalFee.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">₹{p.paidAmount.toLocaleString()}</TableCell>
-                    <TableCell className="text-right text-warning">₹{p.pendingAmount.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">{p.fine > 0 ? <span className="text-destructive">₹{p.fine.toLocaleString()}</span> : "-"}</TableCell>
-                    <TableCell>{statusBadge(p.status)}</TableCell>
-                    <TableCell>
-                      {p.refundStatus === "initiated" ? <Badge className="bg-warning text-warning-foreground">Initiated</Badge> :
-                       p.refundStatus === "completed" ? <Badge className="bg-success text-success-foreground">Completed</Badge> :
-                       <span className="text-xs text-muted-foreground">-</span>}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        {p.status === "pending_verification" && (
-                          <>
-                            <Button size="sm" variant="ghost" className="text-success" onClick={() => handleVerifyPayment(p)}><CheckCircle2 className="h-4 w-4" /></Button>
-                            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleRejectPayment(p)}><XCircle className="h-4 w-4" /></Button>
-                          </>
-                        )}
-                        {p.status === "paid" && p.refundStatus === "none" && p.advancePayment > 0 && (
-                          <Button size="sm" variant="ghost" className="text-warning" onClick={() => setRefundDialog({ open: true, payment: p })}><RotateCcw className="h-4 w-4" /></Button>
-                        )}
-                        {p.refundStatus === "initiated" && (
-                          <Button size="sm" variant="ghost" className="text-success" onClick={() => handleCompleteRefund(p)}><CheckCircle2 className="h-4 w-4" /></Button>
-                        )}
-                        {p.receiptNumber && <Button size="sm" variant="ghost"><Eye className="h-4 w-4" /></Button>}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-
-        {/* === ADMISSION FEES TAB === */}
-        <TabsContent value="admission" className="space-y-4">
-          <h2 className="text-lg font-semibold">Admission Fee Records</h2>
-          <div className="rounded-lg border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Admission No</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead className="text-right">Fee</TableHead>
-                  <TableHead className="text-right">Paid</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {admissionFeeRecords.length === 0 ? (
-                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No records</TableCell></TableRow>
-                ) : admissionFeeRecords.map(rec => (
-                  <TableRow key={rec.id}>
-                    <TableCell className="font-medium">{rec.studentName}</TableCell>
-                    <TableCell>{rec.admissionNumber}</TableCell>
-                    <TableCell>{rec.className}</TableCell>
-                    <TableCell className="text-right">₹{rec.admissionFee.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">₹{rec.amountPaid.toLocaleString()}</TableCell>
-                    <TableCell>{rec.paymentMethod ? (rec.paymentMethod === "bank_transfer" ? "Bank Transfer" : rec.paymentMethod === "cash" ? "Cash" : "Online") : "-"}</TableCell>
-                    <TableCell>
-                      {rec.verificationStatus === "paid" ? <Badge className="bg-success text-success-foreground">Paid</Badge> :
-                       rec.verificationStatus === "pending_verification" ? <Badge className="bg-warning text-warning-foreground">Pending</Badge> :
-                       <Badge variant="secondary">Not Paid</Badge>}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        {rec.verificationStatus === "pending_verification" && (
-                          <>
-                            <Button size="sm" variant="ghost" className="text-success" onClick={() => handleVerifyAdmissionFee(rec)}><CheckCircle2 className="h-4 w-4" /></Button>
-                            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleRejectAdmissionFee(rec)}><XCircle className="h-4 w-4" /></Button>
-                          </>
-                        )}
-                        {rec.receiptNumber && <Button size="sm" variant="ghost"><Receipt className="h-4 w-4" /></Button>}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-
-        {/* === SALARY TAB === */}
-        <TabsContent value="salary" className="space-y-4">
-          <h2 className="text-lg font-semibold">Teacher Salaries</h2>
-          <div className="rounded-lg border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Teacher</TableHead>
-                  <TableHead>Employee ID</TableHead>
-                  <TableHead>Position</TableHead>
-                  <TableHead>Month</TableHead>
-                  <TableHead className="text-right">Basic</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead>Paid</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {salaries.length === 0 ? (
-                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No salary records</TableCell></TableRow>
-                ) : salaries.map(s => (
-                  <TableRow key={s.id}>
-                    <TableCell className="font-medium">{s.teacherName}</TableCell>
-                    <TableCell>{s.employeeId}</TableCell>
-                    <TableCell>{s.position}</TableCell>
-                    <TableCell>{s.month}</TableCell>
-                    <TableCell className="text-right">₹{s.basicSalary.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">₹{s.totalSalary.toLocaleString()}</TableCell>
-                    <TableCell>{s.isPaid ? <Badge className="bg-success text-success-foreground">Paid</Badge> : <Badge variant="secondary">Unpaid</Badge>}</TableCell>
-                    <TableCell>
-                      {!s.isPaid && (
-                        <Button size="sm" className="bg-gradient-brand border-0" onClick={() => setSalaryPayDialog({ open: true, salary: s })}>
-                          <Wallet className="h-4 w-4 mr-1" />Pay
-                        </Button>
+            <Table><TableHeader><TableRow><TableHead>Student</TableHead><TableHead>Class</TableHead><TableHead>Month</TableHead><TableHead className="text-right">Fee</TableHead><TableHead className="text-right">Paid</TableHead><TableHead className="text-right">Fine</TableHead><TableHead>Status</TableHead><TableHead>Refund</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+              <TableBody>{filteredPayments.length === 0 ? (
+                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No matching payments</TableCell></TableRow>
+              ) : filteredPayments.map(p => (
+                <TableRow key={p.id}>
+                  <TableCell className="font-medium">{p.student_name}</TableCell>
+                  <TableCell>{p.class_name}-{p.section}</TableCell>
+                  <TableCell>{p.month}</TableCell>
+                  <TableCell className="text-right">₹{Number(p.total_fee).toLocaleString()}</TableCell>
+                  <TableCell className="text-right">₹{Number(p.paid_amount).toLocaleString()}</TableCell>
+                  <TableCell className="text-right">{Number(p.fine) > 0 ? <span className="text-destructive">₹{Number(p.fine).toLocaleString()}</span> : "-"}</TableCell>
+                  <TableCell>{statusBadge(p.status)}</TableCell>
+                  <TableCell>
+                    {p.refund_status === "initiated" ? <Badge className="bg-warning text-warning-foreground">Initiated</Badge> :
+                     p.refund_status === "completed" ? <Badge className="bg-success text-success-foreground">Completed</Badge> :
+                     <span className="text-xs text-muted-foreground">-</span>}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-1">
+                      {p.status === "pending_verification" && (
+                        <><Button size="sm" variant="ghost" className="text-success" onClick={() => handleVerifyPayment(p.id)}><CheckCircle2 className="h-4 w-4" /></Button><Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleRejectPayment(p.id)}><XCircle className="h-4 w-4" /></Button></>
                       )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
+                      {p.status === "paid" && p.refund_status === "none" && Number(p.advance_payment) > 0 && (
+                        <Button size="sm" variant="ghost" className="text-warning" onClick={() => handleInitiateRefund(p.id)}><RotateCcw className="h-4 w-4" /></Button>
+                      )}
+                      {p.refund_status === "initiated" && (
+                        <Button size="sm" variant="ghost" className="text-success" onClick={() => handleCompleteRefund(p.id)}><CheckCircle2 className="h-4 w-4" /></Button>
+                      )}
+                      {p.receipt_number && <Button size="sm" variant="ghost"><Eye className="h-4 w-4" /></Button>}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}</TableBody>
             </Table>
           </div>
         </TabsContent>
@@ -588,63 +388,21 @@ function AdminFeesComponent() {
             <Button size="sm" className="bg-gradient-brand border-0" onClick={() => setShowScholarshipDialog(true)}><Plus className="h-4 w-4 mr-1" />Grant Scholarship</Button>
           </div>
           <div className="rounded-lg border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="text-right">Value</TableHead>
-                  <TableHead>Reason</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+            <Table><TableHeader><TableRow><TableHead>Student</TableHead><TableHead>Class</TableHead><TableHead>Type</TableHead><TableHead className="text-right">Value</TableHead><TableHead>Reason</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+              <TableBody>{scholarships.length === 0 ? (
+                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No scholarships granted</TableCell></TableRow>
+              ) : scholarships.map(s => (
+                <TableRow key={s.id}>
+                  <TableCell className="font-medium">{s.student_name}</TableCell>
+                  <TableCell>Class {s.class_name}</TableCell>
+                  <TableCell>{s.type === "percentage" ? `${s.value}%` : "Fixed"}</TableCell>
+                  <TableCell className="text-right">{s.type === "percentage" ? `${s.value}%` : `₹${Number(s.value).toLocaleString()}`}</TableCell>
+                  <TableCell className="max-w-[200px] truncate text-sm">{s.reason}</TableCell>
+                  <TableCell>{s.is_active ? <Badge className="bg-success text-success-foreground">Active</Badge> : <Badge variant="secondary">Revoked</Badge>}</TableCell>
+                  <TableCell>{s.is_active && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleRevokeScholarship(s.id)}><Ban className="h-4 w-4" /></Button>}</TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {scholarships.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No scholarships granted</TableCell></TableRow>
-                ) : scholarships.map(s => (
-                  <TableRow key={s.id}>
-                    <TableCell className="font-medium">{s.studentName}</TableCell>
-                    <TableCell>Class {s.className}</TableCell>
-                    <TableCell>{s.type === "percentage" ? `${s.value}%` : "Fixed"}</TableCell>
-                    <TableCell className="text-right">{s.type === "percentage" ? `${s.value}%` : `₹${s.value.toLocaleString()}`}</TableCell>
-                    <TableCell className="max-w-[200px] truncate text-sm">{s.reason}</TableCell>
-                    <TableCell>{s.isActive ? <Badge className="bg-success text-success-foreground">Active</Badge> : <Badge variant="secondary">Revoked</Badge>}</TableCell>
-                    <TableCell>
-                      {s.isActive && (
-                        <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { revokeScholarship(s.id); toast.success("Scholarship revoked"); }}>
-                          <Ban className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
+              ))}</TableBody>
             </Table>
-          </div>
-        </TabsContent>
-
-        {/* === CALENDAR TAB === */}
-        <TabsContent value="calendar" className="space-y-4">
-          <h2 className="text-lg font-semibold flex items-center gap-2"><CalendarDays className="h-5 w-5" /> Due Date Calendar</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {calendar.map(c => (
-              <Card key={c.className}>
-                <CardHeader className="pb-2"><CardTitle className="text-base">Class {c.className}</CardTitle><CardDescription>Due: {c.dueDate}</CardDescription></CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between"><span>Month</span><span className="font-medium">{c.month}</span></div>
-                    <div className="flex justify-between"><span>Total Students</span><span className="font-medium">{c.totalStudents}</span></div>
-                    <div className="flex justify-between"><span>Paid</span><span className="font-medium text-success">{c.paidCount}</span></div>
-                    <div className="flex justify-between"><span>Pending</span><span className="font-medium text-warning">{c.pendingCount}</span></div>
-                    <div className="w-full bg-muted rounded-full h-2 mt-2">
-                      <div className="bg-success h-2 rounded-full" style={{ width: `${c.totalStudents > 0 ? (c.paidCount / c.totalStudents) * 100 : 0}%` }} />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
           </div>
         </TabsContent>
 
@@ -652,35 +410,24 @@ function AdminFeesComponent() {
         <TabsContent value="activity" className="space-y-4">
           <h2 className="text-lg font-semibold flex items-center gap-2"><History className="h-5 w-5" /> Finance Activity Log</h2>
           <div className="rounded-lg border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Timestamp</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead>Admin</TableHead>
-                  <TableHead>Student</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+            <Table><TableHeader><TableRow><TableHead>Timestamp</TableHead><TableHead>Action</TableHead><TableHead>Admin</TableHead><TableHead>Student</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
+              <TableBody>{activityLog.length === 0 ? (
+                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No activity recorded</TableCell></TableRow>
+              ) : activityLog.map(log => (
+                <TableRow key={log.id}>
+                  <TableCell className="text-xs">{new Date(log.created_at).toLocaleString()}</TableCell>
+                  <TableCell>{log.action.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}</TableCell>
+                  <TableCell>{log.admin_name}</TableCell>
+                  <TableCell>{log.student_name || "-"}</TableCell>
+                  <TableCell className="text-right">{Number(log.amount) > 0 ? `₹${Number(log.amount).toLocaleString()}` : "-"}</TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {activityLog.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No activity recorded</TableCell></TableRow>
-                ) : activityLog.map(log => (
-                  <TableRow key={log.id}>
-                    <TableCell className="text-xs">{new Date(log.timestamp).toLocaleString()}</TableCell>
-                    <TableCell>{log.action}</TableCell>
-                    <TableCell>{log.admin}</TableCell>
-                    <TableCell>{log.student || "-"}</TableCell>
-                    <TableCell className="text-right">{log.amount > 0 ? `₹${log.amount.toLocaleString()}` : "-"}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
+              ))}</TableBody>
             </Table>
           </div>
         </TabsContent>
       </Tabs>
 
-      {/* === CREATE/EDIT FEE STRUCTURE DIALOG === */}
+      {/* CREATE/EDIT FEE STRUCTURE DIALOG */}
       <Dialog open={showCreateStructure} onOpenChange={o => { if (!o) { setShowCreateStructure(false); setEditingStructure(null); } }}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editingStructure ? "Edit" : "Create"} Fee Structure</DialogTitle></DialogHeader>
@@ -690,33 +437,20 @@ function AdminFeesComponent() {
                 <Label>Class</Label>
                 <Select value={structureForm.className} onValueChange={v => setStructureForm(prev => ({ ...prev, className: v }))} disabled={!!editingStructure}>
                   <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
-                  <SelectContent>
-                    {["9", "10", "11", "12"].map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
-                  </SelectContent>
+                  <SelectContent>{["9", "10", "11", "12"].map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1">
-                <Label>Late Fine (per day)</Label>
-                <Input type="number" value={structureForm.lateFinePerDay} onChange={e => setStructureForm(prev => ({ ...prev, lateFinePerDay: Number(e.target.value) }))} />
-              </div>
+              <div className="space-y-1"><Label>Late Fine (per day)</Label><Input type="number" value={structureForm.lateFinePerDay} onChange={e => setStructureForm(prev => ({ ...prev, lateFinePerDay: Number(e.target.value) }))} /></div>
             </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <input type="checkbox" id="gst" checked={structureForm.gstEnabled} onChange={e => setStructureForm(prev => ({ ...prev, gstEnabled: e.target.checked }))} className="rounded border-input" />
-                <Label htmlFor="gst">Enable GST</Label>
-              </div>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="gst" checked={structureForm.gstEnabled} onChange={e => setStructureForm(prev => ({ ...prev, gstEnabled: e.target.checked }))} className="rounded border-input" />
+              <Label htmlFor="gst">Enable GST</Label>
             </div>
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="font-semibold">Fee Components</Label>
-                <Button size="sm" variant="outline" onClick={addComponentToForm}><Plus className="h-3 w-3 mr-1" />Add</Button>
-              </div>
+              <div className="flex items-center justify-between"><Label className="font-semibold">Fee Components</Label><Button size="sm" variant="outline" onClick={addComponentToForm}><Plus className="h-3 w-3 mr-1" />Add</Button></div>
               {structureForm.components.map((comp, i) => (
                 <div key={i} className="border rounded-lg p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground">Component {i + 1}</span>
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" onClick={() => removeComponentFromForm(i)}><Trash2 className="h-3 w-3" /></Button>
-                  </div>
+                  <div className="flex items-center justify-between"><span className="text-xs font-medium text-muted-foreground">Component {i + 1}</span><Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" onClick={() => removeComponentFromForm(i)}><Trash2 className="h-3 w-3" /></Button></div>
                   <div className="grid grid-cols-2 gap-2">
                     <Input placeholder="Name (e.g. Tuition Fee)" value={comp.name} onChange={e => updateComponentInForm(i, "name", e.target.value)} />
                     <Input type="number" placeholder="Amount" value={comp.amount || ""} onChange={e => updateComponentInForm(i, "amount", Number(e.target.value))} />
@@ -724,11 +458,7 @@ function AdminFeesComponent() {
                   <div className="flex items-center gap-2">
                     <Select value={comp.frequency} onValueChange={v => updateComponentInForm(i, "frequency", v)}>
                       <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="monthly">Monthly</SelectItem>
-                        <SelectItem value="annual">Annual</SelectItem>
-                        <SelectItem value="one-time">One-Time</SelectItem>
-                      </SelectContent>
+                      <SelectContent><SelectItem value="monthly">Monthly</SelectItem><SelectItem value="annual">Annual</SelectItem><SelectItem value="one-time">One-Time</SelectItem></SelectContent>
                     </Select>
                     <div className="flex items-center gap-1">
                       <input type="checkbox" id={`opt_${i}`} checked={comp.isOptional} onChange={e => updateComponentInForm(i, "isOptional", e.target.checked)} className="rounded border-input" />
@@ -741,122 +471,35 @@ function AdminFeesComponent() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setShowCreateStructure(false); setEditingStructure(null); }}>Cancel</Button>
-            <Button className="bg-gradient-brand border-0" onClick={handleCreateStructure}>
-              {editingStructure ? "Update" : "Create"}
-            </Button>
+            <Button className="bg-gradient-brand border-0" onClick={handleCreateStructure}>{editingStructure ? "Update" : "Create"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* === VERIFY PAYMENT DIALOG === */}
-      <Dialog open={verifyDialog.open} onOpenChange={o => { if (!o) setVerifyDialog({ open: false, payment: null }); }}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Verify Payment</DialogTitle></DialogHeader>
-          {verifyDialog.payment && (
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span>Student</span><span className="font-medium">{verifyDialog.payment.studentName}</span></div>
-              <div className="flex justify-between"><span>Month</span><span className="font-medium">{verifyDialog.payment.month}</span></div>
-              <div className="flex justify-between"><span>Amount Paid</span><span className="font-medium">₹{verifyDialog.payment.paidAmount.toLocaleString()}</span></div>
-              <div className="flex justify-between"><span>Method</span><span className="font-medium">{verifyDialog.payment.paymentMethod === "bank_transfer" ? "Bank Transfer" : "Cash"}</span></div>
-              {verifyDialog.payment.transactionRef && <div className="flex justify-between"><span>Transaction Ref</span><span className="font-medium">{verifyDialog.payment.transactionRef}</span></div>}
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setVerifyDialog({ open: false, payment: null })}>Cancel</Button>
-            <Button className="bg-gradient-brand border-0" onClick={confirmVerifyPayment}><CheckCircle2 className="h-4 w-4 mr-1" />Confirm & Verify</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* === REFUND DIALOG === */}
-      <Dialog open={refundDialog.open} onOpenChange={o => { if (!o) setRefundDialog({ open: false, payment: null }); }}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Initiate Refund</DialogTitle></DialogHeader>
-          {refundDialog.payment && (
-            <div className="space-y-2 text-sm">
-              <p>This will initiate a refund of <strong>₹{refundDialog.payment.advancePayment.toLocaleString()}</strong> advance payment for {refundDialog.payment.studentName}.</p>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRefundDialog({ open: false, payment: null })}>Cancel</Button>
-            <Button className="bg-warning text-warning-foreground border-0" onClick={() => refundDialog.payment && handleInitiateRefund(refundDialog.payment)}>Initiate Refund</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* === SCHOLARSHIP DIALOG === */}
+      {/* SCHOLARSHIP DIALOG */}
       <Dialog open={showScholarshipDialog} onOpenChange={o => { if (!o) setShowScholarshipDialog(false); }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Grant Scholarship / Concession</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div className="space-y-1">
-              <Label>Student Name</Label>
-              <Input value={scholarshipForm.studentName} onChange={e => setScholarshipForm(prev => ({ ...prev, studentName: e.target.value }))} />
-            </div>
+            <div className="space-y-1"><Label>Student ID</Label><Input value={scholarshipForm.studentId} onChange={e => setScholarshipForm(prev => ({ ...prev, studentId: e.target.value }))} placeholder="Enter student ID" /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Student ID</Label>
-                <Input value={scholarshipForm.studentId} onChange={e => setScholarshipForm(prev => ({ ...prev, studentId: e.target.value }))} />
-              </div>
-              <div className="space-y-1">
-                <Label>Class</Label>
-                <Select value={scholarshipForm.className} onValueChange={v => setScholarshipForm(prev => ({ ...prev, className: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                  <SelectContent>
-                    {["9", "10", "11", "12"].map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Type</Label>
+              <div className="space-y-1"><Label>Type</Label>
                 <Select value={scholarshipForm.type} onValueChange={v => setScholarshipForm(prev => ({ ...prev, type: v as "percentage" | "fixed" }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="percentage">Percentage (%)</SelectItem>
-                    <SelectItem value="fixed">Fixed Amount</SelectItem>
-                  </SelectContent>
+                  <SelectContent><SelectItem value="percentage">Percentage (%)</SelectItem><SelectItem value="fixed">Fixed Amount</SelectItem></SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1">
-                <Label>Value</Label>
-                <Input type="number" value={scholarshipForm.value || ""} onChange={e => setScholarshipForm(prev => ({ ...prev, value: Number(e.target.value) }))} />
-              </div>
+              <div className="space-y-1"><Label>Value</Label><Input type="number" value={scholarshipForm.value || ""} onChange={e => setScholarshipForm(prev => ({ ...prev, value: Number(e.target.value) }))} /></div>
             </div>
-            <div className="space-y-1">
-              <Label>Reason</Label>
-              <Input value={scholarshipForm.reason} onChange={e => setScholarshipForm(prev => ({ ...prev, reason: e.target.value }))} placeholder="e.g. Merit-based, Need-based" />
-            </div>
+            <div className="space-y-1"><Label>Reason</Label><Input value={scholarshipForm.reason} onChange={e => setScholarshipForm(prev => ({ ...prev, reason: e.target.value }))} placeholder="e.g. Merit-based, Need-based" /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowScholarshipDialog(false)}>Cancel</Button>
-            <Button className="bg-gradient-brand border-0" onClick={handleAddScholarship}>Grant</Button>
+            <Button className="bg-gradient-brand border-0" onClick={handleGrantScholarship}>Grant</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* === PAY SALARY DIALOG === */}
-      <Dialog open={salaryPayDialog.open} onOpenChange={o => { if (!o) setSalaryPayDialog({ open: false, salary: null }); }}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Pay Salary</DialogTitle></DialogHeader>
-          {salaryPayDialog.salary && (
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span>Teacher</span><span className="font-medium">{salaryPayDialog.salary.teacherName}</span></div>
-              <div className="flex justify-between"><span>Month</span><span className="font-medium">{salaryPayDialog.salary.month}</span></div>
-              <div className="flex justify-between"><span>Basic Salary</span><span className="font-medium">₹{salaryPayDialog.salary.basicSalary.toLocaleString()}</span></div>
-              <div className="flex justify-between"><span>Total</span><span className="font-bold">₹{salaryPayDialog.salary.totalSalary.toLocaleString()}</span></div>
-              <p className="text-xs text-muted-foreground mt-2">Salary will be paid via bank transfer.</p>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSalaryPayDialog({ open: false, salary: null })}>Cancel</Button>
-            <Button className="bg-gradient-brand border-0" onClick={() => salaryPayDialog.salary && handlePaySalary(salaryPayDialog.salary)}><Wallet className="h-4 w-4 mr-1" />Confirm Payment</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* === EXPORT DIALOG === */}
       <ExportDialog open={showExport} onOpenChange={setShowExport} config={feeExportConfig} />
     </>
   );

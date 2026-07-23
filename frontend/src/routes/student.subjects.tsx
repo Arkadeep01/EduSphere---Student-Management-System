@@ -1,329 +1,200 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageWrapper, StaggerContainer, StaggerItem, HoverLift } from "@/components/brand/animations";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, FileText, Download, Video, Eye } from "lucide-react";
-import { coreSubjects, specializedSubjects, enrichedSubjects, subjectSelection, assignments, studentSubjectResources, subjectRequestRecords, studentProfileData } from "@/lib/mock-data";
-import { getResourcesBySubject } from "@/lib/resource-store";
-import { getSyllabusForStudent } from "@/lib/syllabus-store";
-import { useState, useEffect, useMemo } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BookOpen, ChevronRight, CheckCircle2, Circle, FileText, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
+import { studentSubjectApi, studentChapterApi } from "@/services/studentApi";
+import { subjectRequestApi } from "@/services/adminApi";
 
-type SubjectType = typeof coreSubjects[number];
-type RequestStatuses = Record<string, string>;
-
-const MOCK_STUDENT_ID = "STU1000";
-const MAX_REQUESTS = 3;
-
-function getSubjectStatus(subject: SubjectType): string {
-  if (subject.category === "core") {
-    const found = subjectSelection.core.find(s => s.id === subject.id);
-    return found?.status || "selected";
-  }
-  if (subject.category === "specialized") {
-    const found = subjectSelection.specialized.find(s => s.id === subject.id);
-    return found?.status || "not_selected";
-  }
-  const found = subjectSelection.enriched.find(s => s.id === subject.id);
-  return found?.status || "not_selected";
-}
-
-function StudentSubjectsComponent() {
-  const [selected, setSelected] = useState(coreSubjects[0]);
-  const [requestStatuses, setRequestStatuses] = useState<RequestStatuses>({});
-  const [requestsEnabled, setRequestsEnabled] = useState(true);
-  const studentRequests = subjectRequestRecords.filter(r => r.studentId === MOCK_STUDENT_ID);
-  const [requestCount, setRequestCount] = useState(studentRequests.length);
-  const limitReached = requestCount >= MAX_REQUESTS;
-  const studentClass = studentProfileData.academic.class;
-
-  useEffect(() => {
-    async function checkToggle() {
-      try {
-        const { subjectRequestApi } = await import("@/services/adminApi");
-        const res = await subjectRequestApi.get();
-        setRequestsEnabled(res.enabled);
-      } catch {
-        setRequestsEnabled(true);
-      }
-    }
-    checkToggle();
-  }, []);
-
-  const syllabus = useMemo(() => {
-    return getSyllabusForStudent(selected.code, studentClass);
-  }, [selected, studentClass]);
-
-  const statusBadge = (status?: string) => {
-    if (status === "selected") return <Badge className="bg-success text-success-foreground border-0 text-xs">Selected</Badge>;
-    if (status === "request_pending") return <Badge variant="secondary" className="bg-warning/15 text-warning-foreground text-xs">Request Pending</Badge>;
-    if (status === "not_selected") return <Badge variant="outline" className="text-xs text-muted-foreground border-dashed">Not Selected</Badge>;
-    return null;
-  };
-
-  const handleRequestSubject = (subject: SubjectType) => {
-    const key = `${subject.category}-${subject.id}`;
-    setRequestStatuses(prev => ({ ...prev, [key]: "request_pending" }));
-    subjectRequestRecords.push({
-      id: `sr${Date.now()}`,
-      studentId: MOCK_STUDENT_ID,
-      studentName: "Aarav Sharma",
-      rollNumber: MOCK_STUDENT_ID,
-      class: "10-A",
-      section: "A",
-      subjectId: subject.id,
-      subjectName: subject.name,
-      subjectCode: subject.code,
-      subjectCategory: subject.category,
-      requestedOn: new Date().toISOString().slice(0, 10),
-      status: "pending",
-    });
-    setRequestCount(prev => prev + 1);
-    toast.success(`Request sent for ${subject.name}. Waiting for admin approval.`);
-  };
-
-  const displayStatus = (subject: SubjectType): string => {
-    const key = `${subject.category}-${subject.id}`;
-    if (requestStatuses[key]) return requestStatuses[key];
-    return getSubjectStatus(subject);
-  };
-
-  const canRequest = (subject: SubjectType): boolean => {
-    if (!requestsEnabled) return false;
-    if (limitReached) return false;
-    return displayStatus(subject) === "not_selected";
-  };
-
-  const requestDisabledReason = (): string | null => {
-    if (!requestsEnabled) return "Subject requests are currently disabled by the administration.";
-    if (limitReached) return "Maximum subject request limit reached. Please contact Administration for further changes.";
-    return null;
-  };
-
-  return (
-    <PageWrapper>
-      {!requestsEnabled && (
-        <div className="mb-4 p-3 rounded-lg bg-warning/10 border border-warning/20 text-sm text-warning-foreground">
-          Subject requests are currently disabled by the administration.
-        </div>
-      )}
-      {limitReached && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive-foreground">
-          Maximum subject request limit reached. Please contact Administration for further changes.
-        </div>
-      )}
-      {/* Subject Category Tabs */}
-      <Tabs defaultValue="core" className="mb-6">
-        <TabsList className="mx-auto">
-          <TabsTrigger value="core">Core Subjects</TabsTrigger>
-          <TabsTrigger value="specialized">Specialized</TabsTrigger>
-          <TabsTrigger value="enriched">Enriched</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="core" className="mt-4">
-          <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {coreSubjects.map(s => (
-              <StaggerItem key={s.id}><HoverLift><Card onClick={() => setSelected(s)} className={`cursor-pointer overflow-hidden ${selected.id === s.id ? "ring-2 ring-primary" : ""}`}>
-                <div className={`h-20 bg-gradient-to-br ${s.color} flex items-center justify-center`}><BookOpen className="h-8 w-8 text-white/80" /></div>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <Badge variant="secondary" className="text-[10px]">{s.code}</Badge>
-                    <Badge className="bg-primary/10 text-primary border-0 text-[10px]">Core</Badge>
-                  </div>
-                  <h3 className="font-semibold mt-2 text-sm">{s.name}</h3>
-                  <p className="text-xs text-muted-foreground">{s.teacher}</p>
-                  <Progress value={s.progress} className="mt-2 h-1.5" />
-                </CardContent>
-              </Card></HoverLift></StaggerItem>
-            ))}
-          </StaggerContainer>
-        </TabsContent>
-
-        <TabsContent value="specialized" className="mt-4">
-          <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {specializedSubjects.map(s => {
-              const status = displayStatus(s);
-              return (
-                <StaggerItem key={s.id}><HoverLift><Card onClick={() => setSelected(s)} className={`cursor-pointer overflow-hidden ${selected.id === s.id ? "ring-2 ring-primary" : ""}`}>
-                  <div className={`h-20 bg-gradient-to-br ${s.color} flex items-center justify-center`}><BookOpen className="h-8 w-8 text-white/80" /></div>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="secondary" className="text-[10px]">{s.code}</Badge>
-                      {statusBadge(status)}
-                    </div>
-                    <h3 className="font-semibold mt-2 text-sm">{s.name}</h3>
-                    <p className="text-xs text-muted-foreground">{s.teacher}</p>
-                  </CardContent>
-                </Card></HoverLift></StaggerItem>
-              );
-            })}
-          </StaggerContainer>
-        </TabsContent>
-
-        <TabsContent value="enriched" className="mt-4">
-          <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {enrichedSubjects.map(s => {
-              const status = displayStatus(s);
-              return (
-                <StaggerItem key={s.id}><HoverLift><Card onClick={() => setSelected(s)} className={`cursor-pointer overflow-hidden ${selected.id === s.id ? "ring-2 ring-primary" : ""}`}>
-                  <div className={`h-20 bg-gradient-to-br ${s.color} flex items-center justify-center`}><BookOpen className="h-8 w-8 text-white/80" /></div>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="secondary" className="text-[10px]">{s.code}</Badge>
-                      {statusBadge(status)}
-                    </div>
-                    <h3 className="font-semibold mt-2 text-sm">{s.name}</h3>
-                    <p className="text-xs text-muted-foreground">{s.teacher}</p>
-                  </CardContent>
-                </Card></HoverLift></StaggerItem>
-              );
-            })}
-          </StaggerContainer>
-        </TabsContent>
-      </Tabs>
-
-      {/* Selected Subject Detail Panel */}
-      <Card><CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-bold">{selected.name}</h2>
-            <p className="text-sm text-muted-foreground">{selected.code} · {selected.teacher}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Badge className="capitalize">{selected.category}</Badge>
-            {canRequest(selected) && (
-              <Button size="sm" onClick={() => handleRequestSubject(selected)} className="bg-gradient-brand border-0">
-                Request Subject
-              </Button>
-            )}
-            {displayStatus(selected) === "not_selected" && !canRequest(selected) && (
-              <span className="text-xs text-muted-foreground">{requestDisabledReason()}</span>
-            )}
-          </div>
-        </div>
-        <Tabs defaultValue="overview">
-          <TabsList><TabsTrigger value="overview">Overview</TabsTrigger><TabsTrigger value="notes">Notes</TabsTrigger><TabsTrigger value="assignments">Assignments</TabsTrigger><TabsTrigger value="resources">Resources</TabsTrigger></TabsList>
-          <TabsContent value="overview" className="mt-4 space-y-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Description</p>
-              <p className="text-sm">{selected.description || "No description available."}</p>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="p-3 border rounded-lg text-center">
-                <p className="text-xs text-muted-foreground">Subject Type</p>
-                <p className="text-sm font-semibold capitalize">{selected.category}</p>
-              </div>
-              <div className="p-3 border rounded-lg text-center">
-                <p className="text-xs text-muted-foreground">Assigned Teacher</p>
-                <p className="text-sm font-semibold">{selected.teacher}</p>
-              </div>
-              <div className="p-3 border rounded-lg text-center">
-                <p className="text-xs text-muted-foreground">Progress</p>
-                <p className="text-sm font-semibold">{selected.progress}%</p>
-              </div>
-              <div className="p-3 border rounded-lg text-center">
-                <p className="text-xs text-muted-foreground">Status</p>
-                <p className="text-sm font-semibold">{statusBadge(displayStatus(selected))}</p>
-              </div>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground mb-1">Progress</p>
-              <Progress value={selected.progress} className="h-2" />
-            </div>
-            {syllabus && (
-              <div className="p-4 border rounded-lg">
-                <p className="text-sm font-medium text-muted-foreground mb-2">Latest Syllabus</p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-primary" />
-                    <div>
-                      <p className="text-sm font-medium">{syllabus.fileName}</p>
-                      <p className="text-xs text-muted-foreground">Uploaded {new Date(syllabus.uploadedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => window.open(syllabus.fileUrl)}>
-                      <Eye className="h-4 w-4 mr-1" />View
-                    </Button>
-                    <Button size="sm" variant="ghost" asChild>
-                      <a href={syllabus.fileUrl} download={syllabus.fileName}>
-                        <Download className="h-4 w-4 mr-1" />Download
-                      </a>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </TabsContent>
-          <TabsContent value="notes" className="mt-4 space-y-2">
-            {syllabus && (
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-4 w-4 text-primary" />
-                  <div>
-                    <span className="text-sm font-medium">Syllabus</span>
-                    <p className="text-xs text-muted-foreground">{syllabus.fileName}</p>
-                  </div>
-                </div>
-                <div className="flex gap-1">
-                  <Button size="sm" variant="ghost" onClick={() => window.open(syllabus.fileUrl)}>
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" variant="ghost" asChild>
-                    <a href={syllabus.fileUrl} download={syllabus.fileName}>
-                      <Download className="h-4 w-4" />
-                    </a>
-                  </Button>
-                </div>
-              </div>
-            )}
-            {["Intro & Syllabus", "Chapter 1 Notes", "Chapter 2 Summary", "Mid-term Revision"].map(n => (
-              <div key={n} className="flex items-center justify-between p-3 border rounded-lg"><div className="flex items-center gap-3"><FileText className="h-4 w-4 text-primary" /><span className="text-sm">{n}</span></div><Button size="sm" variant="ghost"><Download className="h-4 w-4" /></Button></div>
-            ))}
-          </TabsContent>
-          <TabsContent value="assignments" className="mt-4 space-y-2">
-            {assignments.filter(a => a.subject === selected.name).map(a => (
-              <div key={a.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div><span className="text-sm font-medium">{a.title}</span><p className="text-xs text-muted-foreground">Due {a.due}</p></div>
-                <Button size="sm" variant="outline">Submit</Button>
-              </div>
-            ))}
-          </TabsContent>
-          <TabsContent value="resources" className="mt-4 space-y-2">
-            {(() => {
-              const staticRes = studentSubjectResources[selected.name] || [];
-              const sharedRes = getResourcesBySubject(selected.name, studentClass);
-              const allRes = [...staticRes, ...sharedRes];
-              if (allRes.length === 0) {
-                return <p className="text-sm text-muted-foreground py-4 text-center">No resources available for this subject.</p>;
-              }
-              return allRes.map(r => {
-                const Icon = r.type === "video" ? Video : r.type === "note" ? FileText : FileText;
-                return (
-                  <div key={r.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center gap-3"><Icon className="h-4 w-4 text-primary" /><span className="text-sm">{r.title} <span className="text-xs text-muted-foreground">({r.size})</span></span></div>
-                    <Button size="sm" variant="ghost" asChild={!!r.fileUrl}>
-                      {r.fileUrl ? (
-                        <a href={r.fileUrl} download={r.title}><Download className="h-4 w-4" /></a>
-                      ) : (
-                        <button><Download className="h-4 w-4" /></button>
-                      )}
-                    </Button>
-                  </div>
-                );
-              });
-            })()}
-          </TabsContent>
-        </Tabs>
-      </CardContent></Card>
-    </PageWrapper>
-  );
-}
+interface Subject { id: number; name: string; code: string; tier: string; teacher_name: string; description: string; color: string; progress: number; }
+interface Chapter { id: number; title: string; topics: { id: number; title: string; is_completed: boolean }[]; }
 
 export const Route = createFileRoute("/student/subjects")({
-  head: () => ({ meta: [{ title: "My Subjects — Student" }] }),
-  component: StudentSubjectsComponent,
+  head: () => ({ meta: [{ title: "Subjects — Student" }] }),
+  component: () => {
+    const { user } = useAuth();
+    const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
+    const [mySubjectsList, setMySubjectsList] = useState<Subject[]>([]);
+    const [pendingSubjectIds, setPendingSubjectIds] = useState<number[]>([]);
+    const [requestEnabled, setRequestEnabled] = useState(false);
+    const [chapters, setChapters] = useState<Chapter[]>([]);
+    const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+    const [activeTab, setActiveTab] = useState("list");
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      (async () => {
+        try {
+          const [all, my, reqCtrl] = await Promise.all([
+            studentSubjectApi.listAll().catch(() => []),
+            studentSubjectApi.mySubjects().catch(() => ({ assigned: [], pending: [] })),
+            subjectRequestApi.get().catch(() => ({ enabled: false })),
+          ]);
+          setAllSubjects(all as Subject[] || []);
+          setMySubjectsList((my as any)?.assigned || []);
+          setPendingSubjectIds((my as any)?.pending?.map((p: any) => p.subject) || []);
+          setRequestEnabled(reqCtrl?.enabled || false);
+        } catch { toast.error("Failed to load subjects"); }
+        finally { setLoading(false); }
+      })();
+    }, []);
+
+    const loadChapters = async (subjectId: number) => {
+      try {
+        const c = await studentChapterApi.list(subjectId);
+        setChapters(c as Chapter[]);
+      } catch { toast.error("Failed to load chapters"); }
+    };
+
+    const handleSelectSubject = (s: Subject) => {
+      setSelectedSubject(s);
+      loadChapters(s.id);
+      setActiveTab("detail");
+    };
+
+    const handleRequestSubject = async (subjectId: number) => {
+      try {
+        await studentSubjectApi.select([subjectId]);
+        toast.success("Subject request submitted");
+        setPendingSubjectIds(prev => [...prev, subjectId]);
+      } catch { toast.error("Failed to request subject"); }
+    };
+
+    const coreSubjects = allSubjects.filter(s => s.tier === "core");
+    const specializedSubjects = allSubjects.filter(s => s.tier === "specialized" && !mySubjectsList.find(m => m.id === s.id));
+    const enrichmentSubjects = allSubjects.filter(s => s.tier === "enrichment" && !mySubjectsList.find(m => m.id === s.id));
+
+    if (loading) return <div className="text-center py-8 text-muted-foreground">Loading subjects...</div>;
+
+    return (
+      <div className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="list"><BookOpen className="h-4 w-4 mr-1" />My Subjects</TabsTrigger>
+            {selectedSubject && <TabsTrigger value="detail">{selectedSubject.name}</TabsTrigger>}
+            <TabsTrigger value="browse">Browse All</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="list">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {mySubjectsList.length === 0 ? (
+                <div className="col-span-full text-center py-12 text-muted-foreground">
+                  <BookOpen className="h-12 w-12 mx-auto mb-3 opacity-40" />
+                  <p>No subjects assigned yet</p>
+                  {requestEnabled && <Button className="mt-3" variant="outline" onClick={() => setActiveTab("browse")}>Browse Subjects</Button>}
+                </div>
+              ) : mySubjectsList.map(s => (
+                <Card key={s.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleSelectSubject(s)}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div><h3 className="font-semibold">{s.name}</h3><p className="text-xs text-muted-foreground">{s.code}</p></div>
+                      <Badge variant="outline" className={`text-[9px] ${s.tier === "core" ? "border-primary" : s.tier === "specialized" ? "border-info" : "border-warning"}`}>{s.tier}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">{s.teacher_name}</p>
+                    <div className="mt-3 w-full bg-muted rounded-full h-1.5"><div className="bg-primary h-1.5 rounded-full" style={{ width: `${s.progress || 0}%` }} /></div>
+                    <div className="flex items-center justify-between mt-3">
+                      <span className="text-xs text-muted-foreground">{s.progress || 0}% complete</span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="detail">
+            {selectedSubject && (
+              <div className="space-y-4">
+                <Card className="bg-gradient-brand border-0 text-white">
+                  <CardContent className="p-4">
+                    <h3 className="text-lg font-bold">{selectedSubject.name}</h3>
+                    <p className="text-sm opacity-80 mt-1">{selectedSubject.description}</p>
+                    <div className="flex gap-3 mt-2 text-xs opacity-70"><span>Code: {selectedSubject.code}</span><span>Teacher: {selectedSubject.teacher_name}</span></div>
+                  </CardContent>
+                </Card>
+                <Card><CardHeader><CardTitle>Syllabus</CardTitle></CardHeader>
+                  <CardContent>
+                    {chapters.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No syllabus available yet</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {chapters.map(ch => (
+                          <div key={ch.id} className="border rounded-lg p-3">
+                            <h4 className="font-medium text-sm">{ch.title}</h4>
+                            {ch.topics && ch.topics.length > 0 && (
+                              <div className="mt-2 space-y-1">
+                                {ch.topics.map(t => (
+                                  <div key={t.id} className="flex items-center gap-2 text-xs">
+                                    {t.is_completed ? <CheckCircle2 className="h-3 w-3 text-success" /> : <Circle className="h-3 w-3 text-muted-foreground" />}
+                                    <span className={t.is_completed ? "line-through text-muted-foreground" : ""}>{t.title}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="browse">
+            {!requestEnabled ? (
+              <Card><CardContent className="p-4 text-center text-muted-foreground"><AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-40" /><p>Subject requests are currently disabled</p></CardContent></Card>
+            ) : (
+              <div className="space-y-6">
+                {coreSubjects.length > 0 && (
+                  <div><h3 className="font-semibold mb-2">Core Subjects</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {coreSubjects.filter(s => !mySubjectsList.find(m => m.id === s.id)).map(s => (
+                        <Card key={s.id}><CardContent className="p-3 flex items-center justify-between">
+                          <div><p className="font-medium text-sm">{s.name}</p><p className="text-xs text-muted-foreground">{s.code}</p></div>
+                          <Badge>Enrolled</Badge>
+                        </CardContent></Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {specializedSubjects.length > 0 && (
+                  <div><h3 className="font-semibold mb-2">Specialized Subjects</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {specializedSubjects.map(s => (
+                        <Card key={s.id}><CardContent className="p-3 flex items-center justify-between">
+                          <div><p className="font-medium text-sm">{s.name}</p><p className="text-xs text-muted-foreground">{s.code}</p></div>
+                          <Button size="sm" variant="outline" disabled={pendingSubjectIds.includes(s.id)} onClick={() => handleRequestSubject(s.id)}>
+                            {pendingSubjectIds.includes(s.id) ? "Requested" : "Request"}
+                          </Button>
+                        </CardContent></Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {enrichmentSubjects.length > 0 && (
+                  <div><h3 className="font-semibold mb-2">Enrichment Subjects</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {enrichmentSubjects.map(s => (
+                        <Card key={s.id}><CardContent className="p-3 flex items-center justify-between">
+                          <div><p className="font-medium text-sm">{s.name}</p><p className="text-xs text-muted-foreground">{s.code}</p></div>
+                          <Button size="sm" variant="outline" disabled={pendingSubjectIds.includes(s.id)} onClick={() => handleRequestSubject(s.id)}>
+                            {pendingSubjectIds.includes(s.id) ? "Requested" : "Request"}
+                          </Button>
+                        </CardContent></Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+    );
+  },
 });

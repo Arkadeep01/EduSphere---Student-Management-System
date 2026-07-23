@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TeachersRouteImport } from './routes/teachers'
 import { Route as TeacherRouteImport } from './routes/teacher'
 import { Route as StudentRouteImport } from './routes/student'
+import { Route as StaffRouteImport } from './routes/staff'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
@@ -48,6 +49,12 @@ import { Route as StudentDashboardRouteImport } from './routes/student.dashboard
 import { Route as StudentAttendanceRouteImport } from './routes/student.attendance'
 import { Route as StudentAssignmentsRouteImport } from './routes/student.assignments'
 import { Route as StudentNotificationsRouteImport } from './routes/student.notifications'
+import { Route as StaffDashboardRouteImport } from './routes/staff.dashboard'
+import { Route as StaffProfileRouteImport } from './routes/staff.profile'
+import { Route as StaffRejectedRouteImport } from './routes/staff.rejected'
+import { Route as StaffUploadRouteImport } from './routes/staff.upload'
+import { Route as StaffUploadTasksRouteImport } from './routes/staff.upload-tasks'
+import { Route as StaffHistoryRouteImport } from './routes/staff.history'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminTeachersRouteImport } from './routes/admin.teachers'
 import { Route as AdminStudentsRouteImport } from './routes/admin.students'
@@ -63,6 +70,9 @@ import { Route as AdminAttendanceRouteImport } from './routes/admin.attendance'
 import { Route as AdminContactsRouteImport } from './routes/admin.contacts'
 import { Route as AdminDocumentsRouteImport } from './routes/admin.documents'
 import { Route as AdminAdmissionsRouteImport } from './routes/admin.admissions'
+import { Route as AdminSubjectsRouteImport } from './routes/admin.subjects'
+import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
+import { Route as AdminAuditLogsRouteImport } from './routes/admin.audit-logs'
 
 const TeachersRoute = TeachersRouteImport.update({
   id: '/teachers',
@@ -77,6 +87,11 @@ const TeacherRoute = TeacherRouteImport.update({
 const StudentRoute = StudentRouteImport.update({
   id: '/student',
   path: '/student',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffRoute = StaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -215,6 +230,39 @@ const StudentTimetableRoute = StudentTimetableRouteImport.update({
   path: '/timetable',
   getParentRoute: () => StudentRoute,
 } as any)
+
+// Staff child routes
+const StaffDashboardRoute = StaffDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => StaffRoute,
+} as any)
+const StaffUploadTasksRoute = StaffUploadTasksRouteImport.update({
+  id: '/upload-tasks',
+  path: '/upload-tasks',
+  getParentRoute: () => StaffRoute,
+} as any)
+const StaffUploadRoute = StaffUploadRouteImport.update({
+  id: '/upload',
+  path: '/upload',
+  getParentRoute: () => StaffRoute,
+} as any)
+const StaffHistoryRoute = StaffHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => StaffRoute,
+} as any)
+const StaffRejectedRoute = StaffRejectedRouteImport.update({
+  id: '/rejected',
+  path: '/rejected',
+  getParentRoute: () => StaffRoute,
+} as any)
+const StaffProfileRoute = StaffProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => StaffRoute,
+} as any)
+
 const StudentSubjectsRoute = StudentSubjectsRouteImport.update({
   id: '/subjects',
   path: '/subjects',
@@ -316,6 +364,7 @@ const AdminClassesRoute = AdminClassesRouteImport.update({
   path: '/classes',
   getParentRoute: () => AdminRoute,
 } as any)
+
 const AdminAttendanceRoute = AdminAttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
@@ -340,10 +389,29 @@ const AdminAdmissionsRoute = AdminAdmissionsRouteImport.update({
   getParentRoute: () => AdminRoute,
 } as any)
 
+const AdminSubjectsRoute = AdminSubjectsRouteImport.update({
+  id: '/subjects',
+  path: '/subjects',
+  getParentRoute: () => AdminRoute,
+} as any)
+
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRoute,
+} as any)
+
+const AdminAuditLogsRoute = AdminAuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
+  getParentRoute: () => AdminRoute,
+} as any)
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admissionForms': typeof AdmissionFormsRoute
   '/admissions': typeof AdmissionsRoute
   '/contact': typeof ContactRoute
@@ -357,6 +425,13 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/staff': typeof StaffRouteWithChildren
+  '/staff/dashboard': typeof StaffDashboardRoute
+  '/staff/history': typeof StaffHistoryRoute
+  '/staff/profile': typeof StaffProfileRoute
+  '/staff/rejected': typeof StaffRejectedRoute
+  '/staff/upload': typeof StaffUploadRoute
+  '/staff/upload-tasks': typeof StaffUploadTasksRoute
   '/student': typeof StudentRouteWithChildren
   '/teacher': typeof TeacherRouteWithChildren
   '/teachers': typeof TeachersRoute
@@ -369,9 +444,11 @@ export interface FileRoutesByFullPath {
   '/admin/events': typeof AdminEventsRoute
   '/admin/exams': typeof AdminExamsRoute
   '/admin/fees': typeof AdminFeesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -400,6 +477,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admissionForms': typeof AdmissionFormsRoute
   '/admissions': typeof AdmissionsRoute
   '/contact': typeof ContactRoute
@@ -413,6 +491,13 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/staff': typeof StaffRouteWithChildren
+  '/staff/dashboard': typeof StaffDashboardRoute
+  '/staff/history': typeof StaffHistoryRoute
+  '/staff/profile': typeof StaffProfileRoute
+  '/staff/rejected': typeof StaffRejectedRoute
+  '/staff/upload': typeof StaffUploadRoute
+  '/staff/upload-tasks': typeof StaffUploadTasksRoute
   '/student': typeof StudentRouteWithChildren
   '/teacher': typeof TeacherRouteWithChildren
   '/teachers': typeof TeachersRoute
@@ -425,9 +510,11 @@ export interface FileRoutesByTo {
   '/admin/events': typeof AdminEventsRoute
   '/admin/exams': typeof AdminExamsRoute
   '/admin/fees': typeof AdminFeesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -440,15 +527,17 @@ export interface FileRoutesByTo {
   '/student/results': typeof StudentResultsRoute
   '/student/subjects': typeof StudentSubjectsRoute
   '/student/timetable': typeof StudentTimetableRoute
+  '/student/notifications': typeof StudentNotificationsRoute
   '/teacher/assignments': typeof TeacherAssignmentsRoute
   '/teacher/attendance': typeof TeacherAttendanceRoute
   '/teacher/classes': typeof TeacherClassesRoute
   '/teacher/dashboard': typeof TeacherDashboardRoute
   '/teacher/exams': typeof TeacherExamsRoute
-  '/teacher/exams/evaluate/$examId/$classId': typeof TeacherExamsEvaluateExamIdClassIdRoute
   '/teacher/profile': typeof TeacherProfileRoute
   '/teacher/subjects': typeof TeacherSubjectsRoute
   '/teacher/timetable': typeof TeacherTimetableRoute
+  '/teacher/resources': typeof TeacherResourcesRoute
+  '/teacher/exams/evaluate/$examId/$classId': typeof TeacherExamsEvaluateExamIdClassIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -468,6 +557,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/staff': typeof StaffRouteWithChildren
   '/student': typeof StudentRouteWithChildren
   '/teacher': typeof TeacherRouteWithChildren
   '/teachers': typeof TeachersRoute
@@ -480,12 +570,20 @@ export interface FileRoutesById {
   '/admin/events': typeof AdminEventsRoute
   '/admin/exams': typeof AdminExamsRoute
   '/admin/fees': typeof AdminFeesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/staff/dashboard': typeof StaffDashboardRoute
+  '/staff/history': typeof StaffHistoryRoute
+  '/staff/profile': typeof StaffProfileRoute
+  '/staff/rejected': typeof StaffRejectedRoute
+  '/staff/upload': typeof StaffUploadRoute
+  '/staff/upload-tasks': typeof StaffUploadTasksRoute
   '/student/assignments': typeof StudentAssignmentsRoute
   '/student/attendance': typeof StudentAttendanceRoute
   '/student/dashboard': typeof StudentDashboardRoute
@@ -495,6 +593,7 @@ export interface FileRoutesById {
   '/student/results': typeof StudentResultsRoute
   '/student/subjects': typeof StudentSubjectsRoute
   '/student/timetable': typeof StudentTimetableRoute
+  '/student/notifications': typeof StudentNotificationsRoute
   '/teacher/assignments': typeof TeacherAssignmentsRoute
   '/teacher/attendance': typeof TeacherAttendanceRoute
   '/teacher/classes': typeof TeacherClassesRoute
@@ -503,6 +602,8 @@ export interface FileRoutesById {
   '/teacher/profile': typeof TeacherProfileRoute
   '/teacher/subjects': typeof TeacherSubjectsRoute
   '/teacher/timetable': typeof TeacherTimetableRoute
+  '/teacher/resources': typeof TeacherResourcesRoute
+  '/teacher/exams/evaluate/$examId/$classId': typeof TeacherExamsEvaluateExamIdClassIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -523,6 +624,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reset-password'
+    | '/staff'
+    | '/staff/dashboard'
+    | '/staff/history'
+    | '/staff/profile'
+    | '/staff/rejected'
+    | '/staff/upload'
+    | '/staff/upload-tasks'
     | '/student'
     | '/teacher'
     | '/teachers'
@@ -535,9 +643,11 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/exams'
     | '/admin/fees'
+    | '/admin/notifications'
     | '/admin/profile'
     | '/admin/reports'
     | '/admin/settings'
+    | '/admin/subjects'
     | '/admin/students'
     | '/admin/teachers'
     | '/auth/callback'
@@ -577,6 +687,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reset-password'
+    | '/staff'
+    | '/staff/dashboard'
+    | '/staff/history'
+    | '/staff/profile'
+    | '/staff/rejected'
+    | '/staff/upload'
+    | '/staff/upload-tasks'
     | '/student'
     | '/teacher'
     | '/teachers'
@@ -589,9 +706,11 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/exams'
     | '/admin/fees'
+    | '/admin/notifications'
     | '/admin/profile'
     | '/admin/reports'
     | '/admin/settings'
+    | '/admin/subjects'
     | '/admin/students'
     | '/admin/teachers'
     | '/auth/callback'
@@ -631,6 +750,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reset-password'
+    | '/staff'
     | '/student'
     | '/teacher'
     | '/teachers'
@@ -643,12 +763,20 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/exams'
     | '/admin/fees'
+    | '/admin/notifications'
     | '/admin/profile'
     | '/admin/reports'
     | '/admin/settings'
+    | '/admin/subjects'
     | '/admin/students'
     | '/admin/teachers'
     | '/auth/callback'
+    | '/staff/dashboard'
+    | '/staff/history'
+    | '/staff/profile'
+    | '/staff/rejected'
+    | '/staff/upload'
+    | '/staff/upload-tasks'
     | '/student/assignments'
     | '/student/attendance'
     | '/student/dashboard'
@@ -686,6 +814,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  StaffRoute: typeof StaffRouteWithChildren
   StudentRoute: typeof StudentRouteWithChildren
   TeacherRoute: typeof TeacherRouteWithChildren
   TeachersRoute: typeof TeachersRoute
@@ -713,6 +842,13 @@ declare module '@tanstack/react-router' {
       path: '/student'
       fullPath: '/student'
       preLoaderRoute: typeof StudentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff': {
+      id: '/staff'
+      path: '/staff'
+      fullPath: '/staff'
+      preLoaderRoute: typeof StaffRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -995,6 +1131,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/subjects': {
+      id: '/admin/subjects'
+      path: '/subjects'
+      fullPath: '/admin/subjects'
+      preLoaderRoute: typeof AdminSubjectsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/reports': {
       id: '/admin/reports'
       path: '/reports'
@@ -1014,6 +1157,13 @@ declare module '@tanstack/react-router' {
       path: '/fees'
       fullPath: '/admin/fees'
       preLoaderRoute: typeof AdminFeesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/exams': {
@@ -1051,6 +1201,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAttendanceRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/audit-logs': {
+      id: '/admin/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/admin/audit-logs'
+      preLoaderRoute: typeof AdminAuditLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/contacts': {
       id: '/admin/contacts'
       path: '/contacts'
@@ -1072,11 +1229,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAdmissionsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/staff/dashboard': {
+      id: '/staff/dashboard'
+      path: '/dashboard'
+      fullPath: '/staff/dashboard'
+      preLoaderRoute: typeof StaffDashboardRouteImport
+      parentRoute: typeof StaffRoute
+    }
+    '/staff/history': {
+      id: '/staff/history'
+      path: '/history'
+      fullPath: '/staff/history'
+      preLoaderRoute: typeof StaffHistoryRouteImport
+      parentRoute: typeof StaffRoute
+    }
+    '/staff/profile': {
+      id: '/staff/profile'
+      path: '/profile'
+      fullPath: '/staff/profile'
+      preLoaderRoute: typeof StaffProfileRouteImport
+      parentRoute: typeof StaffRoute
+    }
+    '/staff/rejected': {
+      id: '/staff/rejected'
+      path: '/rejected'
+      fullPath: '/staff/rejected'
+      preLoaderRoute: typeof StaffRejectedRouteImport
+      parentRoute: typeof StaffRoute
+    }
+    '/staff/upload': {
+      id: '/staff/upload'
+      path: '/upload'
+      fullPath: '/staff/upload'
+      preLoaderRoute: typeof StaffUploadRouteImport
+      parentRoute: typeof StaffRoute
+    }
+    '/staff/upload-tasks': {
+      id: '/staff/upload-tasks'
+      path: '/upload-tasks'
+      fullPath: '/staff/upload-tasks'
+      preLoaderRoute: typeof StaffUploadTasksRouteImport
+      parentRoute: typeof StaffRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
   AdminAttendanceRoute: typeof AdminAttendanceRoute
+  AdminAuditLogsRoute: typeof AdminAuditLogsRoute
   AdminClassesRoute: typeof AdminClassesRoute
   AdminContactsRoute: typeof AdminContactsRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
@@ -1085,15 +1285,18 @@ interface AdminRouteChildren {
   AdminEventsRoute: typeof AdminEventsRoute
   AdminExamsRoute: typeof AdminExamsRoute
   AdminFeesRoute: typeof AdminFeesRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminProfileRoute: typeof AdminProfileRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminSubjectsRoute: typeof AdminSubjectsRoute
   AdminStudentsRoute: typeof AdminStudentsRoute
   AdminTeachersRoute: typeof AdminTeachersRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAttendanceRoute: AdminAttendanceRoute,
+  AdminAuditLogsRoute: AdminAuditLogsRoute,
   AdminClassesRoute: AdminClassesRoute,
   AdminContactsRoute: AdminContactsRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,
@@ -1102,14 +1305,36 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEventsRoute: AdminEventsRoute,
   AdminExamsRoute: AdminExamsRoute,
   AdminFeesRoute: AdminFeesRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
   AdminProfileRoute: AdminProfileRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminSubjectsRoute: AdminSubjectsRoute,
   AdminStudentsRoute: AdminStudentsRoute,
   AdminTeachersRoute: AdminTeachersRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface StaffRouteChildren {
+  StaffDashboardRoute: typeof StaffDashboardRoute
+  StaffHistoryRoute: typeof StaffHistoryRoute
+  StaffProfileRoute: typeof StaffProfileRoute
+  StaffRejectedRoute: typeof StaffRejectedRoute
+  StaffUploadRoute: typeof StaffUploadRoute
+  StaffUploadTasksRoute: typeof StaffUploadTasksRoute
+}
+
+const StaffRouteChildren: StaffRouteChildren = {
+  StaffDashboardRoute: StaffDashboardRoute,
+  StaffHistoryRoute: StaffHistoryRoute,
+  StaffProfileRoute: StaffProfileRoute,
+  StaffRejectedRoute: StaffRejectedRoute,
+  StaffUploadRoute: StaffUploadRoute,
+  StaffUploadTasksRoute: StaffUploadTasksRoute,
+}
+
+const StaffRouteWithChildren = StaffRoute._addFileChildren(StaffRouteChildren)
 
 interface StudentRouteChildren {
   StudentAssignmentsRoute: typeof StudentAssignmentsRoute
@@ -1184,6 +1409,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  StaffRoute: StaffRouteWithChildren,
   StudentRoute: StudentRouteWithChildren,
   TeacherRoute: TeacherRouteWithChildren,
   TeachersRoute: TeachersRoute,

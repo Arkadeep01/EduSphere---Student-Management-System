@@ -189,6 +189,53 @@ class AnswerScript(models.Model):
         return f"{self.student.user.email} - {self.exam_name} ({self.evaluation_status})"
 
 
+class Chapter(models.Model):
+    subject = models.ForeignKey(
+        "student.Subject", on_delete=models.CASCADE, related_name="chapters"
+    )
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    order = models.PositiveSmallIntegerField(default=0)
+    progress_weight = models.PositiveSmallIntegerField(default=0, help_text="Weight for progress calculation")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["subject", "order"]
+
+    def __str__(self):
+        return f"{self.subject.name} - {self.title}"
+
+
+class Topic(models.Model):
+    chapter = models.ForeignKey(
+        Chapter, on_delete=models.CASCADE, related_name="topics"
+    )
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    order = models.PositiveSmallIntegerField(default=0)
+    is_completed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["chapter", "order"]
+
+    def __str__(self):
+        return f"{self.chapter.title} - {self.title}"
+
+
+class ClassChapterProgress(models.Model):
+    chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name="class_progress")
+    class_name = models.CharField(max_length=20, help_text="e.g. X-A")
+    completed_topics = models.PositiveSmallIntegerField(default=0)
+    total_topics = models.PositiveSmallIntegerField(default=0)
+    percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+
+    class Meta:
+        unique_together = ("chapter", "class_name")
+
+    def __str__(self):
+        return f"{self.chapter.title} - {self.class_name} ({self.percentage}%)"
+
+
 class QuestionMarks(models.Model):
     answer_script = models.ForeignKey(
         AnswerScript,

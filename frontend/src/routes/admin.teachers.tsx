@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -10,57 +11,103 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Star, Mail, Plus, Search, GraduationCap, BookOpen, Users, Download } from "lucide-react";
-import { useState } from "react";
-import { teachers, classCards, subjectAllocations, classTeacherAssignments, subjects } from "@/lib/mock-data";
+import { Loader2, Star, Mail, Plus, Search, GraduationCap, BookOpen, Users, Download } from "lucide-react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { teacherAdminApi } from "@/services/adminApi";
 import { ExportDialog } from "@/components/export";
 import { teacherExportConfig } from "@/components/export/moduleConfigs";
+import { API_BASE } from "@/services/request";
+
+const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 
 function AdminTeachersComponent() {
-  const [showNotifyModal, setShowNotifyModal] = useState<string | null>(null);
+  const [showNotifyModal, setShowNotifyModal] = useState<number | null>(null);
   const [showExport, setShowExport] = useState(false);
+  const [notifyTitle, setNotifyTitle] = useState("");
   const [notifyMessage, setNotifyMessage] = useState("");
   const [showAddTeacher, setShowAddTeacher] = useState(false);
   const [showAllocateSubject, setShowAllocateSubject] = useState(false);
   const [showAssignClassTeacher, setShowAssignClassTeacher] = useState(false);
   const [q, setQ] = useState("");
+  const [allocations, setAllocations] = useState<any[]>([]);
+  const [ctAssignments, setCtAssignments] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [classNames, setClassNames] = useState<string[]>([]);
+
+  const { data: realTeachers, isLoading } = useQuery({
+    queryKey: ["admin", "teachers"],
+    queryFn: async () => {
+      const r = await fetch(`${API_BASE}/api/admin/teachers/`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!r.ok) throw new Error("Failed to fetch teachers");
+      return r.json() as Promise<Array<Record<string, unknown>>>;
+    },
+    enabled: !!token,
+  });
+
+  const teachers = realTeachers ? realTeachers.map((t: any) => ({
+    id: t.id as number,
+    name: t.full_name || t.email || t.user?.email || "",
+    subject: t.assigned_subject_name || "Unassigned",
+    classes: 0,
+    email: t.email || t.user?.email || "",
+    experience: t.experience ?? 0,
+    rating: "0.0",
+  })) : [];
+
+  useEffect(() => {
+    Promise.all([
+      teacherAdminApi.allocations().catch(() => []),
+      teacherAdminApi.classTeacherAssignments().catch(() => []),
+      fetch(`${API_BASE}/api/admin/subjects/`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.json()).catch(() => []),
+      fetch(`${API_BASE}/api/admin/classes/`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.json()).then(d => (d as any[])?.map((c: any) => c.name) || []).catch(() => []),
+    ]).then(([alloc, ct, subs, cls]) => {
+      setAllocations(alloc as any[] || []);
+      setCtAssignments(ct as any[] || []);
+      setSubjects(subs as any[] || []);
+      setClassNames(cls as string[] || []);
+    });
+  }, []);
 
   const filtered = teachers.filter(t =>
-    t.name.toLowerCase().includes(q.toLowerCase()) ||
-    t.subject.toLowerCase().includes(q.toLowerCase()) ||
-    t.id.toLowerCase().includes(q.toLowerCase())
+    t.name?.toLowerCase().includes(q.toLowerCase()) ||
+    t.subject?.toLowerCase().includes(q.toLowerCase())
   );
 
-  function renderTeacherScopeInputs(scope: string, fv: Record<string, string>, setFv: React.Dispatch<React.SetStateAction<Record<string, string>>>): React.ReactNode {
-    return (
-      <div className="space-y-2">
-        {scope === "subject" && (
-          <div>
-            <Label className="text-xs">Subject</Label>
-            <Select value={fv["subject_name"] || ""} onValueChange={v => setFv(prev => ({ ...prev, subject_name: v }))}>
-              <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                {subjects.map(s => <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-        {scope === "class" && (
-          <div>
-            <Label className="text-xs">Class</Label>
-            <Select value={fv["class_name"] || ""} onValueChange={v => setFv(prev => ({ ...prev, class_name: v }))}>
-              <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                {classCards.map(c => <SelectItem key={c.name} value={c.name}>Class {c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-      </div>
-    );
+  const sendNotification = async (id: number) => {
+    try {
+      await teacherAdminApi.notify(id, notifyTitle || "Notification", notifyMessage);
+      toast.success("Notification sent to teacher");
+      setShowNotifyModal(null);
+      setNotifyMessage("");
+      setNotifyTitle("");
+    } catch { toast.error("Failed to send notification"); }
+  };
+
+  const allocateSubject = async (teacherId: number, subjectId: number, classes: string[]) => {
+    try {
+      await teacherAdminApi.allocateSubject(teacherId, subjectId, classes);
+      toast.success("Subject allocation saved");
+      const alloc = await teacherAdminApi.allocations();
+      setAllocations(alloc as any[] || []);
+      setShowAllocateSubject(false);
+    } catch { toast.error("Failed to allocate subject"); }
+  };
+
+  const assignClassTeacher = async (teacherId: number, className: string) => {
+    try {
+      await teacherAdminApi.assignClassTeacher(teacherId, className);
+      toast.success("Class teacher assigned");
+      const ct = await teacherAdminApi.classTeacherAssignments();
+      setCtAssignments(ct as any[] || []);
+      setShowAssignClassTeacher(false);
+    } catch { toast.error("Failed to assign class teacher"); }
+  };
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
   return (
@@ -84,7 +131,7 @@ function AdminTeachersComponent() {
             {filtered.map(t => (
               <Card key={t.id} className="hover-lift"><CardContent className="p-5">
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12"><AvatarFallback className="bg-gradient-brand text-white">{t.name.split(" ").map(s => s[0]).slice(0, 2).join("")}</AvatarFallback></Avatar>
+                  <Avatar className="h-12 w-12"><AvatarFallback className="bg-gradient-brand text-white">{t.name.split(" ").map((s: string) => s[0]).slice(0, 2).join("")}</AvatarFallback></Avatar>
                   <div className="min-w-0 flex-1"><p className="font-semibold truncate">{t.name}</p><p className="text-xs text-muted-foreground">{t.subject}</p></div>
                 </div>
                 <div className="mt-4 flex items-center justify-between text-sm">
@@ -100,13 +147,12 @@ function AdminTeachersComponent() {
 
         <TabsContent value="allocations">
           <Card><CardContent className="p-4">
-            <Table><TableHeader><TableRow><TableHead>Teacher</TableHead><TableHead>Subject</TableHead><TableHead>Assigned Classes</TableHead><TableHead>Academic Year</TableHead></TableRow></TableHeader>
-              <TableBody>{subjectAllocations.map((sa, i) => (
-                <TableRow key={i}>
-                  <TableCell className="font-medium">{sa.teacher}</TableCell>
-                  <TableCell>{sa.subject}</TableCell>
-                  <TableCell>{sa.classes.join(", ")}</TableCell>
-                  <TableCell><Badge variant="outline">{sa.academicYear}</Badge></TableCell>
+            <Table><TableHeader><TableRow><TableHead>Teacher</TableHead><TableHead>Subject</TableHead><TableHead>Assigned Classes</TableHead></TableRow></TableHeader>
+              <TableBody>{allocations.map((sa: any, i: number) => (
+                <TableRow key={sa.id || i}>
+                  <TableCell className="font-medium">{sa.teacher_name || sa.teacher}</TableCell>
+                  <TableCell>{sa.subject_name || sa.subject}</TableCell>
+                  <TableCell>{(sa.assigned_classes || []).join(", ")}</TableCell>
                 </TableRow>
               ))}</TableBody>
             </Table>
@@ -115,12 +161,11 @@ function AdminTeachersComponent() {
 
         <TabsContent value="class-teachers">
           <Card><CardContent className="p-4">
-            <Table><TableHeader><TableRow><TableHead>Teacher</TableHead><TableHead>Class</TableHead><TableHead>Academic Year</TableHead></TableRow></TableHeader>
-              <TableBody>{classTeacherAssignments.map((ct, i) => (
-                <TableRow key={i}>
-                  <TableCell className="font-medium">{ct.teacher}</TableCell>
-                  <TableCell>Class {ct.class}</TableCell>
-                  <TableCell><Badge variant="outline">{ct.academicYear}</Badge></TableCell>
+            <Table><TableHeader><TableRow><TableHead>Teacher</TableHead><TableHead>Class</TableHead></TableRow></TableHeader>
+              <TableBody>{ctAssignments.map((ct: any, i: number) => (
+                <TableRow key={ct.id || i}>
+                  <TableCell className="font-medium">{ct.teacher_name || ct.teacher}</TableCell>
+                  <TableCell>Class {ct.class_name || ct.class}</TableCell>
                 </TableRow>
               ))}</TableBody>
             </Table>
@@ -132,11 +177,24 @@ function AdminTeachersComponent() {
         <DialogContent><DialogHeader><DialogTitle>Send Notification</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="space-y-2"><Label>Teacher</Label><p className="text-sm font-medium">{teachers.find(t => t.id === showNotifyModal)?.name}</p></div>
+            <div className="space-y-2"><Label>Title</Label><Input value={notifyTitle} onChange={e => setNotifyTitle(e.target.value)} placeholder="Notification title" /></div>
             <div className="space-y-2"><Label>Message</Label><Textarea placeholder="Type your notification message..." value={notifyMessage} onChange={e => setNotifyMessage(e.target.value)} rows={4} /></div>
           </div>
-          <DialogFooter><Button variant="outline" onClick={() => { setShowNotifyModal(null); setNotifyMessage(""); }}>Cancel</Button>
-            <Button className="bg-gradient-brand border-0" onClick={() => { toast.success("Notification sent to teacher"); setShowNotifyModal(null); setNotifyMessage(""); }}>Send</Button>
+          <DialogFooter><Button variant="outline" onClick={() => { setShowNotifyModal(null); setNotifyMessage(""); setNotifyTitle(""); }}>Cancel</Button>
+            <Button className="bg-gradient-brand border-0" onClick={() => sendNotification(showNotifyModal!)}>Send</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showAllocateSubject} onOpenChange={setShowAllocateSubject}>
+        <DialogContent><DialogHeader><DialogTitle>Subject Teacher Allocation</DialogTitle></DialogHeader>
+          <AllocateSubjectForm teachers={teachers} subjects={subjects} classNames={classNames} onSave={allocateSubject} onCancel={() => setShowAllocateSubject(false)} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showAssignClassTeacher} onOpenChange={setShowAssignClassTeacher}>
+        <DialogContent><DialogHeader><DialogTitle>Assign Class Teacher</DialogTitle></DialogHeader>
+          <AssignClassTeacherForm teachers={teachers} classNames={classNames} onSave={assignClassTeacher} onCancel={() => setShowAssignClassTeacher(false)} />
         </DialogContent>
       </Dialog>
 
@@ -147,38 +205,76 @@ function AdminTeachersComponent() {
             <div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>Email</Label><Input type="email" /></div><div className="space-y-2"><Label>Phone</Label><Input placeholder="Phone number" /></div></div>
             <div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>Employee ID</Label><Input placeholder="TCHxxx" /></div><div className="space-y-2"><Label>Qualification</Label><Input placeholder="e.g. Ph.D., M.Sc." /></div></div>
             <div className="space-y-2"><Label>Experience (years)</Label><Input type="number" placeholder="0" /></div>
-            <div className="space-y-2"><Label>Subject</Label><Select><SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger><SelectContent>{subjects.map(s => (<SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>))}</SelectContent></Select></div>
-            <div className="space-y-2"><Label>Assigned Classes</Label><Select><SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger><SelectContent>{classCards.map(c => (<SelectItem key={c.name} value={c.name}>Class {c.name}</SelectItem>))}</SelectContent></Select></div>
           </div>
-          <DialogFooter><Button variant="outline" onClick={() => setShowAddTeacher(false)}>Cancel</Button><Button className="bg-gradient-brand border-0" onClick={() => { toast.success("Teacher added successfully"); setShowAddTeacher(false); }}>Add Teacher</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setShowAddTeacher(false)}>Cancel</Button><Button className="bg-gradient-brand border-0" onClick={() => { toast.success("Teacher added"); setShowAddTeacher(false); }}>Add Teacher</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showAllocateSubject} onOpenChange={setShowAllocateSubject}>
-        <DialogContent><DialogHeader><DialogTitle>Subject Teacher Allocation</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-2"><Label>Teacher</Label><Select><SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger><SelectContent>{teachers.map(t => (<SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>))}</SelectContent></Select></div>
-            <div className="space-y-2"><Label>Subject</Label><Select><SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger><SelectContent>{subjects.map(s => (<SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>))}</SelectContent></Select></div>
-            <div className="space-y-2"><Label>Assigned Classes</Label><div className="flex flex-wrap gap-2">{classCards.slice(0, 4).map(c => (<Badge key={c.name} variant="outline" className="cursor-pointer">Class {c.name}</Badge>))}</div></div>
-            <div className="space-y-2"><Label>Academic Session</Label><Select defaultValue="2026-27"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="2026-27">2026-27</SelectItem><SelectItem value="2025-26">2025-26</SelectItem></SelectContent></Select></div>
-          </div>
-          <DialogFooter><Button variant="outline" onClick={() => setShowAllocateSubject(false)}>Cancel</Button><Button className="bg-gradient-brand border-0" onClick={() => { toast.success("Subject allocation saved"); setShowAllocateSubject(false); }}>Save Allocation</Button></DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showAssignClassTeacher} onOpenChange={setShowAssignClassTeacher}>
-        <DialogContent><DialogHeader><DialogTitle>Assign Class Teacher</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-2"><Label>Teacher</Label><Select><SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger><SelectContent>{teachers.map(t => (<SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>))}</SelectContent></Select></div>
-            <div className="space-y-2"><Label>Class</Label><Select><SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger><SelectContent>{classCards.map(c => (<SelectItem key={c.name} value={c.name}>Class {c.name}</SelectItem>))}</SelectContent></Select></div>
-            <div className="space-y-2"><Label>Academic Year</Label><Select defaultValue="2026-27"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="2026-27">2026-27</SelectItem><SelectItem value="2025-26">2025-26</SelectItem></SelectContent></Select></div>
-          </div>
-          <DialogFooter><Button variant="outline" onClick={() => setShowAssignClassTeacher(false)}>Cancel</Button><Button className="bg-gradient-brand border-0" onClick={() => { toast.success("Class teacher assigned"); setShowAssignClassTeacher(false); }}>Assign</Button></DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <ExportDialog open={showExport} onOpenChange={setShowExport} config={teacherExportConfig} renderScopeInputs={renderTeacherScopeInputs} />
+      <ExportDialog open={showExport} onOpenChange={setShowExport} config={teacherExportConfig} />
     </>
+  );
+}
+
+function AllocateSubjectForm({ teachers, subjects, classNames, onSave, onCancel }: {
+  teachers: any[]; subjects: any[]; classNames: string[];
+  onSave: (teacherId: number, subjectId: number, classes: string[]) => void; onCancel: () => void;
+}) {
+  const [teacherId, setTeacherId] = useState<number | null>(null);
+  const [subjectId, setSubjectId] = useState<number | null>(null);
+  const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-2"><Label>Teacher</Label>
+        <Select onValueChange={v => setTeacherId(parseInt(v))}><SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger>
+          <SelectContent>{teachers.map((t: any) => (<SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>))}</SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2"><Label>Subject</Label>
+        <Select onValueChange={v => setSubjectId(parseInt(v))}><SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
+          <SelectContent>{subjects.map((s: any) => (<SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>))}</SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2"><Label>Assigned Classes</Label>
+        <div className="flex flex-wrap gap-2">{classNames.map(c => (
+          <Badge key={c} variant={selectedClasses.includes(c) ? "default" : "outline"} className="cursor-pointer"
+            onClick={() => setSelectedClasses(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c])}>
+            Class {c}
+          </Badge>
+        ))}</div>
+      </div>
+      <DialogFooter>
+        <Button variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button className="bg-gradient-brand border-0" onClick={() => { if (teacherId && subjectId) onSave(teacherId, subjectId, selectedClasses); }}>Save Allocation</Button>
+      </DialogFooter>
+    </div>
+  );
+}
+
+function AssignClassTeacherForm({ teachers, classNames, onSave, onCancel }: {
+  teachers: any[]; classNames: string[];
+  onSave: (teacherId: number, className: string) => void; onCancel: () => void;
+}) {
+  const [teacherId, setTeacherId] = useState<number | null>(null);
+  const [className, setClassName] = useState("");
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-2"><Label>Teacher</Label>
+        <Select onValueChange={v => setTeacherId(parseInt(v))}><SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger>
+          <SelectContent>{teachers.map((t: any) => (<SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>))}</SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2"><Label>Class</Label>
+        <Select onValueChange={setClassName}><SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
+          <SelectContent>{classNames.map(c => (<SelectItem key={c} value={c}>Class {c}</SelectItem>))}</SelectContent>
+        </Select>
+      </div>
+      <DialogFooter>
+        <Button variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button className="bg-gradient-brand border-0" onClick={() => { if (teacherId && className) onSave(teacherId, className); }}>Assign</Button>
+      </DialogFooter>
+    </div>
   );
 }
 

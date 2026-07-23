@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { PageWrapper, StaggerContainer, StaggerItem } from "@/components/brand/animations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, DollarSign, FileText, FileCheck, Bell } from "lucide-react";
+import { Loader2, Calendar, DollarSign, FileText, FileCheck, Bell } from "lucide-react";
 import { notificationCategories } from "@/lib/mock-data";
-import { useState } from "react";
+import { API_BASE } from "@/services/request";
 
 const categoryIcons: Record<string, typeof Calendar> = {
   "Timetable Updates": Calendar,
@@ -14,8 +15,22 @@ const categoryIcons: Record<string, typeof Calendar> = {
   "General": Bell,
 };
 
+const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+
 function StudentNotificationsComponent() {
-  const [categories] = useState(notificationCategories);
+  const { data: realNotifs } = useQuery({
+    queryKey: ["student", "notifications"],
+    queryFn: async () => {
+      const r = await fetch(`${API_BASE}/api/student/notifications/`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!r.ok) throw new Error("Failed");
+      return r.json() as Promise<Array<Record<string, unknown>>>;
+    },
+    enabled: !!token,
+  });
+
+  const categories = realNotifs && realNotifs.length > 0
+    ? groupIntoCategories(realNotifs)
+    : notificationCategories;
 
   return (
     <PageWrapper>
@@ -51,6 +66,22 @@ function StudentNotificationsComponent() {
       </StaggerContainer>
     </PageWrapper>
   );
+}
+
+function groupIntoCategories(notifs: Array<Record<string, unknown>>) {
+  const grouped: Record<string, { id: string; title: string; message: string; time: string; unread: boolean }[]> = {};
+  for (const n of notifs) {
+    const cat = (n.notification_type as string) || "General";
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push({
+      id: String(n.id),
+      title: String(n.title || ""),
+      message: String(n.message || ""),
+      time: String(n.created_at || ""),
+      unread: !n.is_read,
+    });
+  }
+  return Object.entries(grouped).map(([category, items]) => ({ category, items }));
 }
 
 export const Route = createFileRoute("/student/notifications")({

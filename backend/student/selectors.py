@@ -3,8 +3,9 @@ from django.utils import timezone
 
 from .models import (
     Subject, StudentProfile, StudentSubject, Assignment,
-    AssignmentSubmission, Attendance, Result, Timetable, Notification,
+    AssignmentSubmission, Attendance, Timetable, Notification,
 )
+from administration.models.exam import PublishedResult
 from teacher.models import Resource
 
 
@@ -12,15 +13,15 @@ def get_student_dashboard_data(student_profile):
     """Aggregate dashboard metrics for a student."""
     today = timezone.now().date()
     subjects = Subject.objects.filter(
-        studentsubject__student=student_profile,
-        studentsubject__status="approved",
+        student_allocations__student=student_profile,
+        student_allocations__status="approved",
     )
     pending_assignments = Assignment.objects.filter(
         target_class=student_profile.class_assigned,
         due_date__gte=today,
     ).exclude(
-        assignmentsubmission__student=student_profile,
-        assignmentsubmission__status="submitted",
+        submissions__student=student_profile,
+        submissions__status="submitted",
     ).count()
     return {
         "subjects": subjects,
@@ -37,8 +38,8 @@ def get_student_profile(user):
 def get_assigned_subjects(student_profile):
     """Get approved subjects for a student."""
     return Subject.objects.filter(
-        studentsubject__student=student_profile,
-        studentsubject__status="approved",
+        student_allocations__student=student_profile,
+        student_allocations__status="approved",
     )
 
 
@@ -75,8 +76,8 @@ def get_attendance_for_student(student_profile, start_date=None, end_date=None):
 
 
 def get_results_for_student(student_profile):
-    """Get results for a student."""
-    return Result.objects.filter(student=student_profile).select_related("subject")
+    """Get published results for a student."""
+    return PublishedResult.objects.filter(student=student_profile).select_related("subject", "exam")
 
 
 def get_timetable_for_student(student_profile):

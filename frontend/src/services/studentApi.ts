@@ -67,6 +67,15 @@ export interface SubmissionData {
   evaluated_at: string | null;
 }
 
+export const studentExamApi = {
+  list: () => request<unknown[]>("/exams/", undefined, STUDENT_API_BASE),
+};
+
+export const studentChapterApi = {
+  list: (subjectId: number) =>
+    request<unknown[]>(`/subjects/${subjectId}/chapters/`, undefined, STUDENT_API_BASE),
+};
+
 export const studentSubmissionApi = {
   submit: (assignmentId: string, files: File[]) => {
     const formData = new FormData();

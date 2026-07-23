@@ -67,6 +67,13 @@ class StudentSubject(models.Model):
         related_name="subject_allocations",
     )
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name="student_allocations")
+    academic_session = models.ForeignKey(
+        "administration.AcademicSession",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="student_subject_allocations",
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="not_selected")
     assigned_by_admin = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

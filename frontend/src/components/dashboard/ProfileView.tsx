@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/context/AuthContext";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { studentProfileData, teacherProfileData, teacherSubjectData } from "@/lib/mock-data";
 import { generateMockUploadResponse } from "@/lib/upload";
@@ -25,6 +26,8 @@ function displayValue(val: string | undefined | null): string {
   if (val === undefined || val === null || val.trim() === "" || val === "N/A") return "NULL";
   return val;
 }
+
+const API_BASE = "http://localhost:8000";
 
 export function ProfileView({ role }: ProfileViewProps) {
   const { user } = useAuth();
@@ -51,9 +54,39 @@ export function ProfileView({ role }: ProfileViewProps) {
     exam: true,
   });
 
-  const personal = isStudent ? studentProfileData.personal : teacherProfileData.personal;
-  const initials = personal.fullName ? personal.fullName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) : "?";
-  const academic = isStudent ? studentProfileData.academic : null;
+  const token = localStorage.getItem("accessToken");
+  const profileEndpoint = isStudent ? `${API_BASE}/api/student/profile/` : `${API_BASE}/api/teacher/profile/`;
+  const { data: realProfile } = useQuery({
+    queryKey: [role, "profile"],
+    queryFn: async () => {
+      const r = await fetch(profileEndpoint, { headers: { Authorization: `Bearer ${token}` } });
+      if (!r.ok) throw new Error("Failed to fetch profile");
+      return r.json();
+    },
+    enabled: !!token,
+  });
+
+  const fullName = user?.first_name && user?.last_name
+    ? `${user.first_name} ${user.last_name}`
+    : user?.email ?? "User";
+
+  const mockPersonal = isStudent ? studentProfileData.personal : teacherProfileData.personal;
+  const personal = {
+    fullName,
+    email: user?.email ?? mockPersonal.email,
+    phone: (realProfile?.phone as string) ?? mockPersonal.phone,
+    dob: (realProfile?.date_of_birth as string) ?? mockPersonal.dob,
+    gender: (realProfile?.gender as string) ?? mockPersonal.gender,
+    bloodGroup: (realProfile?.blood_group as string) ?? mockPersonal.bloodGroup,
+    address: (realProfile?.address as string) ?? mockPersonal.address,
+  };
+  const initials = fullName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  const academic = isStudent ? {
+    class: (realProfile?.class_assigned as string) ?? studentProfileData.academic.class,
+    section: (realProfile?.section as string) ?? studentProfileData.academic.section,
+    rollNumber: (realProfile?.roll_number as string) ?? studentProfileData.academic.rollNumber,
+    admissionNumber: (realProfile?.admission_number as string) ?? studentProfileData.academic.admissionNumber,
+  } : null;
   const parents = isStudent ? studentProfileData.parents : null;
 
   const tabs = isTeacher

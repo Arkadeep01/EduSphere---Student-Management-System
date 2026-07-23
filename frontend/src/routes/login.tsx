@@ -12,6 +12,7 @@ import {
   Shield,
   GraduationCap,
   User,
+  FileText,
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -43,9 +44,10 @@ function LoginPage() {
       const redirectMap: Record<string, string> = {
         admin: "/admin/dashboard",
         teacher: "/teacher/dashboard",
+        staff: "/staff/dashboard",
         student: "/student/dashboard",
       };
-      navigate({ to: redirectMap[user.role] || "/student/dashboard" });
+      navigate({ to: redirectMap[user.role] || "/login" });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Login failed. Please try again.";
       toast.error(message);
@@ -57,6 +59,7 @@ function LoginPage() {
   const roles: { id: Role; label: string; icon: typeof Shield }[] = [
     { id: "student", label: "Student", icon: User },
     { id: "teacher", label: "Teacher", icon: GraduationCap },
+    { id: "staff", label: "Staff", icon: FileText },
     { id: "admin", label: "Admin", icon: Shield },
   ];
 
@@ -90,7 +93,7 @@ function LoginPage() {
               Enter your credentials to continue.
             </p>
 
-            <div className="mt-6 grid grid-cols-3 gap-2 p-1 bg-muted rounded-lg">
+            <div className="mt-6 grid grid-cols-4 gap-2 p-1 bg-muted rounded-lg">
               {roles.map((r) => (
                 <button
                   key={r.id}

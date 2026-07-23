@@ -515,34 +515,41 @@ def _build_contact_queryset(filters=None):
 
 AUDIT_FIELD_MAP = {
     "user": {"label": "User"},
+    "action": {"label": "Action"},
     "model_name": {"label": "Model"},
-    "export_type": {"label": "Export Type"},
-    "file_path": {"label": "File Path"},
-    "exported_at": {"label": "Exported At"},
+    "object_id": {"label": "Object ID"},
+    "description": {"label": "Description"},
+    "ip_address": {"label": "IP Address"},
+    "created_at": {"label": "Timestamp"},
 }
 
 
 def _get_audit_field_value(log, field_key):
     if field_key == "user":
-        return log.user.email
+        return log.user.email if log.user else ""
+    if field_key == "action":
+        return log.action
     if field_key == "model_name":
         return log.model_name
-    if field_key == "export_type":
-        return log.export_type
-    if field_key == "file_path":
-        return log.file_path
-    if field_key == "exported_at":
-        return str(log.exported_at)
+    if field_key == "object_id":
+        return log.object_id
+    if field_key == "description":
+        return log.description
+    if field_key == "ip_address":
+        return str(log.ip_address) if log.ip_address else ""
+    if field_key == "created_at":
+        return str(log.created_at)
     return ""
 
 
 def _build_audit_queryset(filters=None):
-    qs = ExportLog.objects.select_related("user").all()
+    from administration.models.audit_log import AuditLog
+    qs = AuditLog.objects.select_related("user").all()
     if filters:
+        if filters.get("action"):
+            qs = qs.filter(action=filters["action"])
         if filters.get("model_name"):
             qs = qs.filter(model_name=filters["model_name"])
-        if filters.get("export_type"):
-            qs = qs.filter(export_type=filters["export_type"])
     return qs
 
 
@@ -727,6 +734,180 @@ register_export(ExportConfig(
     filename_generator=lambda flt, fmt: _generate_filename(flt, fmt, "Documents"),
 ))
 
+# ---- FEE FIELD MAP & HELPERS ----
+
+FEE_FIELD_MAP = {
+    "student": {"label": "Student"},
+    "class_assigned": {"label": "Class"},
+    "month": {"label": "Month"},
+    "total_fee": {"label": "Total Fee"},
+    "paid_amount": {"label": "Paid Amount"},
+    "fine": {"label": "Fine"},
+    "gst": {"label": "GST"},
+    "scholarship_amount": {"label": "Scholarship"},
+    "status": {"label": "Status"},
+    "payment_method": {"label": "Payment Method"},
+    "receipt_number": {"label": "Receipt Number"},
+    "paid_at": {"label": "Paid At"},
+    "academic_session": {"label": "Academic Session"},
+}
+
+
+def _get_fee_field_value(payment, field_key):
+    if field_key == "student":
+        return payment.student.user.get_full_name() if payment.student else ""
+    if field_key == "class_assigned":
+        return payment.student.class_assigned or ""
+    if field_key == "month":
+        return payment.month
+    if field_key == "total_fee":
+        return str(payment.total_fee)
+    if field_key == "paid_amount":
+        return str(payment.paid_amount)
+    if field_key == "fine":
+        return str(payment.fine)
+    if field_key == "gst":
+        return str(payment.gst)
+    if field_key == "scholarship_amount":
+        return str(payment.scholarship_amount)
+    if field_key == "status":
+        return payment.status
+    if field_key == "payment_method":
+        return payment.payment_method or ""
+    if field_key == "receipt_number":
+        return payment.receipt_number or ""
+    if field_key == "paid_at":
+        return str(payment.paid_at.date()) if payment.paid_at else ""
+    if field_key == "academic_session":
+        return payment.academic_session
+    return ""
+
+
+def _build_fee_queryset(filters=None):
+    from administration.models.fee import StudentFeePayment
+    qs = StudentFeePayment.objects.select_related("student__user").all()
+    if filters:
+        if filters.get("class_assigned"):
+            qs = qs.filter(student__class_assigned=filters["class_assigned"])
+        if filters.get("month"):
+            qs = qs.filter(month=filters["month"])
+        if filters.get("status"):
+            qs = qs.filter(status=filters["status"])
+        if filters.get("academic_session"):
+            qs = qs.filter(academic_session=filters["academic_session"])
+    return qs
+
+
+register_export(ExportConfig(
+    module_name="fees",
+    label="Fees",
+    field_map=FEE_FIELD_MAP,
+    field_getter=lambda obj, f: _get_fee_field_value(obj, f),
+    queryset_builder=_build_fee_queryset,
+    filename_generator=lambda flt, fmt: _generate_filename(flt, fmt, "Fees"),
+))
+
+# ---- RECEIPT FIELD MAP & HELPERS (filtered fee payments) ----
+
+
+def _build_receipt_queryset(filters=None):
+    from administration.models.fee import StudentFeePayment
+    qs = StudentFeePayment.objects.select_related("student__user").filter(
+        status="paid", receipt_number__isnull=False
+    )
+    if filters:
+        if filters.get("class_assigned"):
+            qs = qs.filter(student__class_assigned=filters["class_assigned"])
+        if filters.get("month"):
+            qs = qs.filter(month=filters["month"])
+        if filters.get("receipt_number"):
+            qs = qs.filter(receipt_number=filters["receipt_number"])
+    return qs
+
+
+register_export(ExportConfig(
+    module_name="receipt",
+    label="Receipts",
+    field_map=FEE_FIELD_MAP,
+    field_getter=lambda obj, f: _get_fee_field_value(obj, f),
+    queryset_builder=_build_receipt_queryset,
+    filename_generator=lambda flt, fmt: _generate_filename(flt, fmt, "Receipts"),
+))
+
+
+# ---- STAFF FIELD MAP & HELPERS ----
+
+STAFF_FIELD_MAP = {
+    "student_name": {"label": "Student Name"},
+    "exam_name": {"label": "Exam Name"},
+    "subject_name": {"label": "Subject Name"},
+    "batch_id": {"label": "Batch ID"},
+    "upload_status": {"label": "Upload Status"},
+    "uploaded_by": {"label": "Uploaded By"},
+    "uploaded_at": {"label": "Uploaded At"},
+    "verified_by": {"label": "Verified By"},
+    "verified_at": {"label": "Verified At"},
+    "section": {"label": "Section"},
+    "roll_number": {"label": "Roll Number"},
+    "registration_number": {"label": "Registration Number"},
+    "script_number": {"label": "Script Number"},
+    "evaluation_status": {"label": "Evaluation Status"},
+}
+
+
+def _get_staff_field_value(script, field_key):
+    if field_key == "student_name":
+        return script.student.user.get_full_name() or script.student.user.email
+    elif field_key == "exam_name":
+        return script.exam.name
+    elif field_key == "subject_name":
+        return script.subject.name
+    elif field_key == "batch_id":
+        return script.batch_id
+    elif field_key == "upload_status":
+        return script.get_upload_status_display()
+    elif field_key == "uploaded_by":
+        return script.uploaded_by.email if script.uploaded_by else ""
+    elif field_key == "uploaded_at":
+        return str(script.uploaded_at.date()) if script.uploaded_at else ""
+    elif field_key == "verified_by":
+        return script.verified_by.email if script.verified_by else ""
+    elif field_key == "verified_at":
+        return str(script.verified_at.date()) if script.verified_at else ""
+    elif field_key == "section":
+        return script.section
+    elif field_key == "roll_number":
+        return script.roll_number
+    elif field_key == "registration_number":
+        return script.registration_number
+    elif field_key == "script_number":
+        return script.script_number
+    elif field_key == "evaluation_status":
+        return script.get_evaluation_status_display()
+    return ""
+
+
+def _build_staff_queryset(filters=None):
+    from administration.models.exam import AnswerScriptUpload
+    qs = AnswerScriptUpload.objects.select_related("exam", "subject", "student__user", "uploaded_by").all()
+    if filters:
+        if filters.get("upload_status"):
+            qs = qs.filter(upload_status=filters["upload_status"])
+        if filters.get("batch_id"):
+            qs = qs.filter(batch_id=filters["batch_id"])
+        if filters.get("exam_id"):
+            qs = qs.filter(exam_id=filters["exam_id"])
+    return qs
+
+
+register_export(ExportConfig(
+    module_name="staff",
+    label="Staff Answer Scripts",
+    field_map=STAFF_FIELD_MAP,
+    field_getter=lambda obj, f: _get_staff_field_value(obj, f),
+    queryset_builder=_build_staff_queryset,
+    filename_generator=lambda flt, fmt: _generate_filename(flt, fmt, "StaffScripts"),
+))
 
 # ---- Core Export Service ----
 

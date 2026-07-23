@@ -60,7 +60,17 @@ class ExamSchedule(models.Model):
 
 
 class AnswerScriptUpload(models.Model):
-    STATUS_CHOICES = [
+    UPLOAD_STATUS_CHOICES = [
+        ("pending_upload", "Pending Upload"),
+        ("uploaded", "Uploaded"),
+        ("verified", "Verified"),
+        ("rejected", "Rejected"),
+        ("assigned", "Assigned to Teacher"),
+        ("evaluation_completed", "Evaluation Completed"),
+        ("archived", "Archived"),
+    ]
+
+    EVALUATION_STATUS_CHOICES = [
         ("pending", "Pending Evaluation"),
         ("evaluating", "Evaluating"),
         ("completed", "Completed"),
@@ -83,20 +93,48 @@ class AnswerScriptUpload(models.Model):
         null=True,
         related_name="admin_evaluation_queue",
     )
-    script_file = models.FileField(upload_to="admin_answer_scripts/")
-    evaluation_status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default="pending"
+    script_file = models.FileField(upload_to="staff_answer_scripts/", blank=True, null=True)
+
+    upload_status = models.CharField(
+        max_length=25, choices=UPLOAD_STATUS_CHOICES, default="pending_upload"
     )
+    evaluation_status = models.CharField(
+        max_length=20, choices=EVALUATION_STATUS_CHOICES, default="pending"
+    )
+
+    section = models.CharField(max_length=10, blank=True)
+    roll_number = models.CharField(max_length=20, blank=True)
+    registration_number = models.CharField(max_length=20, blank=True)
+    script_number = models.CharField(max_length=20, blank=True)
+    batch_id = models.CharField(max_length=50, blank=True, db_index=True)
+
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
+        related_name="staff_uploads",
+    )
+    uploaded_at = models.DateTimeField(blank=True, null=True)
+
+    verified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
+        related_name="verified_uploads",
+    )
+    verified_at = models.DateTimeField(blank=True, null=True)
+
+    verification_notes = models.TextField(blank=True)
+
     marks_obtained = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
     total_marks = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
     remarks = models.TextField(blank=True)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
+    draft_marks = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    draft_remarks = models.TextField(blank=True)
+    evaluated_at = models.DateTimeField(blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["-uploaded_at"]
 
     def __str__(self):
-        return f"{self.student.user.email} – {self.exam.name} ({self.evaluation_status})"
+        return f"{self.student.user.email} – {self.exam.name} ({self.get_upload_status_display()})"
 
 
 class EvaluationTracking(models.Model):

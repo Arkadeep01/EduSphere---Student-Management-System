@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     TeacherProfile, TeacherClassAssignment, TimetableEntry,
-    LibrarySession, Resource, AnswerScript,
+    LibrarySession, Resource, AnswerScript, Chapter, Topic, ClassChapterProgress,
 )
 from student.models import StudentProfile
 
@@ -82,3 +82,26 @@ class AnswerScriptSerializer(serializers.ModelSerializer):
 
     def get_student_name(self, obj):
         return f"{obj.student.user.first_name} {obj.student.user.last_name}"
+
+
+class TopicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Topic
+        fields = ["id", "chapter", "title", "description", "order", "is_completed"]
+
+
+class ChapterSerializer(serializers.ModelSerializer):
+    topics = TopicSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Chapter
+        fields = ["id", "subject", "title", "description", "order", "progress_weight", "topics", "created_at"]
+
+
+class ClassChapterProgressSerializer(serializers.ModelSerializer):
+    chapter_title = serializers.CharField(source="chapter.title", read_only=True)
+    chapter_order = serializers.IntegerField(source="chapter.order", read_only=True)
+
+    class Meta:
+        model = ClassChapterProgress
+        fields = ["id", "chapter", "chapter_title", "chapter_order", "class_name", "completed_topics", "total_topics", "percentage"]

@@ -5,147 +5,138 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Star, Image, Upload, Trash2, ArrowUp, ArrowDown, Plus, Video } from "lucide-react";
-import { siteContent } from "@/lib/mock-data";
-import { useState } from "react";
+import { Upload, Trash2, ArrowUp, ArrowDown, Plus, Video } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { cmsApi } from "@/services/adminApi";
 
 function AdminSettingsComponent() {
-  const [content, setContent] = useState(siteContent);
+  const [about, setAbout] = useState<any>({ content: "", video: "", videoTitle: "" });
+  const [gallery, setGallery] = useState<any[]>([]);
+  const [homepage, setHomepage] = useState<any[]>([]);
+  const [admission, setAdmission] = useState<any>({ bannerInfo: "", fee: "", intakeCapacity: "" });
+  const [loading, setLoading] = useState(true);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const homeInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    Promise.all([
+      cmsApi.about.get().catch(() => ({ content: "", video: "", videoTitle: "" })),
+      cmsApi.gallery.list().catch(() => []),
+      cmsApi.homepage.list().catch(() => []),
+      cmsApi.admission.get().catch(() => ({ bannerInfo: "", fee: "", intakeCapacity: "" })),
+    ]).then(([a, g, h, ad]) => {
+      setAbout(a as any);
+      setGallery(g as any[]);
+      setHomepage(h as any[]);
+      setAdmission(ad as any);
+    }).finally(() => setLoading(false));
+  }, []);
+
+  const saveAbout = async () => {
+    try { await cmsApi.about.update(about); toast.success("About page saved"); } catch { toast.error("Failed to save"); }
+  };
+
+  const saveAdmission = async () => {
+    try { await cmsApi.admission.update(admission); toast.success("Admission page saved"); } catch { toast.error("Failed to save"); }
+  };
+
+  const uploadGallery = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    const fd = new FormData(); fd.append("image", file); fd.append("label", file.name);
+    try { await cmsApi.gallery.upload(fd); toast.success("Image uploaded"); const g = await cmsApi.gallery.list(); setGallery(g as any[] || []); } catch { toast.error("Upload failed"); }
+  };
+
+  const deleteGallery = async (id: number) => {
+    try { await cmsApi.gallery.delete(id); setGallery(prev => prev.filter(g => g.id !== id)); toast.success("Image deleted"); } catch { toast.error("Delete failed"); }
+  };
+
+  const uploadHomepage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    const fd = new FormData(); fd.append("image", file); fd.append("label", file.name);
+    try { await cmsApi.homepage.upload(fd); toast.success("Image uploaded"); const h = await cmsApi.homepage.list(); setHomepage(h as any[] || []); } catch { toast.error("Upload failed"); }
+  };
+
+  const deleteHomepage = async (id: number) => {
+    try { await cmsApi.homepage.delete(id); setHomepage(prev => prev.filter(h => h.id !== id)); toast.success("Image deleted"); } catch { toast.error("Delete failed"); }
+  };
+
+  if (loading) return <div className="text-center py-8 text-muted-foreground">Loading settings...</div>;
 
   return (
-    <>
-      <Tabs defaultValue="about">
-        <TabsList className="mb-4"><TabsTrigger value="about">About Page</TabsTrigger><TabsTrigger value="gallery">Gallery</TabsTrigger><TabsTrigger value="home">Home Page</TabsTrigger><TabsTrigger value="admission">Admission Page</TabsTrigger></TabsList>
+    <Tabs defaultValue="about">
+      <TabsList className="mb-4"><TabsTrigger value="about">About Page</TabsTrigger><TabsTrigger value="gallery">Gallery</TabsTrigger><TabsTrigger value="home">Home Page</TabsTrigger><TabsTrigger value="admission">Admission Page</TabsTrigger></TabsList>
 
-        <TabsContent value="about">
-          <div className="space-y-4">
-            <Card><CardContent className="p-5 space-y-4">
-              <h3 className="font-semibold">About Content</h3>
-              <div className="space-y-2"><Label>Content</Label><Textarea defaultValue={content.about.content} rows={5} /></div>
-            </CardContent></Card>
-
-            <Card><CardContent className="p-5 space-y-4">
-              <h3 className="font-semibold">Featured Video</h3>
-              <div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>Video URL</Label><Input defaultValue={content.about.video} /></div><div className="space-y-2"><Label>Video Title</Label><Input defaultValue={content.about.videoTitle} /></div></div>
-            </CardContent></Card>
-
-            <Card><CardContent className="p-5 space-y-4">
-              <h3 className="font-semibold">Featured Students</h3>
-              {content.about.featuredStudents.map((s, i) => (
-                <div key={i} className="flex items-center gap-3 p-2 rounded-lg border">
-                  <Avatar><AvatarFallback>{s.name.split(" ").map(x => x[0]).join("")}</AvatarFallback></Avatar>
-                  <div className="flex-1"><p className="text-sm font-medium">{s.name}</p><p className="text-xs text-muted-foreground">{s.achievement}</p></div>
-                  <Badge variant="outline">{s.class}</Badge>
-                </div>
-              ))}
-              <Button variant="outline" size="sm"><Plus className="mr-2 h-4 w-4" />Add Student</Button>
-            </CardContent></Card>
-
-            <Card><CardContent className="p-5 space-y-4">
-              <h3 className="font-semibold">Top Students</h3>
-              <Table><TableHeader><TableRow><TableHead>Rank</TableHead><TableHead>Name</TableHead><TableHead>Class</TableHead><TableHead>Percentage</TableHead></TableRow></TableHeader>
-                <TableBody>{content.about.topStudents.map(s => (
-                  <TableRow key={s.rank}><TableCell>#{s.rank}</TableCell><TableCell className="font-medium">{s.name}</TableCell><TableCell>{s.class}</TableCell><TableCell>{s.percentage}%</TableCell></TableRow>
-                ))}</TableBody>
-              </Table>
-            </CardContent></Card>
-
-            <Button className="bg-gradient-brand border-0" onClick={() => toast.success("About page settings saved")}>Save Changes</Button>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="gallery">
+      <TabsContent value="about">
+        <div className="space-y-4">
           <Card><CardContent className="p-5 space-y-4">
-            <div className="flex items-center justify-between"><h3 className="font-semibold">Gallery Images</h3>
-              <Button variant="outline" size="sm"><Upload className="mr-2 h-4 w-4" />Upload Images</Button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {content.gallery.images.map(img => (
-                <Card key={img.id} className="overflow-hidden group">
-                  <div className="h-28 bg-muted relative">
-                    <img src={img.image} alt={img.label} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                      <Button size="sm" variant="ghost" className="h-7 w-7 text-white"><ArrowUp className="h-3 w-3" /></Button>
-                      <Button size="sm" variant="ghost" className="h-7 w-7 text-white"><ArrowDown className="h-3 w-3" /></Button>
-                      <Button size="sm" variant="ghost" className="h-7 w-7 text-destructive"><Trash2 className="h-3 w-3" /></Button>
-                    </div>
+            <h3 className="font-semibold">About Content</h3>
+            <div className="space-y-2"><Label>Content</Label><Textarea value={about.content || ""} onChange={e => setAbout({ ...about, content: e.target.value })} rows={5} /></div>
+          </CardContent></Card>
+          <Card><CardContent className="p-5 space-y-4">
+            <h3 className="font-semibold">Featured Video</h3>
+            <div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>Video URL</Label><Input value={about.video || ""} onChange={e => setAbout({ ...about, video: e.target.value })} /></div><div className="space-y-2"><Label>Video Title</Label><Input value={about.videoTitle || ""} onChange={e => setAbout({ ...about, videoTitle: e.target.value })} /></div></div>
+          </CardContent></Card>
+          <Button className="bg-gradient-brand border-0" onClick={saveAbout}>Save Changes</Button>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="gallery">
+        <Card><CardContent className="p-5 space-y-4">
+          <div className="flex items-center justify-between"><h3 className="font-semibold">Gallery Images</h3>
+            <Button variant="outline" size="sm" onClick={() => galleryInputRef.current?.click()}><Upload className="mr-2 h-4 w-4" />Upload Images</Button>
+            <input type="file" ref={galleryInputRef} className="hidden" accept="image/*" onChange={uploadGallery} />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {gallery.map((img: any) => (
+              <Card key={img.id} className="overflow-hidden group">
+                <div className="h-28 bg-muted relative">
+                  <img src={img.image || img.file} alt={img.label} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                    <Button size="sm" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => deleteGallery(img.id)}><Trash2 className="h-3 w-3" /></Button>
                   </div>
-                  <CardContent className="p-2">
-                    <div className="flex items-center justify-between"><p className="text-xs truncate">{img.label}</p>
-                      {img.featured && <Star className="h-3 w-3 fill-warning text-warning" />}
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">Order: {img.order}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            <Button className="bg-gradient-brand border-0" onClick={() => toast.success("Gallery settings saved")}>Save Changes</Button>
-          </CardContent></Card>
-        </TabsContent>
-
-        <TabsContent value="home">
-          <Card><CardContent className="p-5 space-y-4">
-            <div className="flex items-center justify-between"><h3 className="font-semibold">Home Page Featured Images</h3>
-              <Button variant="outline" size="sm"><Upload className="mr-2 h-4 w-4" />Add Image</Button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {content.home.featuredImages.map(img => (
-                <Card key={img.id} className="overflow-hidden">
-                  <div className="h-32 bg-muted"><img src={img.image} alt={img.label} className="w-full h-full object-cover" /></div>
-                  <CardContent className="p-3 space-y-2">
-                    <div className="flex items-center justify-between"><p className="text-sm font-medium truncate">{img.label}</p>
-                      <Star className={`h-4 w-4 ${img.starred ? "fill-warning text-warning" : "text-muted-foreground"} cursor-pointer`} />
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button size="sm" variant="ghost" className="h-6 px-1"><ArrowUp className="h-3 w-3" /></Button>
-                      <span className="text-xs text-muted-foreground">Order: {img.order}</span>
-                      <Button size="sm" variant="ghost" className="h-6 px-1"><ArrowDown className="h-3 w-3" /></Button>
-                    </div>
-                    <Button size="sm" variant="ghost" className="w-full text-destructive h-7 text-xs"><Trash2 className="mr-1 h-3 w-3" />Remove</Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            <Button className="bg-gradient-brand border-0" onClick={() => toast.success("Home page settings saved")}>Save Changes</Button>
-          </CardContent></Card>
-        </TabsContent>
-
-        <TabsContent value="admission">
-          <div className="space-y-4">
-            <Card><CardContent className="p-5 space-y-4">
-              <h3 className="font-semibold">Banner Information</h3>
-              <div className="space-y-2"><Label>Banner Text</Label><Input defaultValue={content.admission.bannerInfo} /></div>
-              <div className="space-y-2"><Label>Application Fee ($)</Label><Input type="number" defaultValue={content.admission.fee} /></div>
-              <div className="space-y-2"><Label>Intake Capacity</Label><Input type="number" defaultValue={content.admission.intakeCapacity} /></div>
-            </CardContent></Card>
-
-            <Card><CardContent className="p-5 space-y-4">
-              <h3 className="font-semibold">Important Dates</h3>
-              <Table><TableHeader><TableRow><TableHead>Event</TableHead><TableHead>Date</TableHead><TableHead></TableHead></TableRow></TableHeader>
-                <TableBody>{content.admission.dates.map((d, i) => (
-                  <TableRow key={i}><TableCell>{d.event}</TableCell><TableCell>{d.date}</TableCell><TableCell><Button size="sm" variant="ghost" className="h-6">Edit</Button></TableCell></TableRow>
-                ))}</TableBody>
-              </Table>
-              <Button variant="outline" size="sm"><Plus className="mr-2 h-4 w-4" />Add Date</Button>
-            </CardContent></Card>
-
-            <Card><CardContent className="p-5 space-y-4">
-              <h3 className="font-semibold">Notices</h3>
-              {content.admission.notices.map((n, i) => (
-                <div key={i} className="flex items-center gap-2"><Input defaultValue={n} className="flex-1" /><Button size="sm" variant="ghost" className="text-destructive"><Trash2 className="h-4 w-4" /></Button></div>
-              ))}
-              <Button variant="outline" size="sm"><Plus className="mr-2 h-4 w-4" />Add Notice</Button>
-            </CardContent></Card>
-
-            <Button className="bg-gradient-brand border-0" onClick={() => toast.success("Admission page settings saved")}>Save Changes</Button>
+                </div>
+                <CardContent className="p-2">
+                  <p className="text-xs truncate">{img.label}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </TabsContent>
-      </Tabs>
-    </>
+        </CardContent></Card>
+      </TabsContent>
+
+      <TabsContent value="home">
+        <Card><CardContent className="p-5 space-y-4">
+          <div className="flex items-center justify-between"><h3 className="font-semibold">Home Page Featured Images</h3>
+            <Button variant="outline" size="sm" onClick={() => homeInputRef.current?.click()}><Upload className="mr-2 h-4 w-4" />Add Image</Button>
+            <input type="file" ref={homeInputRef} className="hidden" accept="image/*" onChange={uploadHomepage} />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {homepage.map((img: any) => (
+              <Card key={img.id} className="overflow-hidden">
+                <div className="h-32 bg-muted"><img src={img.image || img.file} alt={img.label} className="w-full h-full object-cover" /></div>
+                <CardContent className="p-3 space-y-2">
+                  <p className="text-sm font-medium truncate">{img.label}</p>
+                  <Button size="sm" variant="ghost" className="w-full text-destructive h-7 text-xs" onClick={() => deleteHomepage(img.id)}><Trash2 className="mr-1 h-3 w-3" />Remove</Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </CardContent></Card>
+      </TabsContent>
+
+      <TabsContent value="admission">
+        <div className="space-y-4">
+          <Card><CardContent className="p-5 space-y-4">
+            <h3 className="font-semibold">Banner Information</h3>
+            <div className="space-y-2"><Label>Banner Text</Label><Input value={admission.bannerInfo || ""} onChange={e => setAdmission({ ...admission, bannerInfo: e.target.value })} /></div>
+            <div className="space-y-2"><Label>Application Fee ($)</Label><Input type="number" value={admission.fee || ""} onChange={e => setAdmission({ ...admission, fee: e.target.value })} /></div>
+            <div className="space-y-2"><Label>Intake Capacity</Label><Input type="number" value={admission.intakeCapacity || ""} onChange={e => setAdmission({ ...admission, intakeCapacity: e.target.value })} /></div>
+          </CardContent></Card>
+          <Button className="bg-gradient-brand border-0" onClick={saveAdmission}>Save Changes</Button>
+        </div>
+      </TabsContent>
+    </Tabs>
   );
 }
 

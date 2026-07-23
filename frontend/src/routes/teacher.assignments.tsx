@@ -10,20 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Upload, MessageSquare, Eye, Download, ArrowLeft, FileText } from "lucide-react";
-import { teacherAssignments, teacherSubjectData, classStudents } from "@/lib/mock-data";
-import { getSubmissions, updateMarks } from "@/lib/assignment-store";
 import { toast } from "sonner";
-import { useState } from "react";
-import type { Assignment } from "@/lib/mock-data";
+import { useState, useEffect, useCallback } from "react";
 import { teacherAssignmentApi } from "@/services/teacherApi";
+import type { AssignmentData, SubmissionData } from "@/services/teacherApi";
 
-function getAssignmentStatus(a: Assignment): "active" | "closed" | "marked" {
-  const dueDate = new Date(a.due);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  if (dueDate >= today) return "active";
-  if (a.graded < a.submissions) return "closed";
-  return "marked";
+function getAssignmentStatus(dueDate: string): "active" | "closed" {
+  return new Date(dueDate) >= new Date() ? "active" : "closed";
 }
 
 function StudentDocViewer({ filename, fileUrl }: { filename: string; fileUrl?: string; onClose: () => void }) {
@@ -66,30 +59,79 @@ function StudentDocViewer({ filename, fileUrl }: { filename: string; fileUrl?: s
 
 function TeacherAssignmentsComponent() {
   const [showCreate, setShowCreate] = useState(false);
-  const [selectedAssignment, setSelectedAssignment] = useState<string | null>(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<AssignmentData | null>(null);
   const [classFilter, setClassFilter] = useState("all");
-  const [form, setForm] = useState({ title: "", description: "", targetClass: "", dueDate: "" });
+  const [form, setForm] = useState({ title: "", description: "", target_class: "", due_date: "" });
   const [marksInput, setMarksInput] = useState<Record<string, string>>({});
   const [remarksInput, setRemarksInput] = useState<Record<string, string>>({});
   const [docViewerFile, setDocViewerFile] = useState<{ filename: string; url?: string } | null>(null);
-  const [assignments, setAssignments] = useState<Assignment[]>(teacherAssignments);
+  const [assignments, setAssignments] = useState<AssignmentData[]>([]);
+  const [submissions, setSubmissions] = useState<SubmissionData[]>([]);
+  const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [classOptions, setClassOptions] = useState<string[]>([]);
+
+  const fetchAssignments = useCallback(async () => {
+    try {
+      const data = await teacherAssignmentApi.list();
+      setAssignments(data || []);
+      setClassOptions(Array.from(new Set((data || []).map(a => a.target_class))));
+    } catch {
+      toast.error("Failed to load assignments");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchAssignments(); }, [fetchAssignments]);
 
   const filtered = classFilter === "all"
     ? assignments
-    : assignments.filter(a => a.class === classFilter);
+    : assignments.filter(a => a.target_class === classFilter);
 
-  const handleCreate = () => {
-    if (!form.title || !form.description || !form.dueDate) {
+  function getStudentsForClass(class_name: string): { id: number; name: string }[] {
+    if (!submissions.length) return [];
+    const seen = new Map<number, string>();
+    submissions.forEach(s => {
+      if (!seen.has(s.student)) {
+        seen.set(s.student, s.student_name);
+      }
+    });
+    return Array.from(seen.entries()).map(([id, name]) => ({ id, name }));
+  }
+
+  const handleCreate = async () => {
+    if (!form.title || !form.description || !form.due_date) {
       toast.error("Title, description and due date are required");
       return;
     }
-    toast.success(`Assignment "${form.title}" created for ${form.targetClass || "all classes"}`);
-    setShowCreate(false);
-    setForm({ title: "", description: "", targetClass: "", dueDate: "" });
+    try {
+      await teacherAssignmentApi.create({
+        title: form.title,
+        description: form.description,
+        subject: 0,
+        target_class: form.target_class,
+        due_date: new Date(form.due_date).toISOString(),
+      });
+      toast.success(`Assignment "${form.title}" created`);
+      setShowCreate(false);
+      setForm({ title: "", description: "", target_class: "", due_date: "" });
+      fetchAssignments();
+    } catch {
+      toast.error("Failed to create assignment");
+    }
   };
 
-  async function handleUploadMarks(asgn: Assignment) {
+  function handleGradeClick(asgn: AssignmentData) {
+    setSelectedAssignment(asgn);
+    setMarksInput({});
+    setRemarksInput({});
+    teacherAssignmentApi.listSubmissions(asgn.id).then(data => {
+      setSubmissions(data || []);
+    }).catch(() => setSubmissions([]));
+  }
+
+  async function handleUploadMarks() {
     setUploading(true);
     const studentIds = Object.keys(marksInput);
     if (studentIds.length === 0) {
@@ -97,61 +139,41 @@ function TeacherAssignmentsComponent() {
       setUploading(false);
       return;
     }
-    try {
-      const submissions = await teacherAssignmentApi.listSubmissions(asgn.id);
-      if (submissions) {
-        await Promise.all(
-          submissions
-            .filter(s => studentIds.includes(s.student.toString()))
-            .map(s => teacherAssignmentApi.submitMarks(s.id, parseFloat(marksInput[s.student.toString()] || "0"), remarksInput[s.student.toString()] || "")),
-        );
+    let count = 0;
+    for (const sid of studentIds) {
+      const grade = parseFloat(marksInput[sid]);
+      if (isNaN(grade)) continue;
+      const sub = submissions.find(s => s.student.toString() === sid);
+      if (sub) {
+        try {
+          await teacherAssignmentApi.submitMarks(sub.id, grade, remarksInput[sid] || "");
+          count++;
+        } catch { /* skip */ }
       }
-    } catch {
-      console.log("Teacher API unavailable, updating local state only");
     }
-    studentIds.forEach(sid => {
-      const m = parseFloat(marksInput[sid]);
-      if (!isNaN(m)) {
-        updateMarks(asgn.title, asgn.class, sid, m, 100, remarksInput[sid] || "No remarks");
-      }
-    });
-    setAssignments(prev => prev.map(a => {
-      if (a.id !== asgn.id) return a;
-      const newMarks = { ...(a.marks || {}) };
-      studentIds.forEach(sid => {
-        const m = parseFloat(marksInput[sid]);
-        if (!isNaN(m)) {
-          newMarks[sid] = {
-            marks: m,
-            total: 100,
-            remarks: remarksInput[sid] || "No remarks",
-            evaluatedAt: new Date().toISOString().split("T")[0],
-          };
-        }
-      });
-      const newGraded = Object.keys(newMarks).length;
-      return { ...a, marks: newMarks, graded: newGraded };
-    }));
+    if (count > 0) {
+      toast.success(`Marks uploaded for ${count} student(s)`);
+      const data = await teacherAssignmentApi.listSubmissions(selectedAssignment!.id);
+      setSubmissions(data || []);
+    }
     setMarksInput({});
     setRemarksInput({});
     setUploading(false);
-    toast.success(`Marks uploaded for ${studentIds.length} student(s)`);
+  }
+
+  if (loading) {
+    return <PageWrapper><div className="text-center py-8 text-muted-foreground">Loading assignments...</div></PageWrapper>;
   }
 
   if (selectedAssignment) {
-    const asgn = assignments.find(a => a.id === selectedAssignment);
-    if (!asgn) return null;
-    const students = classStudents[asgn.class] || [];
-    const storeSubmissions = getSubmissions(asgn.title, asgn.class);
-    const totalGraded = Object.keys(asgn.marks || {}).length;
-    const storeGraded = Object.values(storeSubmissions).filter(s => s.status === "evaluated").length;
-    const combinedGraded = Math.max(totalGraded, storeGraded);
+    const asgn = selectedAssignment;
+    const students = getStudentsForClass(asgn.target_class);
 
     return (
       <PageWrapper>
         <div className="flex items-center gap-3 mb-4">
           <Button variant="ghost" size="icon" onClick={() => { setSelectedAssignment(null); setMarksInput({}); setRemarksInput({}); }}><ArrowLeft className="h-4 w-4" /></Button>
-          <div><h2 className="text-lg font-bold">{asgn.title}</h2><p className="text-xs text-muted-foreground">{asgn.class} · Due {asgn.due}</p></div>
+          <div><h2 className="text-lg font-bold">{asgn.title}</h2><p className="text-xs text-muted-foreground">{asgn.target_class} · Due {new Date(asgn.due_date).toLocaleDateString()}</p></div>
         </div>
         <StaggerContainer className="grid lg:grid-cols-3 gap-4">
           <StaggerItem><Card className="lg:col-span-2"><CardContent className="p-0">
@@ -159,73 +181,58 @@ function TeacherAssignmentsComponent() {
               <TableHeader><TableRow><TableHead>Student</TableHead><TableHead>Status</TableHead><TableHead>File</TableHead><TableHead>Marks</TableHead><TableHead>Remarks</TableHead></TableRow></TableHeader>
               <TableBody>
                 {students.map(s => {
-                  const sid = s.id;
-                  const storeSub = storeSubmissions[sid];
-                  const hasStoreFiles = storeSub && storeSub.files.length > 0;
-                  const mockSubmitted = asgn.submittedFiles && asgn.submittedFiles[sid];
-                  const marks = asgn.marks?.[sid] || (storeSub?.status === "evaluated" ? { marks: storeSub.marks!, total: storeSub.totalMarks!, remarks: storeSub.remarks, evaluatedAt: storeSub.evaluatedAt! } : undefined);
-                  const status = marks ? "Marked" : (hasStoreFiles || mockSubmitted) ? "Submitted" : "Pending";
-                  const storeFiles = storeSub?.files || [];
+                  const sub = submissions.find(x => x.student === s.id);
+                  const status = sub?.status === "evaluated" ? "Marked" : sub?.status === "submitted" ? "Submitted" : "Pending";
+                  const markEntry = sub?.status === "evaluated" ? { marks: sub.grade, total: 100, remarks: sub.remarks } : null;
 
                   return (
-                    <TableRow key={sid}>
+                    <TableRow key={s.id}>
                       <TableCell className="font-medium">{s.name}</TableCell>
                       <TableCell>
                         <Badge
                           variant={status === "Marked" ? "default" : status === "Submitted" ? "secondary" : "outline"}
                           className={status === "Marked" ? "bg-success text-success-foreground" : ""}
                         >
-                          {status === "Marked" ? `Marked (${marks!.marks}/${marks!.total})` : status}
+                          {status === "Marked" ? `Marked (${markEntry!.marks}/100)` : status}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {(hasStoreFiles || mockSubmitted) ? (
+                        {sub?.files?.length ? (
                           <div className="flex flex-col gap-1">
-                            {storeFiles.length > 0 ? (
-                              storeFiles.map((f, fi) => (
-                                <div key={f.id} className="flex items-center gap-1">
-                                  <span className="text-xs text-muted-foreground truncate max-w-[100px]">{f.originalName}</span>
-                                  <Button size="sm" variant="ghost" className="h-6 px-1.5" onClick={() => setDocViewerFile({ filename: f.originalName, url: f.dataUrl })}>
-                                    <Eye className="h-3 w-3" />
-                                  </Button>
-                                  <Button size="sm" variant="ghost" className="h-6 px-1.5" asChild>
-                                    <a href={f.dataUrl} download={f.originalName}><Download className="h-3 w-3" /></a>
-                                  </Button>
-                                </div>
-                              ))
-                            ) : mockSubmitted ? (
-                              <div className="flex gap-1">
-                                <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setDocViewerFile({ filename: mockSubmitted.filename, url: mockSubmitted.url })}>
-                                  <Eye className="h-3 w-3 mr-1" />View
+                            {sub.files.map((f, fi) => (
+                              <div key={f.id} className="flex items-center gap-1">
+                                <span className="text-xs text-muted-foreground truncate max-w-[100px]">{f.original_name}</span>
+                                <Button size="sm" variant="ghost" className="h-6 px-1.5" onClick={() => setDocViewerFile({ filename: f.original_name })}>
+                                  <Eye className="h-3 w-3" />
                                 </Button>
-                                <Button size="sm" variant="ghost" className="h-7 px-2" asChild>
-                                  <a href={mockSubmitted.url} download={mockSubmitted.filename}><Download className="h-3 w-3" /></a>
+                                <Button size="sm" variant="ghost" className="h-6 px-1.5" asChild>
+                                  <a href={f.file} download={f.original_name}><Download className="h-3 w-3" /></a>
                                 </Button>
                               </div>
-                            ) : null}
+                            ))}
                           </div>
                         ) : <span className="text-xs text-muted-foreground">—</span>}
                       </TableCell>
                       <TableCell>
-                        {marks ? (
-                          <span className="text-sm font-medium text-success">{marks.marks}/{marks.total}</span>
+                        {markEntry ? (
+                          <span className="text-sm font-medium text-success">{markEntry.marks}/100</span>
                         ) : (
                           <Input
                             className="w-20 h-8 text-sm"
                             placeholder="—"
                             type="number"
-                            value={marksInput[sid] || ""}
-                            onChange={e => setMarksInput(prev => ({ ...prev, [sid]: e.target.value }))}
+                            value={marksInput[s.id.toString()] || ""}
+                            onChange={e => setMarksInput(prev => ({ ...prev, [s.id.toString()]: e.target.value }))}
                           />
                         )}
                       </TableCell>
                       <TableCell>
-                        {marks ? (
-                          <span className="text-xs text-muted-foreground max-w-[100px] truncate block">{marks.remarks}</span>
+                        {markEntry ? (
+                          <span className="text-xs text-muted-foreground max-w-[100px] truncate block">{markEntry.remarks}</span>
                         ) : (
                           <Button size="sm" variant="ghost" onClick={() => {
-                            const r = prompt("Enter remarks:", remarksInput[sid] || "");
-                            if (r !== null) setRemarksInput(prev => ({ ...prev, [sid]: r }));
+                            const r = prompt("Enter remarks:", remarksInput[s.id.toString()] || "");
+                            if (r !== null) setRemarksInput(prev => ({ ...prev, [s.id.toString()]: r }));
                           }}>
                             <MessageSquare className="h-4 w-4" />
                           </Button>
@@ -238,19 +245,18 @@ function TeacherAssignmentsComponent() {
             </Table>
           </CardContent></Card></StaggerItem>
           <StaggerItem><Card><CardContent className="p-6 space-y-4">
-            <div><p className="text-sm text-muted-foreground">Submissions</p><p className="text-2xl font-bold">{asgn.submissions}/{asgn.total}</p></div>
-            <div><p className="text-sm text-muted-foreground">Marked</p><p className="text-2xl font-bold text-success">{combinedGraded}/{asgn.submissions}</p></div>
-            <ProgressBar value={combinedGraded} max={asgn.submissions} />
+            <div><p className="text-sm text-muted-foreground">Submissions</p><p className="text-2xl font-bold">{submissions.filter(s => s.status === "submitted" || s.status === "evaluated").length}/{students.length}</p></div>
+            <div><p className="text-sm text-muted-foreground">Marked</p><p className="text-2xl font-bold text-success">{submissions.filter(s => s.status === "evaluated").length}/{submissions.filter(s => s.status === "submitted" || s.status === "evaluated").length}</p></div>
             <Button
               className="w-full bg-gradient-brand border-0"
-              onClick={() => handleUploadMarks(asgn)}
+              onClick={handleUploadMarks}
               disabled={uploading}
             >
               <Upload className="mr-2 h-4 w-4" />{uploading ? "Uploading..." : "Upload Marks"}
             </Button>
           </CardContent></Card></StaggerItem>
         </StaggerContainer>
-        {docViewerFile && <StudentDocViewer filename={docViewerFile.filename} fileUrl={docViewerFile.url} onClose={() => setDocViewerFile(null)} />}
+        {docViewerFile && <StudentDocViewer filename={docViewerFile.filename} onClose={() => setDocViewerFile(null)} />}
       </PageWrapper>
     );
   }
@@ -264,14 +270,14 @@ function TeacherAssignmentsComponent() {
             <div className="sm:col-span-2 space-y-2"><Label>Title *</Label><Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g. Quadratic Equations Problem Set" /></div>
             <div className="sm:col-span-2 space-y-2"><Label>Description *</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Detailed instructions for the assignment..." className="min-h-[100px]" /></div>
             <div className="space-y-2"><Label>Target Class</Label>
-              <Select value={form.targetClass} onValueChange={v => setForm({ ...form, targetClass: v })}>
+              <Select value={form.target_class} onValueChange={v => setForm({ ...form, target_class: v })}>
                 <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
                 <SelectContent>
-                  {teacherSubjectData.classes.map(cls => <SelectItem key={cls} value={cls}>{cls}</SelectItem>)}
+                  {classOptions.map(cls => <SelectItem key={cls} value={cls}>{cls}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2"><Label>Due Date *</Label><Input type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} /></div>
+            <div className="space-y-2"><Label>Due Date *</Label><Input type="date" value={form.due_date} onChange={e => setForm({ ...form, due_date: e.target.value })} /></div>
             <div className="sm:col-span-2 flex gap-2">
               <Button onClick={handleCreate} className="bg-gradient-brand border-0">Create & Publish</Button>
               <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
@@ -287,7 +293,7 @@ function TeacherAssignmentsComponent() {
             <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Classes</SelectItem>
-              {teacherSubjectData.classes.map(cls => <SelectItem key={cls} value={cls}>{cls}</SelectItem>)}
+              {classOptions.map(cls => <SelectItem key={cls} value={cls}>{cls}</SelectItem>)}
             </SelectContent>
           </Select>
           <Button size="sm" className="ml-auto bg-gradient-brand border-0" onClick={() => setShowCreate(true)}>+ New Assignment</Button>
@@ -296,30 +302,24 @@ function TeacherAssignmentsComponent() {
 
       <Card><CardContent className="p-0">
         <Table>
-          <TableHeader><TableRow><TableHead>Title</TableHead><TableHead>Class</TableHead><TableHead>Due</TableHead><TableHead>Submissions</TableHead><TableHead>Status</TableHead><TableHead></TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead>Title</TableHead><TableHead>Class</TableHead><TableHead>Due</TableHead><TableHead>Subject</TableHead><TableHead>Status</TableHead><TableHead></TableHead></TableRow></TableHeader>
           <TableBody>{filtered.map(a => (
             <TableRow key={a.id}>
               <TableCell className="font-medium">{a.title}</TableCell>
-              <TableCell>{a.class}</TableCell>
-              <TableCell>{a.due}</TableCell>
-              <TableCell>{a.submissions}/{a.total}</TableCell>
+              <TableCell>{a.target_class}</TableCell>
+              <TableCell>{new Date(a.due_date).toLocaleDateString()}</TableCell>
+              <TableCell>{a.subject_name}</TableCell>
               <TableCell>
-                {getAssignmentStatus(a) === "active" && <Badge variant="secondary">Active</Badge>}
-                {getAssignmentStatus(a) === "closed" && <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50 dark:bg-amber-950/10">Closed</Badge>}
-                {getAssignmentStatus(a) === "marked" && <Badge className="bg-success text-success-foreground">Marked</Badge>}
+                {getAssignmentStatus(a.due_date) === "active" && <Badge variant="secondary">Active</Badge>}
+                {getAssignmentStatus(a.due_date) === "closed" && <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50 dark:bg-amber-950/10">Closed</Badge>}
               </TableCell>
-              <TableCell><Button size="sm" variant="outline" onClick={() => setSelectedAssignment(a.id)}>Grade</Button></TableCell>
+              <TableCell><Button size="sm" variant="outline" onClick={() => handleGradeClick(a)}>Grade</Button></TableCell>
             </TableRow>
           ))}</TableBody>
         </Table>
       </CardContent></Card>
     </PageWrapper>
   );
-}
-
-function ProgressBar({ value, max }: { value: number; max: number }) {
-  const pct = max > 0 ? (value / max) * 100 : 0;
-  return <div className="h-2 rounded-full bg-muted"><div className="h-full rounded-full bg-success transition-all" style={{ width: `${pct}%` }} /></div>;
 }
 
 export const Route = createFileRoute("/teacher/assignments")({

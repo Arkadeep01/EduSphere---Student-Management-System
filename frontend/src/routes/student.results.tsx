@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   PageWrapper,
   StaggerContainer,
@@ -15,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { results, rankings, exams, studentProfileData } from "@/lib/mock-data";
+import { results as mockResults, rankings as mockRankings, exams as mockExams, studentProfileData } from "@/lib/mock-data";
 import {
   RadarChart,
   PolarGrid,
@@ -24,11 +25,31 @@ import {
   Radar,
   ResponsiveContainer,
 } from "recharts";
+import { API_BASE } from "@/services/request";
+
+const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 
 export const Route = createFileRoute("/student/results")({
   head: () => ({ meta: [{ title: "Results — Student" }] }),
-  component: () => {
-    return (
+  component: ResultsPage,
+});
+
+function ResultsPage() {
+  const { data: realResults } = useQuery({
+    queryKey: ["student", "results"],
+    queryFn: async () => {
+      const r = await fetch(`${API_BASE}/api/student/results/`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!r.ok) throw new Error("Failed");
+      return r.json() as Promise<Array<Record<string,unknown>>>;
+    },
+    enabled: !!token,
+  });
+
+  const results = realResults && realResults.length > 0
+    ? realResults.map((r) => ({ subject: String(r.subject_name || ""), marks: Number(r.marks_obtained || 0), total: Number(r.total_marks || 100), grade: String(r.grade || "") }))
+    : mockResults;
+
+  return (
       <PageWrapper>
         <Tabs defaultValue="marks" className="mb-6">
           <TabsList>
@@ -226,5 +247,4 @@ export const Route = createFileRoute("/student/results")({
         </Tabs>
       </PageWrapper>
     );
-  },
-});
+  }

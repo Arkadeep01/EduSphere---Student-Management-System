@@ -34,6 +34,28 @@ class NotificationAdminService:
                     title=broadcast.title,
                     message=broadcast.message,
                 )
+        elif broadcast.recipient_type == "specific_students":
+            user_ids = broadcast.recipient_ids or []
+            profiles = StudentProfile.objects.filter(
+                user_id__in=user_ids
+            ).select_related("user")
+            for p in profiles:
+                Notification.objects.create(
+                    user=p.user,
+                    title=broadcast.title,
+                    message=broadcast.message,
+                )
+        elif broadcast.recipient_type == "specific_teachers":
+            user_ids = broadcast.recipient_ids or []
+            profiles = TeacherProfile.objects.filter(
+                user_id__in=user_ids
+            ).select_related("user")
+            for p in profiles:
+                Notification.objects.create(
+                    user=p.user,
+                    title=broadcast.title,
+                    message=broadcast.message,
+                )
         elif broadcast.recipient_type == "class":
             profiles = StudentProfile.objects.filter(
                 class_assigned__startswith=broadcast.target_class

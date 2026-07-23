@@ -15,5 +15,7 @@ urlpatterns = [
     path("timetable/", views.TimetableView.as_view(), name="student-timetable"),
     path("notifications/", views.NotificationView.as_view(), name="student-notifications"),
     path("resources/", views.ResourceListView.as_view(), name="student-resources"),
+    path("subjects/<int:subject_id>/chapters/", views.SubjectChaptersView.as_view(), name="student-subject-chapters"),
     path("subject-request-status/", views.SubjectRequestStatusView.as_view(), name="student-subject-request-status"),
+    path("exams/", views.StudentExamListView.as_view(), name="student-exams"),
 ]

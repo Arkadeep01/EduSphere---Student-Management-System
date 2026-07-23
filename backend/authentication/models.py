@@ -58,6 +58,7 @@ class CustomUser(AbstractUser):
         ('student', 'Student'),
         ('teacher', 'Teacher'),
         ('admin', 'Admin'),
+        ('staff', 'Staff'),
     ]
     role = models.CharField(
         max_length=10,

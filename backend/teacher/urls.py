@@ -18,6 +18,18 @@ urlpatterns = [
     path("resources/", views.ResourceView.as_view(), name="teacher-resources"),
     path("resources/<int:resource_id>/", views.ResourceDetailView.as_view(), name="teacher-resource-detail"),
     path("resources/<int:resource_id>/download/", views.ResourceDownloadView.as_view(), name="teacher-resource-download"),
+    path("assignments/", views.TeacherAssignmentListView.as_view(), name="teacher-assignment-list"),
+    path("assignments/<int:assignment_id>/", views.TeacherAssignmentDetailView.as_view(), name="teacher-assignment-detail"),
     path("assignments/<int:assignment_id>/submissions/", views.AssignmentSubmissionsView.as_view(), name="teacher-assignment-submissions"),
     path("submissions/<int:submission_id>/marks/", views.SubmissionMarksView.as_view(), name="teacher-submission-marks"),
+
+    # Subject Chapters
+    path("chapters/", views.TeacherSubjectChaptersView.as_view(), name="teacher-chapters"),
+    path("chapters/<int:chapter_id>/", views.TeacherSubjectChapterDetailView.as_view(), name="teacher-chapter-detail"),
+    path("chapters/<int:chapter_id>/topics/", views.TeacherTopicView.as_view(), name="teacher-chapter-topics"),
+    path("chapters/<int:chapter_id>/topics/<int:topic_id>/", views.TeacherTopicView.as_view(), name="teacher-topic-detail"),
+    path("class-progress/", views.TeacherClassProgressView.as_view(), name="teacher-class-progress"),
+
+    # Exams
+    path("exams/", views.TeacherExamListView.as_view(), name="teacher-exams"),
 ]

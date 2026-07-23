@@ -1,6 +1,9 @@
 from django.contrib import admin
 
 from .models import (
+    AcademicSession,
+    AuditLog,
+    Class,
     SubjectRequestControl,
     ClassTeacherAssignment,
     TeacherSubjectAllocation,
@@ -22,8 +25,17 @@ from .models import (
     ExportLog,
     DocumentStorage,
     NotificationBroadcast,
+    FeeStructure,
+    FeeComponent,
+    StudentFeePayment,
+    StudentScholarship,
+    FinanceActivityLog,
+    Letterhead,
 )
 
+admin.site.register(AcademicSession)
+admin.site.register(Class)
+admin.site.register(AuditLog)
 admin.site.register(SubjectRequestControl)
 admin.site.register(ClassTeacherAssignment)
 admin.site.register(TeacherSubjectAllocation)
@@ -45,3 +57,9 @@ admin.site.register(AdmissionPageContent)
 admin.site.register(ExportLog)
 admin.site.register(DocumentStorage)
 admin.site.register(NotificationBroadcast)
+admin.site.register(FeeStructure)
+admin.site.register(FeeComponent)
+admin.site.register(StudentFeePayment)
+admin.site.register(StudentScholarship)
+admin.site.register(FinanceActivityLog)
+admin.site.register(Letterhead)

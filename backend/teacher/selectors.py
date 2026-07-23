@@ -4,28 +4,42 @@ from django.db.models.functions import Coalesce
 
 from .models import (
     TeacherProfile, TeacherClassAssignment, TimetableEntry,
-    LibrarySession, Resource, AnswerScript,
+    LibrarySession, Resource,
 )
-from student.models import StudentProfile, Subject, Attendance, Result, AssignmentSubmission
+from student.models import StudentProfile, Subject, Attendance, Result, Assignment, AssignmentSubmission
+
+
+def get_teacher_subjects(teacher_profile):
+    """Get all subjects for a teacher from both assigned_subject and TeacherSubjectAllocation."""
+    from administration.models.teacher import TeacherSubjectAllocation
+    subject_ids = set()
+    if teacher_profile.assigned_subject:
+        subject_ids.add(teacher_profile.assigned_subject_id)
+    allocated = TeacherSubjectAllocation.objects.filter(teacher=teacher_profile).values_list("subject_id", flat=True)
+    subject_ids.update(allocated)
+    return Subject.objects.filter(id__in=subject_ids)
 
 
 def get_teacher_dashboard_data(teacher_profile):
     """Aggregate dashboard metrics for a teacher."""
     today = timezone.now().date()
-    subject = teacher_profile.assigned_subject
+    subjects = get_teacher_subjects(teacher_profile)
     total_students = StudentProfile.objects.filter(
         class_assigned__in=teacher_profile.class_assignments.values("class_name")
-    ).count() if subject else 0
+    ).count() if subjects else 0
 
-    pending_evaluations = AnswerScript.objects.filter(
+    from administration.models import AnswerScriptUpload as AdminAnswerScriptUpload
+    pending_evaluations = AdminAnswerScriptUpload.objects.filter(
         teacher=teacher_profile,
         evaluation_status="pending",
+        upload_status__in=["verified", "assigned"],
     ).count()
 
     return {
         "total_students": total_students,
         "pending_evaluations": pending_evaluations,
-        "assigned_subject": subject.name if subject else None,
+        "assigned_subject": subjects.first().name if subjects.exists() else None,
+        "subjects": [{"id": s.id, "name": s.name} for s in subjects],
         "total_classes": teacher_profile.class_assignments.count(),
     }
 
@@ -64,25 +78,30 @@ def get_weekly_timetable(teacher_profile):
 
 
 def get_evaluation_queue(teacher_profile):
-    """Get answer scripts pending evaluation."""
-    return AnswerScript.objects.filter(
+    """Get answer scripts assigned for evaluation using AnswerScriptUpload."""
+    from administration.models import AnswerScriptUpload as AdminAnswerScriptUpload
+    return AdminAnswerScriptUpload.objects.filter(
         teacher=teacher_profile,
-    ).select_related("student", "student__user", "subject").order_by("uploaded_at")
+    ).select_related("student", "student__user", "subject", "exam").order_by("uploaded_at")
 
 
 def get_pending_evaluations(teacher_profile):
-    """Get only pending evaluation items."""
-    return get_evaluation_queue(teacher_profile).filter(evaluation_status="pending")
+    """Get only verified scripts pending evaluation."""
+    return get_evaluation_queue(teacher_profile).filter(
+        upload_status__in=["verified", "assigned"],
+        evaluation_status="pending",
+    )
 
 
 def search_answer_scripts(teacher_profile, query):
     """Search answer scripts by student name or exam name."""
-    return AnswerScript.objects.filter(
+    from administration.models import AnswerScriptUpload as AdminAnswerScriptUpload
+    return AdminAnswerScriptUpload.objects.filter(
         teacher=teacher_profile,
     ).filter(
         Q(student__user__first_name__icontains=query) |
         Q(student__user__last_name__icontains=query) |
-        Q(exam_name__icontains=query),
+        Q(exam__name__icontains=query),
     ).select_related("student", "student__user")
 
 
@@ -109,6 +128,17 @@ def get_class_attendance_summary(teacher_profile, class_name, date=None):
         "absent": records.filter(status="absent").count(),
         "students": students,
     }
+
+
+def get_teacher_assignments(teacher_profile, subject=None):
+    """Get assignments created by the teacher's subject."""
+    if subject is None:
+        subject = teacher_profile.assigned_subject
+    if not subject:
+        return Assignment.objects.none()
+    return Assignment.objects.filter(
+        subject=subject,
+    ).select_related("subject").order_by("-created_at")
 
 
 def get_class_student_performance(teacher_profile, class_name):
