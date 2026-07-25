@@ -13,7 +13,7 @@ from django.core.exceptions import ValidationError
 from .models import CustomUser, OTP
 
 
-from django.core.mail import send_mail
+from notification.services.email_service import EmailService
 
 def get_user_data(user):
     return {
@@ -127,11 +127,22 @@ def send_otp_api(request):
         otp_code = f"{secrets.randbelow(10**6):06}"
         expires_at = timezone.now() + timedelta(minutes=10)
         OTP.objects.create(user=user, email=email, otp_code=otp_code, expires_at=expires_at)
-        # Send email (console backend in dev)
-        subject = "EduSphere OTP Verification"
-        message = f"Your verification code is {otp_code}. It is valid for 10 minutes."
-        from_email = os.getenv('DEFAULT_FROM_EMAIL', 'no-reply@example.com')
-        send_mail(subject, message, from_email, [email])
+        # Send email via Notification Engine
+        context = {
+            "user_name": f"{user.first_name} {user.last_name}".strip() or user.email,
+            "user_email": user.email,
+            "otp_code": otp_code,
+            "expiry_minutes": "10",
+            "title": "EduSphere OTP Verification",
+            "message": f"Your verification code is: <strong>{otp_code}</strong><br/>This code is valid for 10 minutes.",
+        }
+        success = EmailService.send_templated_email(
+            to_email=email,
+            template_name="otp_verification",
+            context=context,
+        )
+        if not success:
+            return JsonResponse({"success": False, "message": "Failed to send OTP email."}, status=500)
         return JsonResponse({"success": True, "message": "OTP sent."})
     except json.JSONDecodeError:
         return JsonResponse({"success": False, "message": "Invalid JSON."}, status=400)
@@ -333,11 +344,22 @@ def password_reset_request(request):
     expires_at = timezone.now() + timedelta(minutes=10)
     OTP.objects.create(user=user, email=email, otp_code=otp_code, expires_at=expires_at)
 
-    # Send email
-    subject = "EduSphere Password Reset OTP"
-    message = f"Your password reset code is {otp_code}. It is valid for 10 minutes."
-    from_email = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@example.com")
-    send_mail(subject, message, from_email, [email])
+    # Send email via Notification Engine
+    context = {
+        "user_name": f"{user.first_name} {user.last_name}".strip() or user.email,
+        "user_email": user.email,
+        "otp_code": otp_code,
+        "expiry_minutes": "10",
+        "title": "EduSphere Password Reset OTP",
+        "message": f"Your password reset code is: <strong>{otp_code}</strong><br/>This code is valid for 10 minutes.",
+    }
+    success = EmailService.send_templated_email(
+        to_email=email,
+        template_name="password_reset",
+        context=context,
+    )
+    if not success:
+        return Response({"error": "Failed to send password reset email."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return Response({"success": True, "message": "Password reset OTP sent."}, status=status.HTTP_200_OK)
 

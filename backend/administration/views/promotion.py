@@ -48,11 +48,18 @@ class StudentPromotionView(APIView):
             "previous_class": result["previous_class"],
         }, status=status.HTTP_201_CREATED)
 
-    def patch(self, request, student_id):
+    def patch(self, request):
         """Repeat or detain a student."""
         data = request.data
+        student_id = data.get("student_id")
         action = data.get("action")
         reason = data.get("reason", "")
+
+        if not student_id:
+            return Response(
+                {"detail": "student_id is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         if action not in ["repeat", "detain"]:
             return Response(
@@ -117,7 +124,7 @@ class StudentRollbackView(APIView):
     """API View for rollback operations."""
     permission_classes = [IsAuthenticated, IsAdmin]
 
-    def post(self, request):
+    def post(self, request, student_id=None):
         """Rollback a promotion operation."""
         data = request.data
         promotion_log_id = data.get("promotion_log_id")

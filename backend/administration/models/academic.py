@@ -6,6 +6,7 @@ class AcademicSession(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     is_current = models.BooleanField(default=False)
+    is_archived = models.BooleanField(default=False, help_text="Archived sessions are read-only")
 
     class Meta:
         ordering = ["-start_date"]

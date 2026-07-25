@@ -3,11 +3,12 @@ import { useState } from "react";
 import {
   LayoutDashboard, Users, GraduationCap, BookOpen, CalendarDays,
   ClipboardCheck, FileText, DollarSign, BarChart3, Settings, User,
-  LogOut, Menu, Bell, Sun, Moon, ChevronDown, Home as FileCheck, Layers, Clock, Award, Mail, ClipboardList, FolderOpen
+  LogOut, Menu, Bell, Sun, Moon, ChevronDown, Home as FileCheck, Layers, Clock, Award, Mail, ClipboardList, FolderOpen, Megaphone, TrendingUp, FileSpreadsheet, Search,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/lib/theme";
+import { useNotifications, NotificationProvider } from "@/context/NotificationContext";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { notifications, type Role } from "@/lib/mock-data";
+import type { Role } from "@/lib/mock-data";
 
 interface NavItem { label: string; to: string; icon: typeof LayoutDashboard; }
 
@@ -26,10 +27,14 @@ const navByRole: Record<Role, NavItem[]> = {
     { label: "Students", to: "/admin/students", icon: Users },
     { label: "Teachers", to: "/admin/teachers", icon: GraduationCap },
     { label: "Classes", to: "/admin/classes", icon: Layers },
+    { label: "Promotions", to: "/admin/promotions", icon: TrendingUp },
     { label: "Attendance", to: "/admin/attendance", icon: ClipboardCheck },
     { label: "Examinations", to: "/admin/exams", icon: FileText },
+    { label: "Results", to: "/admin/results", icon: FileSpreadsheet },
     { label: "Fees & Finance", to: "/admin/fees", icon: DollarSign },
     { label: "Notifications", to: "/admin/notifications", icon: Bell },
+    { label: "Notification Mgmt", to: "/admin/notification", icon: Megaphone },
+    { label: "Notification Center", to: "/admin/notification-center", icon: Bell },
     { label: "Events", to: "/admin/events", icon: CalendarDays },
     { label: "Audit Logs", to: "/admin/audit-logs", icon: ClipboardList },
     { label: "Contact Submissions", to: "/admin/contacts", icon: Mail },
@@ -37,6 +42,7 @@ const navByRole: Record<Role, NavItem[]> = {
     { label: "Documents", to: "/admin/documents", icon: FolderOpen },
     { label: "Reports", to: "/admin/reports", icon: BarChart3 },
     { label: "Subjects", to: "/admin/subjects", icon: BookOpen },
+    { label: "Blind Rechecking", to: "/admin/rechecking", icon: Search },
     { label: "Settings", to: "/admin/settings", icon: Settings },
     { label: "Profile", to: "/admin/profile", icon: User },
   ],
@@ -49,6 +55,8 @@ const navByRole: Record<Role, NavItem[]> = {
     { label: "Exams", to: "/teacher/exams", icon: FileText },
     { label: "Timetable", to: "/teacher/timetable", icon: Clock },
     { label: "Resources", to: "/teacher/resources", icon: BookOpen },
+    { label: "Blind Rechecking", to: "/teacher/rechecking", icon: Search },
+    { label: "Notification Center", to: "/teacher/notification-center", icon: Bell },
     { label: "Profile", to: "/teacher/profile", icon: User },
   ],
   student: [
@@ -58,9 +66,9 @@ const navByRole: Record<Role, NavItem[]> = {
     { label: "Attendance", to: "/student/attendance", icon: ClipboardCheck },
     { label: "Exam Schedule", to: "/student/exams", icon: FileText },
     { label: "Results", to: "/student/results", icon: Award },
+    { label: "Rechecking", to: "/student/rechecking", icon: Search },
     { label: "Fees", to: "/student/fees", icon: DollarSign },
     { label: "Timetable", to: "/student/timetable", icon: Clock },
-    { label: "Notifications", to: "/student/notifications", icon: Bell },
     { label: "Profile", to: "/student/profile", icon: User },
   ],
   staff: [
@@ -69,12 +77,14 @@ const navByRole: Record<Role, NavItem[]> = {
     { label: "Upload Scripts", to: "/staff/upload", icon: FileText },
     { label: "Upload History", to: "/staff/history", icon: Clock },
     { label: "Rejected", to: "/staff/rejected", icon: FileCheck },
+    { label: "Rechecking", to: "/staff/rechecking", icon: Search },
     { label: "Profile", to: "/staff/profile", icon: User },
   ],
 };
 
-export function  DashboardLayout({ role }: { role: Role }) {
+export function  DashboardLayoutInner({ role }: { role: Role }) {
   const { user, logout } = useAuth();
+  const { unreadCount } = useNotifications();
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -109,6 +119,7 @@ export function  DashboardLayout({ role }: { role: Role }) {
     "upload": "Upload Scripts",
     "history": "Upload History",
     "rejected": "Rejected Uploads",
+    "rechecking": "Blind Rechecking",
   };
   const currentPage = pathname.split("/").pop() || "";
   const pageTitle = pageTitleMap[currentPage] || currentPage.charAt(0).toUpperCase() + currentPage.slice(1);
@@ -184,24 +195,33 @@ export function  DashboardLayout({ role }: { role: Role }) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-4 w-4" />
-                  <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 text-[10px] flex items-center justify-center bg-brand text-brand-foreground">
-                    {notifications.filter(n => n.unread).length}
-                  </Badge>
+                  {unreadCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 text-[10px] flex items-center justify-center bg-brand text-brand-foreground">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </Badge>
+                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-80">
-                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                <DropdownMenuLabel className="flex items-center justify-between">
+                  <span>Notifications</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-xs"
+                    onClick={() => navigate({ to: `/${role}/notification-center` as any })}
+                  >
+                    View All
+                  </Button>
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {notifications.map(n => (
-                  <DropdownMenuItem key={n.id} className="flex-col items-start gap-1 py-2">
-                    <div className="flex w-full items-center justify-between">
-                      <span className="font-medium text-sm">{n.title}</span>
-                      {n.unread && <span className="h-2 w-2 rounded-full bg-brand" />}
-                    </div>
-                    <p className="text-xs text-muted-foreground">{n.desc}</p>
-                    <p className="text-xs text-muted-foreground/70">{n.time}</p>
-                  </DropdownMenuItem>
-                ))}
+                <DropdownMenuItem
+                  className="flex items-center justify-center py-3 text-sm text-primary"
+                  onClick={() => navigate({ to: `/${role}/notification-center` as any })}
+                >
+                  <Bell className="mr-2 h-4 w-4" />
+                  Open Notification Center
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <DropdownMenu>
@@ -235,5 +255,13 @@ export function  DashboardLayout({ role }: { role: Role }) {
         </main>
       </div>
     </div>
+  );
+}
+
+export function DashboardLayout({ role }: { role: Role }) {
+  return (
+    <NotificationProvider>
+      <DashboardLayoutInner role={role} />
+    </NotificationProvider>
   );
 }

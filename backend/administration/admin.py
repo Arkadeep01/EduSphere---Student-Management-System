@@ -31,6 +31,7 @@ from .models import (
     StudentScholarship,
     FinanceActivityLog,
     Letterhead,
+    BlindRecheckingRequest,
 )
 
 admin.site.register(AcademicSession)
@@ -63,3 +64,4 @@ admin.site.register(StudentFeePayment)
 admin.site.register(StudentScholarship)
 admin.site.register(FinanceActivityLog)
 admin.site.register(Letterhead)
+admin.site.register(BlindRecheckingRequest)

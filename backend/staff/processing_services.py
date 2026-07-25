@@ -3,7 +3,8 @@ from django.utils import timezone
 from django.db import transaction
 from django.db.models import Count
 from administration.models.audit_log import AuditLog
-from administration.models.notification import NotificationBroadcast
+from notification.services.notification_service import NotificationService
+from notification.models import NotificationType, Priority, TargetAudience
 from administration.models.processing import ScriptProcessing, ScriptBatchProcessing
 from administration.models.exam import AnswerScriptUpload
 from student.models import StudentProfile
@@ -269,17 +270,23 @@ def finalize_batch_verification(batch, user=None):
         ),
     )
 
-    NotificationBroadcast.objects.create(
-        title="Batch Processing Complete",
-        message=(
-            f"Batch {batch.batch_id} processing completed: "
-            f"{passed}/{total} passed, {failed} failed, {flagged} flagged."
-        ),
-        sent_by=user,
-        recipient_type="all_teachers",
-        status="sent",
-        sent_at=timezone.now(),
-    )
+    try:
+        notif_type = NotificationType.SCRIPTS_BATCH_COMPLETE if batch.verification_status == "passed" else NotificationType.SCRIPTS_BATCH_FAILED
+        NotificationService.create_notification(
+            notification_type=notif_type,
+            title="Batch Processing Complete",
+            message=(
+                f"Batch {batch.batch_id} processing completed: "
+                f"{passed}/{total} passed, {failed} failed, {flagged} flagged."
+            ),
+            sender=user,
+            priority=Priority.MEDIUM,
+            target_audience=TargetAudience.ALL_TEACHERS,
+            send_email=False,
+            send_realtime=True,
+        )
+    except Exception:
+        pass
 
     return batch
 

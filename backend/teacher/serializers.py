@@ -84,6 +84,30 @@ class AnswerScriptSerializer(serializers.ModelSerializer):
         return f"{obj.student.user.first_name} {obj.student.user.last_name}"
 
 
+class AnonymousEvaluationSerializer(serializers.Serializer):
+    script_id = serializers.SerializerMethodField()
+    subject_name = serializers.CharField(source="subject.name", read_only=True)
+    exam_name = serializers.CharField(source="exam.name", read_only=True)
+    marks_obtained = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True, allow_null=True)
+    total_marks = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True, allow_null=True)
+    draft_marks = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True, allow_null=True)
+    draft_remarks = serializers.CharField(read_only=True, allow_blank=True)
+    remarks = serializers.CharField(read_only=True, allow_blank=True)
+    upload_status = serializers.CharField(read_only=True)
+    evaluation_status = serializers.CharField(read_only=True)
+    script_number = serializers.CharField(read_only=True, allow_blank=True)
+    batch_id = serializers.CharField(read_only=True, allow_blank=True)
+    is_locked = serializers.SerializerMethodField()
+    evaluated_at = serializers.DateTimeField(read_only=True, allow_null=True)
+    uploaded_at = serializers.DateTimeField(read_only=True)
+
+    def get_script_id(self, obj):
+        return f"SCR-{obj.id:05d}"
+
+    def get_is_locked(self, obj):
+        return obj.upload_status in ("evaluation_completed", "archived")
+
+
 class TopicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Topic

@@ -196,8 +196,8 @@ class EvaluationQueueView(APIView):
         query = request.query_params.get("search")
         if query:
             scripts = search_answer_scripts(profile, query)
-        from administration.serializers import AnswerScriptUploadSerializer as AdminScriptSerializer
-        serializer = AdminScriptSerializer(scripts, many=True)
+        from .serializers import AnonymousEvaluationSerializer
+        serializer = AnonymousEvaluationSerializer(scripts, many=True)
         return Response(serializer.data)
 
 
@@ -212,6 +212,11 @@ class DraftMarkView(APIView):
             return Response(
                 {"error": "Answer script not found."},
                 status=status.HTTP_404_NOT_FOUND,
+            )
+        if script.upload_status in ("evaluation_completed", "archived"):
+            return Response(
+                {"error": "Evaluation is locked. This script has been finalized."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         marks = request.data.get("marks")
         remarks = request.data.get("remarks", "")
@@ -236,18 +241,36 @@ class EvaluationSubmitView(APIView):
                 {"error": "Answer script not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
+        if script.upload_status in ("evaluation_completed", "archived"):
+            return Response(
+                {"error": "Evaluation is locked. This script has been finalized."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         marks = request.data.get("marks")
         total_marks = request.data.get("total_marks")
         remarks = request.data.get("remarks", "")
         if marks is None or total_marks is None:
             return Response(
                 {"error": "marks and total_marks are required."},
+
                 status=status.HTTP_400_BAD_REQUEST,
             )
         script = submit_evaluation(script, marks, total_marks, remarks)
-        from administration.serializers import AnswerScriptUploadSerializer
-        serializer = AnswerScriptUploadSerializer(script)
-        return Response(serializer.data)
+        from notification.services.notification_service import NotificationService
+        from notification.models import NotificationType, Priority
+        try:
+            NotificationService.create_notification(
+                notification_type=NotificationType.SCRIPTS_EVALUATION_COMPLETE,
+                title="Evaluation Complete",
+                message=f"Evaluation completed for script SCR-{script.id:05d}.",
+                sender=request.user,
+                priority=Priority.MEDIUM,
+                send_email=False,
+                send_realtime=True,
+            )
+        except Exception:
+            pass
+        return Response({"message": "Evaluation submitted.", "script_id": f"SCR-{script.id:05d}"})
 
 
 class TeacherAssignmentListView(APIView):

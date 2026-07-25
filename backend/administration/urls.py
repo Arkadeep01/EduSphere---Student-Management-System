@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import rechecking as rechecking_views
 
 urlpatterns = [
     # Dashboard
@@ -89,6 +90,19 @@ urlpatterns = [
 
     # Exports
     path("exports/students/", views.ExportStudentsView.as_view(), name="admin-export-students"),
+
+    # Promotion & Academic Session Rollover
+    path("promotions/student/", views.StudentPromotionView.as_view(), name="admin-student-promotion"),
+    path("promotions/student/<int:student_id>/rollback/", views.StudentRollbackView.as_view(), name="admin-student-rollback"),
+    path("promotions/bulk/", views.BulkPromotionView.as_view(), name="admin-bulk-promotion"),
+    path("promotions/rollover/", views.AcademicSessionRolloverView.as_view(), name="admin-session-rollover"),
+    path("promotions/rollover/<int:rollover_id>/", views.AcademicSessionRolloverDetailView.as_view(), name="admin-session-rollover-detail"),
+    path("promotions/history/<int:student_id>/", views.StudentHistoryView.as_view(), name="admin-student-history"),
+    path("promotions/logs/", views.PromotionLogView.as_view(), name="admin-promotion-logs"),
+    path("promotions/rules/", views.PromotionRuleView.as_view(), name="admin-promotion-rules"),
+    path("promotions/rules/<int:rule_id>/", views.PromotionRuleView.as_view(), name="admin-promotion-rule-detail"),
+
+    # Exports
     path("exports/teachers/", views.ExportTeachersView.as_view(), name="admin-export-teachers"),
     path("exports/attendance/", views.ExportAttendanceView.as_view(), name="admin-export-attendance"),
     path("exports/classes/", views.ExportClassesView.as_view(), name="admin-export-classes"),
@@ -152,4 +166,17 @@ urlpatterns = [
     path("results/pdf/marksheet/<int:pub_id>/", views.MarksheetPDFView.as_view(), name="admin-result-marksheet-pdf"),
     path("results/pdf/transcript/<int:student_result_id>/", views.TranscriptPDFView.as_view(), name="admin-result-transcript-pdf"),
     path("results/pdf/printable/<int:student_result_id>/", views.PrintableResultPDFView.as_view(), name="admin-result-printable-pdf"),
+
+    # Blind Rechecking
+    path("rechecking/", rechecking_views.AdminRecheckingListView.as_view(), name="admin-rechecking-list"),
+    path("rechecking/stats/", rechecking_views.AdminRecheckingStatsView.as_view(), name="admin-rechecking-stats"),
+    path("rechecking/evaluators/", rechecking_views.AdminEvaluatorListView.as_view(), name="admin-rechecking-evaluators"),
+    path("rechecking/<int:request_id>/", rechecking_views.AdminRecheckingDetailView.as_view(), name="admin-rechecking-detail"),
+    path("rechecking/<int:request_id>/action/", rechecking_views.AdminRecheckingActionView.as_view(), name="admin-rechecking-action"),
+    path("rechecking/<int:request_id>/assign/", rechecking_views.AdminRecheckingAssignEvaluatorView.as_view(), name="admin-rechecking-assign"),
+    path("rechecking/<int:request_id>/complete/", rechecking_views.AdminRecheckingCompleteView.as_view(), name="admin-rechecking-complete"),
+    path("rechecking/close-expired/", rechecking_views.AdminRecheckingCloseExpiredView.as_view(), name="admin-rechecking-close-expired"),
+
+    # Staff Rechecking Overview
+    path("staff/rechecking/", rechecking_views.StaffRecheckingOverviewView.as_view(), name="staff-rechecking-overview"),
 ]

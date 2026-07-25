@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import processing_views
+from administration.views.rechecking import StaffRecheckingOverviewView
 
 urlpatterns = [
     path("dashboard/", views.StaffDashboardView.as_view(), name="staff-dashboard"),
@@ -28,4 +29,5 @@ urlpatterns = [
     path("batch-processing/<str:batch_id>/", processing_views.BatchProcessingDetailView.as_view(), name="batch-processing-detail"),
     path("batch-processing/<str:batch_id>/finalize/", processing_views.BatchProcessingFinalizeView.as_view(), name="batch-processing-finalize"),
     path("batch-processing/list/", processing_views.BatchProcessingListView.as_view(), name="batch-processing-list"),
+    path("rechecking/", StaffRecheckingOverviewView.as_view(), name="staff-rechecking"),
 ]

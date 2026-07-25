@@ -112,6 +112,18 @@ from .audit_admin import AuditLogListView
 
 from .letterhead_admin import LetterheadListView, LetterheadDetailView
 
+from .promotion import (
+    StudentPromotionView,
+    StudentRepeatDetainView,
+    StudentRollbackView,
+    BulkPromotionView,
+    AcademicSessionRolloverView,
+    SessionRolloverDetailView as AcademicSessionRolloverDetailView,
+    StudentHistoryView,
+    PromotionLogView,
+    PromotionRuleView,
+)
+
 from .result_engine import (
     GradeBoundaryListView,
     ResultPublicationCreateView,

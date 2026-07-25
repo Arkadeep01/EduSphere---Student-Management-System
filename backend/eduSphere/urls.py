@@ -11,6 +11,7 @@ urlpatterns = [
     path("api/teacher/", include("teacher.urls")),
     path("api/admin/", include("administration.urls")),
     path("api/staff/", include("staff.urls")),
+    path("api/notifications/", include("notification.urls")),
 ]
 
 if settings.DEBUG:

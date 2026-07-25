@@ -1,3 +1,4 @@
+import logging
 from django.db import transaction
 from django.utils import timezone
 from django.core.exceptions import ValidationError
@@ -14,6 +15,8 @@ from administration.models.fee import FeeStructure
 from administration.models.teacher import FacultyAttendance
 from administration.models.exam import Exam
 from ..models.audit_log import AuditLog
+
+logger = logging.getLogger(__name__)
 
 
 class PromotionService:
@@ -35,9 +38,9 @@ class PromotionService:
         Promote a single student following all business rules.
         
         Rules followed:
-        - StudentProfile.class_assigned is NOT updated
+        - StudentProfile.class_assigned IS updated to target_class
         - Historical tracking in StudentPromotionHistory
-        - Action logged in PromotionLog
+        - Action logged in PromotionLog with class transition
         - Manual promotion always supported
         """
         with transaction.atomic():
@@ -48,6 +51,10 @@ class PromotionService:
             
             previous_class = student.class_assigned
             previous_section = student.section
+            
+            # Update student's current class assignment
+            student.class_assigned = target_class
+            student.save()
             
             promotion_log = PromotionLog.objects.create(
                 student=student,
@@ -78,9 +85,31 @@ class PromotionService:
                 user=processed_by,
                 description=f"Student promoted from {previous_class} to {target_class}",
                 previous_value={"class_assigned": previous_class, "section": previous_section},
-                new_value={"class_assigned": previous_class, "section": target_section}
+                new_value={"class_assigned": target_class, "section": target_section}
             )
             
+            try:
+                from notification.services.notification_service import NotificationService, Priority as NotifPriority
+                from notification.services.realtime_manager import RealtimeManager
+                NotificationService.create_notification(
+                    notification_type="student_promoted",
+                    title="Congratulations – You've Been Promoted!",
+                    message=f"You have been promoted from {previous_class} to {target_class}.",
+                    priority=NotifPriority.HIGH,
+                    target_user_ids=[student.user.id],
+                    sender=processed_by,
+                    metadata={
+                        "from_class": previous_class,
+                        "to_class": target_class,
+                        "action": action,
+                        "student_id": student.id,
+                    },
+                    send_email=True,
+                    send_realtime=True,
+                )
+            except Exception as e:
+                logger.warning(f"Failed to send promotion notification for student {student.id}: {e}")
+
             return {
                 "student": student,
                 "promotion_log": promotion_log,
@@ -317,6 +346,29 @@ class RepeatDetainService:
                 created_at=timezone.now()
             )
             
+            try:
+                from notification.services.notification_service import NotificationService, Priority as NotifPriority
+                template = "promotion_repeated" if action == "repeat" else "promotion_detained"
+                title = "Academic Decision – Repeat Notice" if action == "repeat" else "Important – Detention Notice"
+                body = f"You have been marked as '{action}' for the current academic year."
+                NotificationService.create_notification(
+                    notification_type="student_promoted",
+                    title=title,
+                    message=body,
+                    priority=NotifPriority.HIGH,
+                    target_user_ids=[student.user.id],
+                    sender=processed_by,
+                    metadata={
+                        "action": action,
+                        "student_id": student.id,
+                        "reason": reason,
+                    },
+                    send_email=True,
+                    send_realtime=True,
+                )
+            except Exception as e:
+                logger.warning(f"Failed to send {action} notification for student {student.id}: {e}")
+
             return promotion_log
     
     @staticmethod
@@ -337,6 +389,11 @@ class RepeatDetainService:
         with transaction.atomic():
             original_log = PromotionLog.objects.get(id=promotion_log_id)
             student = original_log.student
+            
+            # Restore student's class_assigned to original from_class
+            student.class_assigned = original_log.from_class
+            student.section = original_log.from_section
+            student.save()
             
             new_log = PromotionLog.objects.create(
                 student=student,
@@ -371,6 +428,27 @@ class RepeatDetainService:
                 }
             )
             
+            try:
+                from notification.services.notification_service import NotificationService, Priority as NotifPriority
+                NotificationService.create_notification(
+                    notification_type="student_promoted",
+                    title="Promotion Rolled Back",
+                    message=f"Your promotion has been rolled back. Class restored from {original_log.to_class} to {original_log.from_class}.",
+                    priority=NotifPriority.MEDIUM,
+                    target_user_ids=[student.user.id],
+                    sender=processed_by,
+                    metadata={
+                        "action": "rollback",
+                        "student_id": student.id,
+                        "original_log_id": promotion_log_id,
+                        "reason": reason,
+                    },
+                    send_email=True,
+                    send_realtime=True,
+                )
+            except Exception as e:
+                logger.warning(f"Failed to send rollback notification for student {student.id}: {e}")
+
             return new_log
 
 
@@ -404,13 +482,50 @@ class SessionRolloverService:
                 copy_options=copy_options or ["all"],
                 processed_by=processed_by
             )
-            
+
+            try:
+                from notification.services.notification_service import NotificationService, Priority as NotifPriority
+
+                NotificationService.create_notification(
+                    notification_type="student_promoted",
+                    title="Session Rollover Started",
+                    message=f"Rollover from {from_session.name} to {to_session.name} has started.",
+                    priority=NotifPriority.MEDIUM,
+                    target_user_ids=[processed_by.id] if processed_by else [],
+                    sender=processed_by,
+                    metadata={
+                        "action": "rollover_started",
+                        "from_session": from_session.name,
+                        "to_session": to_session.name,
+                    },
+                    send_email=False,
+                    send_realtime=True,
+                )
+            except Exception as e:
+                logger.warning(f"Failed to send rollover start notification: {e}")
+
             try:
                 SessionRolloverService._process_rollover(rollover)
                 rollover.status = "completed"
                 rollover.completed_at = timezone.now()
                 rollover.save()
-                
+
+                try:
+                    from notification.services.notification_service import NotificationService, Priority as NotifPriority
+                    NotificationService.create_notification(
+                        notification_type="student_promoted",
+                        title="Session Rollover Complete",
+                        message=f"Rollover from {from_session.name} to {to_session.name} completed successfully.",
+                        priority=NotifPriority.MEDIUM,
+                        target_user_ids=[processed_by.id] if processed_by else [],
+                        sender=processed_by,
+                        metadata={"action": "rollover_complete", "from_session": from_session.name, "to_session": to_session.name},
+                        send_email=False,
+                        send_realtime=True,
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to send rollover complete notification: {e}")
+
                 AuditLog.objects.create(
                     action="rollover",
                     model_name="AcademicSession",
@@ -423,6 +538,23 @@ class SessionRolloverService:
                 rollover.status = "failed"
                 rollover.error_log = [str(e)]
                 rollover.save()
+
+                try:
+                    from notification.services.notification_service import NotificationService, Priority as NotifPriority
+                    NotificationService.create_notification(
+                        notification_type="student_promoted",
+                        title="Session Rollover Failed — Action Required",
+                        message=f"Rollover from {from_session.name} to {to_session.name} failed: {str(e)[:200]}",
+                        priority=NotifPriority.CRITICAL,
+                        target_user_ids=[processed_by.id] if processed_by else [],
+                        sender=processed_by,
+                        metadata={"action": "rollover_failed", "error": str(e)[:500]},
+                        send_email=True,
+                        send_realtime=True,
+                    )
+                except Exception as notif_e:
+                    logger.warning(f"Failed to send rollover failure notification: {notif_e}")
+
                 raise
             
             return rollover
@@ -432,33 +564,44 @@ class SessionRolloverService:
         """Process session rollover operations."""
         from_session = rollover.from_session
         to_session = rollover.to_session
-        
-        if "subjects" not in rollover.copy_options:
+
+        options = set(rollover.copy_options or [])
+
+        if "all" in options:
+            SessionRolloverService._carry_forward_subjects(to_session, from_session)
+            SessionRolloverService._carry_forward_teacher_allocations(from_session, to_session)
+            SessionRolloverService._carry_forward_timetables(from_session, to_session)
+            SessionRolloverService._carry_forward_fee_structures(from_session, to_session)
+            SessionRolloverService._carry_forward_academic_settings(from_session, to_session)
             return
-        
-        SessionRolloverService._carry_forward_subjects(to_session)
-        SessionRolloverService._carry_forward_teacher_allocations(from_session, to_session)
-        SessionRolloverService._carry_forward_timetables(from_session, to_session)
-        SessionRolloverService._carry_forward_fee_structures(from_session, to_session)
-        SessionRolloverService._carry_forward_academic_settings(from_session, to_session)
+
+        if "subjects" in options:
+            SessionRolloverService._carry_forward_subjects(to_session, from_session)
+        if "teachers" in options:
+            SessionRolloverService._carry_forward_teacher_allocations(from_session, to_session)
+        if "timetables" in options:
+            SessionRolloverService._carry_forward_timetables(from_session, to_session)
+        if "fee_structures" in options:
+            SessionRolloverService._carry_forward_fee_structures(from_session, to_session)
+        if "classes" in options:
+            SessionRolloverService._carry_forward_academic_settings(from_session, to_session)
     
     @staticmethod
-    def _carry_forward_subjects(to_session):
-        """Carry forward subjects without duplication."""
-        existing_codes = Subject.objects.values_list("code", flat=True)
-        subjects = Subject.objects.all()
-        
-        for subject in subjects:
-            if subject.code not in existing_codes:
-                Subject.objects.create(
-                    name=subject.name,
-                    code=subject.code,
-                    tier=subject.tier,
-                    teacher_name=subject.teacher_name,
-                    description=subject.description,
-                    color=subject.color,
-                    progress=subject.progress
-                )
+    def _carry_forward_subjects(to_session, from_session=None):
+        """Carry forward student subject allocations (not master Subject records)."""
+        if not from_session:
+            return
+        allocations = StudentSubject.objects.filter(academic_session=from_session)
+        for alloc in allocations:
+            StudentSubject.objects.get_or_create(
+                student=alloc.student,
+                subject=alloc.subject,
+                academic_session=to_session,
+                defaults={
+                    "status": "not_selected",
+                    "assigned_by_admin": False,
+                }
+            )
     
     @staticmethod
     def _carry_forward_teacher_allocations(from_session, to_session):
@@ -478,31 +621,35 @@ class SessionRolloverService:
     
     @staticmethod
     def _carry_forward_timetables(from_session, to_session):
-        """Carry forward timetable allocations."""
+        """Carry forward timetable entries by creating fresh records."""
         from student.models import Timetable
         from student.models import StudentProfile
-        
+
         for student in StudentProfile.objects.exclude(class_assigned=""):
-            Timetable.objects.filter(
-                student=student,
-                academic_session=from_session
-            ).update(
-                academic_session=to_session
-            )
+            entries = Timetable.objects.filter(student=student)
+            for entry in entries:
+                Timetable.objects.create(
+                    student=entry.student,
+                    day_of_week=entry.day_of_week,
+                    start_time=entry.start_time,
+                    end_time=entry.end_time,
+                    subject=entry.subject,
+                    room=entry.room,
+                    is_library_session=entry.is_library_session,
+                )
     
     @staticmethod
     def _carry_forward_fee_structures(from_session, to_session):
         """Carry forward fee configurations."""
-        fee_structures = FeeStructure.objects.filter(session=from_session)
-        
+        fee_structures = FeeStructure.objects.filter(academic_session=from_session.name)
+
         for fs in fee_structures:
             FeeStructure.objects.create(
-                name=fs.name,
-                session=to_session,
-                description=fs.description,
-                components=fs.components,
+                class_name=fs.class_name,
+                academic_session=to_session.name,
+                late_fine_per_day=fs.late_fine_per_day,
+                gst_enabled=fs.gst_enabled,
                 is_active=fs.is_active,
-                effective_from=to_session.start_date
             )
     
     @staticmethod
@@ -590,9 +737,46 @@ class BulkPromotionService:
                 )
                 histories_to_create.append(history)
             
+# Update class_assigned for all students
+            students.update(class_assigned=target_class, section=data.get("target_section", ""))
+
             PromotionLog.objects.bulk_create(logs_to_create)
             StudentPromotionHistory.objects.bulk_create(histories_to_create)
-            
+
+            try:
+                from notification.services.notification_service import NotificationService, Priority as NotifPriority
+                from notification.services.realtime_manager import RealtimeManager
+                for student in students:
+                    NotificationService.create_notification(
+                        notification_type="student_promoted",
+                        title="Promotion Results Published",
+                        message=f"You have been promoted to {target_class}.",
+                        priority=NotifPriority.HIGH,
+                        target_user_ids=[student.user.id],
+                        sender=processed_by,
+                        metadata={
+                            "action": action,
+                            "to_class": target_class,
+                            "student_id": student.id,
+                        },
+                        send_email=True,
+                        send_realtime=True,
+                    )
+                if processed_by:
+                    NotificationService.create_notification(
+                        notification_type="student_promoted",
+                        title="Bulk Promotion Complete",
+                        message=f"Successfully processed {len(students)} students to {target_class}.",
+                        priority=NotifPriority.MEDIUM,
+                        target_user_ids=[processed_by.id],
+                        sender=processed_by,
+                        metadata={"count": len(students), "target_class": target_class},
+                        send_email=False,
+                        send_realtime=True,
+                    )
+            except Exception as e:
+                logger.warning(f"Failed to send bulk promotion notifications: {e}")
+
             return {
                 "students_processed": len(students),
                 "logs_created": len(logs_to_create),

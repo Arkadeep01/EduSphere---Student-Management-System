@@ -6,6 +6,9 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SITE_ID = 2
+
+# ASGI application for Channels
+ASGI_APPLICATION = "eduSphere.asgi.application"
 SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "FALSE").upper() == "TRUE"
 
@@ -44,6 +47,10 @@ INSTALLED_APPS = [
     "teacher",
     "administration",
     "staff",
+    "notification",
+
+    # Channels
+    "channels",
 
 ]
 
@@ -207,6 +214,59 @@ SIMPLE_JWT = {
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",
 }
+
+# Redis Configuration
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+
+# Try to use Redis if available, fall back to local memory cache
+try:
+    import redis
+    r = redis.from_url(REDIS_URL)
+    r.ping()
+    REDIS_AVAILABLE = True
+except Exception:
+    REDIS_AVAILABLE = False
+
+if REDIS_AVAILABLE:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": REDIS_URL,
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            },
+            "KEY_PREFIX": "edusphere",
+        }
+    }
+    SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+    SESSION_CACHE_ALIAS = "default"
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        }
+    }
+
+# Django Channels Layer
+if REDIS_AVAILABLE:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [REDIS_URL],
+                "symmetric_encryption": False,
+            },
+        },
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        },
+    }
+
+# Frontend URL for email links
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 # Internationalization
 LANGUAGE_CODE = "en-us"

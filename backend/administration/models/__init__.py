@@ -16,3 +16,4 @@ from .staff import StaffProfile
 from .processing import ScriptProcessing, ScriptBatchProcessing
 from .results import GradeBoundary, ResultPublication, StudentResult
 from .promotion import PromotionLog, StudentPromotionHistory, AcademicSessionRollover, PromotionRule
+from .rechecking import BlindRecheckingRequest

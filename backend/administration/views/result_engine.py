@@ -35,6 +35,8 @@ from administration.services.pdf_engine import (
     generate_printable_result_pdf,
 )
 from administration.models.audit_log import AuditLog
+from notification.services.notification_service import NotificationService
+from notification.models import NotificationType, Priority, TargetAudience
 
 
 # ---------------------------------------------------------------------------
@@ -64,6 +66,19 @@ class GradeBoundaryListView(APIView):
             user=request.user,
             description="Grade boundaries updated",
         )
+        try:
+            NotificationService.create_notification(
+                notification_type=NotificationType.RESULTS_GRADES_UPDATED,
+                title="Grade Boundaries Updated",
+                message=f"{len(boundaries)} grade boundaries updated by {request.user.email}.",
+                sender=request.user,
+                priority=Priority.MEDIUM,
+                target_audience=TargetAudience.ALL_STUDENTS,
+                send_email=False,
+                send_realtime=True,
+            )
+        except Exception:
+            pass
         return Response(result.data)
 
 
@@ -205,6 +220,20 @@ class ComputeRankView(APIView):
             return Response({"detail": "Publication not found."}, status=status.HTTP_404_NOT_FOUND)
         compute_merit_rank(publication)
         compute_class_ranks(publication)
+        try:
+            NotificationService.create_notification(
+                notification_type=NotificationType.RESULTS_RANK_COMPUTED,
+                title="Ranks Computed",
+                message=f"Merit and class ranks computed for {publication.exam.name}.",
+                sender=request.user,
+                priority=Priority.MEDIUM,
+                target_audience=TargetAudience.SPECIFIC_CLASS,
+                target_class=publication.exam.classes[0] if publication.exam.classes else "",
+                send_email=False,
+                send_realtime=True,
+            )
+        except Exception:
+            pass
         return Response({"detail": "Ranks computed."})
 
 

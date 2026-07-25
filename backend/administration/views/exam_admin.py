@@ -14,7 +14,8 @@ from administration.serializers.exam import (
 )
 from administration.models import AnswerScriptUpload
 from administration.models.audit_log import AuditLog
-from administration.models.notification import NotificationBroadcast
+from notification.services.notification_service import NotificationService
+from notification.models import NotificationType, Priority, TargetAudience
 
 
 class ExamListView(APIView):
@@ -136,14 +137,19 @@ class AdminVerifyBatchView(APIView):
             user=request.user,
             description=f"Admin verified batch {batch_id} ({count} scripts)",
         )
-        NotificationBroadcast.objects.create(
-            title="Batch Verified",
-            message=f"Admin verified batch {batch_id} ({count} scripts).",
-            sent_by=request.user,
-            recipient_type="all_teachers",
-            status="sent",
-            sent_at=now,
-        )
+        try:
+            NotificationService.create_notification(
+                notification_type=NotificationType.SCRIPTS_APPROVED,
+                title="Batch Verified",
+                message=f"Admin verified batch {batch_id} ({count} scripts).",
+                sender=request.user,
+                priority=Priority.MEDIUM,
+                target_audience=TargetAudience.ALL_TEACHERS,
+                send_email=False,
+                send_realtime=True,
+            )
+        except Exception:
+            pass
         return Response({"batch_id": batch_id, "verified_count": count})
 
 
@@ -167,14 +173,19 @@ class AdminRejectBatchView(APIView):
             user=request.user,
             description=f"Admin rejected batch {batch_id} ({count} scripts): {reason}",
         )
-        NotificationBroadcast.objects.create(
-            title="Batch Rejected",
-            message=f"Admin rejected batch {batch_id}. Reason: {reason}",
-            sent_by=request.user,
-            recipient_type="all_teachers",
-            status="sent",
-            sent_at=now,
-        )
+        try:
+            NotificationService.create_notification(
+                notification_type=NotificationType.SCRIPTS_BATCH_FAILED,
+                title="Batch Rejected",
+                message=f"Admin rejected batch {batch_id}. Reason: {reason}",
+                sender=request.user,
+                priority=Priority.HIGH,
+                target_audience=TargetAudience.ALL_TEACHERS,
+                send_email=False,
+                send_realtime=True,
+            )
+        except Exception:
+            pass
         return Response({"batch_id": batch_id, "rejected_count": count})
 
 
@@ -204,12 +215,17 @@ class AdminAssignScriptsView(APIView):
             user=request.user,
             description=f"Admin assigned {count} scripts to teacher {teacher.user.email}",
         )
-        NotificationBroadcast.objects.create(
-            title="Scripts Assigned for Evaluation",
-            message=f"{count} answer scripts assigned to you for evaluation.",
-            sent_by=request.user,
-            recipient_type="all_teachers",
-            status="sent",
-            sent_at=timezone.now(),
-        )
+        try:
+            NotificationService.create_notification(
+                notification_type=NotificationType.SCRIPTS_ASSIGNED,
+                title="Scripts Assigned for Evaluation",
+                message=f"{count} answer scripts assigned to you for evaluation.",
+                sender=request.user,
+                priority=Priority.MEDIUM,
+                target_user_ids=[teacher.user_id],
+                send_email=False,
+                send_realtime=True,
+            )
+        except Exception:
+            pass
         return Response({"assigned_count": count})

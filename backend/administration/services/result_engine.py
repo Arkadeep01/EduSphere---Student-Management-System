@@ -12,7 +12,8 @@ from administration.models.results import GradeBoundary, ResultPublication, Stud
 from administration.models.academic import AcademicSession
 from administration.models.letterhead import Letterhead
 from administration.models.audit_log import AuditLog
-from administration.models.notification import NotificationBroadcast
+from notification.services.notification_service import NotificationService
+from notification.models import NotificationType, Priority, TargetAudience
 from student.models import StudentProfile
 
 
@@ -143,6 +144,20 @@ def generate_all_results(publication, user=None):
     compute_merit_rank(publication)
     compute_class_ranks(publication)
     assign_publication_dates(publication, user)
+    try:
+        NotificationService.create_notification(
+            notification_type=NotificationType.RESULTS_GENERATED,
+            title="Results Generated",
+            message=f"{len(results)} student results generated for {publication.exam.name}.",
+            sender=user,
+            priority=Priority.MEDIUM,
+            target_audience=TargetAudience.ALL_STUDENTS if publication.exam.classes else "",
+            target_class=publication.exam.classes[0] if publication.exam.classes else "",
+            send_email=False,
+            send_realtime=True,
+        )
+    except Exception:
+        pass
     return results
 
 
@@ -189,16 +204,28 @@ def transition_workflow(publication, target_status, user=None):
         publication.locked_at = timezone.now()
         publication.locked_by = user
         lock_student_results(publication)
-    notification_title = f"Results {target_status.title()}"
-    notification_msg = f"Results for {publication.exam.name} are now {target_status}."
-    NotificationBroadcast.objects.create(
-        title=notification_title,
-        message=notification_msg,
-        sent_by=user,
-        recipient_type="all_students",
-        status="sent",
-        sent_at=timezone.now(),
-    )
+    notification_type_map = {
+        "draft": NotificationType.RESULTS_DRAFTED,
+        "review": NotificationType.RESULTS_REVIEWED,
+        "approved": NotificationType.RESULTS_APPROVED,
+        "published": NotificationType.RESULTS_PUBLISHED,
+    }
+    notif_type = notification_type_map.get(target_status, NotificationType.RESULTS_PUBLISHED)
+    try:
+        NotificationService.create_notification(
+            notification_type=notif_type,
+            title=f"Results {target_status.title()}",
+            message=f"Results for {publication.exam.name} are now {target_status}.",
+            sender=user,
+            priority=Priority.HIGH if target_status == "published" else Priority.MEDIUM,
+            target_audience=TargetAudience.ALL_STUDENTS if target_status == "published" else TargetAudience.SPECIFIC_CLASS,
+            target_class=publication.exam.classes[0] if publication.exam.classes else "",
+            send_email=(target_status == "published"),
+            send_realtime=True,
+        )
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Failed to send result notification: {e}")
     AuditLog.objects.create(
         action="update",
         model_name="ResultPublication",

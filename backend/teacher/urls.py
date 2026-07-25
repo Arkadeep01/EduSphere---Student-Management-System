@@ -1,5 +1,11 @@
 from django.urls import path
 from . import views
+from administration.views.rechecking import (
+    TeacherRecheckingQueueView,
+    TeacherRecheckingHistoryView,
+    TeacherRecheckingDraftView,
+    TeacherRecheckingSubmitView,
+)
 
 urlpatterns = [
     path("dashboard/", views.TeacherDashboard.as_view(), name="teacher-dashboard"),
@@ -32,4 +38,8 @@ urlpatterns = [
 
     # Exams
     path("exams/", views.TeacherExamListView.as_view(), name="teacher-exams"),
+    path("rechecking/queue/", TeacherRecheckingQueueView.as_view(), name="teacher-rechecking-queue"),
+    path("rechecking/history/", TeacherRecheckingHistoryView.as_view(), name="teacher-rechecking-history"),
+    path("rechecking/<int:request_id>/draft/", TeacherRecheckingDraftView.as_view(), name="teacher-rechecking-draft"),
+    path("rechecking/<int:request_id>/submit/", TeacherRecheckingSubmitView.as_view(), name="teacher-rechecking-submit"),
 ]

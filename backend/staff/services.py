@@ -2,7 +2,8 @@ import uuid
 from django.utils import timezone
 from administration.models import AnswerScriptUpload
 from administration.models.audit_log import AuditLog
-from administration.models.notification import NotificationBroadcast
+from notification.services.notification_service import NotificationService
+from notification.models import NotificationType, Priority, TargetAudience
 
 
 def create_upload_batch(exam, subject, script_data_list, uploaded_by):
@@ -45,14 +46,19 @@ def create_upload_batch(exam, subject, script_data_list, uploaded_by):
         user=uploaded_by,
         description=f"Staff batch upload {batch_id} with {len(scripts)} scripts for {exam.name} - {subject.name}",
     )
-    NotificationBroadcast.objects.create(
-        title="New Answer Script Batch Uploaded",
-        message=f"Staff {uploaded_by.email} uploaded batch {batch_id} for {exam.name}.",
-        sent_by=uploaded_by,
-        recipient_type="all_teachers",
-        status="sent",
-        sent_at=now,
-    )
+    try:
+        NotificationService.create_notification(
+            notification_type=NotificationType.SCRIPTS_BULK_UPLOADED,
+            title="New Answer Script Batch Uploaded",
+            message=f"Staff {uploaded_by.email} uploaded batch {batch_id} for {exam.name}.",
+            sender=uploaded_by,
+            priority=Priority.MEDIUM,
+            target_audience=TargetAudience.ALL_TEACHERS,
+            send_email=False,
+            send_realtime=True,
+        )
+    except Exception:
+        pass
     return batch_id, scripts
 
 
