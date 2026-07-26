@@ -149,7 +149,9 @@ class NotificationDetailView(APIView):
 
     def get(self, request, notification_id):
         try:
-            notification = Notification.objects.get(id=notification_id, user=request.user)
+            notification = Notification.objects.get(
+                id=notification_id, recipients__user=request.user
+            )
         except Notification.DoesNotExist:
             return Response(
                 {"error": "Notification not found."},

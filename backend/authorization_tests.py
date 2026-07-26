@@ -26,7 +26,8 @@ from administration.models import (
 from administration.models.results import GradeBoundary, ResultPublication, StudentResult
 from administration.models.exam import Exam, PublishedResult
 from student.models import Assignment, AssignmentSubmission
-from notification.models import Notification
+from notification.models import Notification, NotificationRecipient
+from rest_framework_simplejwt.tokens import RefreshToken
 
 import json
 
@@ -134,16 +135,18 @@ class AuthorizationBaseTest(TestCase):
         )
 
         # Create notification for student A
-        cls.notif_a = Notification.objects.create(
-            user=cls.student_a_user,
+        notif_a_obj = Notification.objects.create(
             title="Test Notification A",
             message="For student A only",
         )
-        cls.notif_b = Notification.objects.create(
-            user=cls.student_b_user,
+        NotificationRecipient.objects.create(notification=notif_a_obj, user=cls.student_a_user)
+        cls.notif_a = notif_a_obj
+        notif_b_obj = Notification.objects.create(
             title="Test Notification B",
             message="For student B only",
         )
+        NotificationRecipient.objects.create(notification=notif_b_obj, user=cls.student_b_user)
+        cls.notif_b = notif_b_obj
 
         # Create assignment
         cls.assignment = Assignment.objects.create(
@@ -169,12 +172,14 @@ class AuthorizationBaseTest(TestCase):
     def _login(self, user):
         """Login a user and return authenticated client."""
         client = APIClient()
-        response = client.post("/api/auth/login/", {
+        response = client.post("/api/login/", {
             "email": user.email,
             "password": "testpass123",
+            "selected_role": user.role,
         }, format="json")
         if response.status_code == 200:
-            token = response.data.get("access")
+            data = json.loads(response.content)
+            token = data.get("access")
             if token:
                 client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
         return client
@@ -226,14 +231,19 @@ class InactiveAccountTests(AuthorizationBaseTest):
     """Test that inactive accounts cannot access APIs."""
 
     def test_inactive_student_blocked(self):
-        client = self._login(self.inactive_student)
+        client = APIClient()
+        refresh = RefreshToken.for_user(self.inactive_student)
+        client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
         response = client.get("/api/student/dashboard/")
-        self.assertEqual(response.status_code, 403)
+        # SimpleJWT rejects inactive users at auth layer (401) before permission check (403)
+        self.assertIn(response.status_code, [401, 403])
 
     def test_inactive_admin_blocked(self):
-        client = self._login(self.inactive_admin)
+        client = APIClient()
+        refresh = RefreshToken.for_user(self.inactive_admin)
+        client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
         response = client.get("/api/admin/dashboard/summary/")
-        self.assertEqual(response.status_code, 403)
+        self.assertIn(response.status_code, [401, 403])
 
     def test_unauthenticated_blocked(self):
         client = APIClient()
@@ -250,13 +260,13 @@ class StudentIDORTests(AuthorizationBaseTest):
 
     def test_student_cannot_access_other_notification(self):
         client = self._login(self.student_a_user)
-        response = client.get(f"/api/notifications/{self.notif_b.id}/")
+        response = client.get(f"/api/notifications/notifications/{self.notif_b.id}/")
         self.assertEqual(response.status_code, 404)
         # Should get 404 not 403 to avoid information leakage
 
     def test_student_can_access_own_notification(self):
         client = self._login(self.student_a_user)
-        response = client.get(f"/api/notifications/{self.notif_a.id}/")
+        response = client.get(f"/api/notifications/notifications/{self.notif_a.id}/")
         self.assertEqual(response.status_code, 200)
 
 
@@ -332,7 +342,7 @@ class TeacherIDORTests(AuthorizationBaseTest):
     def test_teacher_cannot_grade_other_subject_submissions(self):
         client = self._login(self.teacher_a_user)
         phys_submission = AssignmentSubmission.objects.create(
-            assignment=self.assignment, student=self.student_a,
+            assignment=self.assignment, student=self.student_b,
             status="submitted",
         )
         # This should be accessible because the assignment is Math (Teacher A's subject)
@@ -428,11 +438,12 @@ class PublishedResultTests(AuthorizationBaseTest):
 
     def test_grade_boundaries_locked_after_publication(self):
         client = self._login(self.admin_user)
-        # Create a published result publication
+        exam = Exam.objects.create(
+            name="Math Final", subject=self.subject_math,
+            date=timezone.now().date(),
+        )
         pub = ResultPublication.objects.create(
-            name="Test Publication",
-            exam=None,
-            status="published",
+            exam=exam,
             workflow_status="published",
         )
         response = client.put("/api/admin/results/grade-boundaries/", [
@@ -443,11 +454,12 @@ class PublishedResultTests(AuthorizationBaseTest):
 
     def test_bulk_publish_requires_ready_state(self):
         client = self._login(self.admin_user)
-        # Create a publication in draft state
+        exam = Exam.objects.create(
+            name="Math Draft", subject=self.subject_math,
+            date=timezone.now().date(),
+        )
         pub = ResultPublication.objects.create(
-            name="Draft Publication",
-            exam=None,
-            status="draft",
+            exam=exam,
             workflow_status="draft",
         )
         response = client.post(f"/api/admin/results/publications/{pub.id}/bulk-publish/", {}, format="json")

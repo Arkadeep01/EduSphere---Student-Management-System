@@ -25,6 +25,7 @@ urlpatterns = [
     path("api/change-password/", change_password, name="change_password"),
     path("api/force-password-change/", force_password_change, name="force_password_change"),
     path("api/resend-credentials/", resend_credentials_api, name="resend_credentials"),
+    path("api/register/", register_api, name="register_api"),
     path("api/test/", test_api),
     # OAuth
     path("api/oauth/init/<str:provider>/", oauth_init_view, name="oauth_init"),

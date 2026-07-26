@@ -80,9 +80,12 @@ class ClassStudentsView(APIView):
     def get(self, request, class_name):
         profile = get_or_create_teacher_profile(request.user)
         from administration.models.teacher import TeacherSubjectAllocation
-        is_allocated = TeacherSubjectAllocation.objects.filter(
-            teacher=profile, assigned_classes__contains=class_name, is_active=True
-        ).exists()
+        allocations = TeacherSubjectAllocation.objects.filter(
+            teacher=profile, is_active=True
+        )
+        is_allocated = any(
+            class_name in (a.assigned_classes or []) for a in allocations
+        )
         if not is_allocated:
             return Response(
                 {"error": "You are not allocated to this class."},
