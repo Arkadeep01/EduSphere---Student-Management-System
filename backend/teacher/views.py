@@ -11,19 +11,21 @@ from student.services import create_assignment, evaluate_submission
 from .models import (
     TeacherProfile, TeacherClassAssignment, TimetableEntry,
     LibrarySession, Resource, Chapter, Topic, ClassChapterProgress,
+    TeacherResignation,
 )
 from .serializers import (
     TeacherProfileSerializer, TeacherClassAssignmentSerializer,
     TimetableEntrySerializer, LibrarySessionSerializer,
     ResourceSerializer, AnswerScriptSerializer,
     ChapterSerializer, TopicSerializer, ClassChapterProgressSerializer,
+    TeacherResignationSerializer, TeacherResignationCreateSerializer,
 )
 from .services import (
     get_or_create_teacher_profile, assign_class_to_teacher,
     create_timetable_entry, convert_to_library_session,
     bulk_mark_attendance, save_draft_marks, submit_evaluation,
     upload_resource, replace_resource, delete_resource,
-    increment_download_count,
+    submit_resignation, list_teacher_resignations,
 )
 from .selectors import (
     get_teacher_dashboard_data, get_assigned_classes,
@@ -71,27 +73,24 @@ class TeacherClassView(APIView):
         serializer = TeacherClassAssignmentSerializer(classes, many=True)
         return Response(serializer.data)
 
-    def post(self, request):
-        profile = get_or_create_teacher_profile(request.user)
-        class_name = request.data.get("class_name")
-        if not class_name:
-            return Response(
-                {"error": "class_name is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        assignment = assign_class_to_teacher(profile, class_name)
-        serializer = TeacherClassAssignmentSerializer(assignment)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 
 class ClassStudentsView(APIView):
     permission_classes = [IsAuthenticated, IsTeacher]
 
     def get(self, request, class_name):
         profile = get_or_create_teacher_profile(request.user)
+        from administration.models.teacher import TeacherSubjectAllocation
+        is_allocated = TeacherSubjectAllocation.objects.filter(
+            teacher=profile, assigned_classes__contains=class_name, is_active=True
+        ).exists()
+        if not is_allocated:
+            return Response(
+                {"error": "You are not allocated to this class."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         students = get_students_in_class(profile, class_name)
-        from student.serializers import StudentProfileSerializer
-        serializer = StudentProfileSerializer(students, many=True)
+        from student.serializers import TeacherStudentProfileSerializer
+        serializer = TeacherStudentProfileSerializer(students, many=True)
         return Response(serializer.data)
 
 
@@ -206,11 +205,12 @@ class DraftMarkView(APIView):
 
     def post(self, request, script_id):
         from administration.models import AnswerScriptUpload as AdminAnswerScriptUpload
+        profile = get_or_create_teacher_profile(request.user)
         try:
-            script = AdminAnswerScriptUpload.objects.get(id=script_id)
+            script = AdminAnswerScriptUpload.objects.get(id=script_id, teacher=profile)
         except AdminAnswerScriptUpload.DoesNotExist:
             return Response(
-                {"error": "Answer script not found."},
+                {"error": "Answer script not found or not assigned to you."},
                 status=status.HTTP_404_NOT_FOUND,
             )
         if script.upload_status in ("evaluation_completed", "archived"):
@@ -234,11 +234,12 @@ class EvaluationSubmitView(APIView):
 
     def post(self, request, script_id):
         from administration.models import AnswerScriptUpload as AdminAnswerScriptUpload
+        profile = get_or_create_teacher_profile(request.user)
         try:
-            script = AdminAnswerScriptUpload.objects.get(id=script_id)
+            script = AdminAnswerScriptUpload.objects.get(id=script_id, teacher=profile)
         except AdminAnswerScriptUpload.DoesNotExist:
             return Response(
-                {"error": "Answer script not found."},
+                {"error": "Answer script not found or not assigned to you."},
                 status=status.HTTP_404_NOT_FOUND,
             )
         if script.upload_status in ("evaluation_completed", "archived"):
@@ -342,11 +343,14 @@ class AssignmentSubmissionsView(APIView):
     permission_classes = [IsAuthenticated, IsTeacher]
 
     def get(self, request, assignment_id):
+        profile = get_or_create_teacher_profile(request.user)
+        from .selectors import get_teacher_subjects
+        teacher_subjects = get_teacher_subjects(profile)
         try:
-            assignment = Assignment.objects.get(id=assignment_id)
+            assignment = Assignment.objects.get(id=assignment_id, subject__in=teacher_subjects)
         except Assignment.DoesNotExist:
             return Response(
-                {"error": "Assignment not found."},
+                {"error": "Assignment not found or not in your subjects."},
                 status=status.HTTP_404_NOT_FOUND,
             )
         submissions = AssignmentSubmission.objects.filter(assignment=assignment)
@@ -358,11 +362,16 @@ class SubmissionMarksView(APIView):
     permission_classes = [IsAuthenticated, IsTeacher]
 
     def post(self, request, submission_id):
+        profile = get_or_create_teacher_profile(request.user)
+        from .selectors import get_teacher_subjects
+        teacher_subjects = get_teacher_subjects(profile)
         try:
-            submission = AssignmentSubmission.objects.get(id=submission_id)
+            submission = AssignmentSubmission.objects.select_related("assignment").get(
+                id=submission_id, assignment__subject__in=teacher_subjects
+            )
         except AssignmentSubmission.DoesNotExist:
             return Response(
-                {"error": "Submission not found."},
+                {"error": "Submission not found or not in your subjects."},
                 status=status.HTTP_404_NOT_FOUND,
             )
         grade = request.data.get("grade")
@@ -448,6 +457,7 @@ class ResourceDownloadView(APIView):
             resource = Resource.objects.get(id=resource_id, teacher=profile)
         except Resource.DoesNotExist:
             return Response({"error": "Resource not found."}, status=status.HTTP_404_NOT_FOUND)
+        from .services import increment_download_count
         increment_download_count(resource)
         from django.http import FileResponse
         return FileResponse(resource.file, as_attachment=True, filename=resource.file.name.split("/")[-1])
@@ -506,8 +516,19 @@ class TeacherSubjectChaptersView(APIView):
 class TeacherSubjectChapterDetailView(APIView):
     permission_classes = [IsAuthenticated, IsTeacher]
 
+    def get_object(self, chapter_id, profile):
+        from .selectors import get_teacher_subjects
+        teacher_subjects = get_teacher_subjects(profile)
+        try:
+            return Chapter.objects.get(id=chapter_id, subject__in=teacher_subjects)
+        except Chapter.DoesNotExist:
+            return None
+
     def patch(self, request, chapter_id):
-        chapter = get_object_or_404(Chapter, id=chapter_id)
+        profile = get_or_create_teacher_profile(request.user)
+        chapter = self.get_object(chapter_id, profile)
+        if not chapter:
+            return Response({"error": "Chapter not found."}, status=status.HTTP_404_NOT_FOUND)
         for attr in ["title", "description", "order", "progress_weight"]:
             if attr in request.data:
                 setattr(chapter, attr, request.data[attr])
@@ -516,7 +537,10 @@ class TeacherSubjectChapterDetailView(APIView):
         return Response(serializer.data)
 
     def delete(self, request, chapter_id):
-        chapter = get_object_or_404(Chapter, id=chapter_id)
+        profile = get_or_create_teacher_profile(request.user)
+        chapter = self.get_object(chapter_id, profile)
+        if not chapter:
+            return Response({"error": "Chapter not found."}, status=status.HTTP_404_NOT_FOUND)
         chapter.delete()
         return Response(status=204)
 
@@ -524,8 +548,19 @@ class TeacherSubjectChapterDetailView(APIView):
 class TeacherTopicView(APIView):
     permission_classes = [IsAuthenticated, IsTeacher]
 
+    def get_chapter(self, chapter_id, profile):
+        from .selectors import get_teacher_subjects
+        teacher_subjects = get_teacher_subjects(profile)
+        try:
+            return Chapter.objects.get(id=chapter_id, subject__in=teacher_subjects)
+        except Chapter.DoesNotExist:
+            return None
+
     def post(self, request, chapter_id):
-        chapter = get_object_or_404(Chapter, id=chapter_id)
+        profile = get_or_create_teacher_profile(request.user)
+        chapter = self.get_chapter(chapter_id, profile)
+        if not chapter:
+            return Response({"error": "Chapter not found."}, status=status.HTTP_404_NOT_FOUND)
         topic = Topic.objects.create(
             chapter=chapter,
             title=request.data["title"],
@@ -536,6 +571,10 @@ class TeacherTopicView(APIView):
         return Response(serializer.data, status=201)
 
     def patch(self, request, chapter_id, topic_id):
+        profile = get_or_create_teacher_profile(request.user)
+        chapter = self.get_chapter(chapter_id, profile)
+        if not chapter:
+            return Response({"error": "Chapter not found."}, status=status.HTTP_404_NOT_FOUND)
         topic = get_object_or_404(Topic, id=topic_id, chapter_id=chapter_id)
         for attr in ["title", "description", "order", "is_completed"]:
             if attr in request.data:
@@ -545,6 +584,10 @@ class TeacherTopicView(APIView):
         return Response(serializer.data)
 
     def delete(self, request, chapter_id, topic_id):
+        profile = get_or_create_teacher_profile(request.user)
+        chapter = self.get_chapter(chapter_id, profile)
+        if not chapter:
+            return Response({"error": "Chapter not found."}, status=status.HTTP_404_NOT_FOUND)
         topic = get_object_or_404(Topic, id=topic_id, chapter_id=chapter_id)
         topic.delete()
         return Response(status=204)
@@ -596,4 +639,25 @@ class TeacherExamListView(APIView):
         exams = Exam.objects.filter(classes__overlap=list(class_names)).order_by("-date")
         from administration.serializers import ExamSerializer as AdminExamSerializer
         serializer = AdminExamSerializer(exams, many=True)
+        return Response(serializer.data)
+
+
+# ─── Teacher Resignation ────────────────────────────────────────────────
+
+class TeacherResignationCreateView(APIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def post(self, request):
+        profile = get_or_create_teacher_profile(request.user)
+        ser = TeacherResignationCreateSerializer(data=request.data)
+        if not ser.is_valid():
+            return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+        resignation = submit_resignation(profile, ser.validated_data)
+        result = TeacherResignationSerializer(resignation)
+        return Response(result.data, status=status.HTTP_201_CREATED)
+
+    def get(self, request):
+        profile = get_or_create_teacher_profile(request.user)
+        resignations = list_teacher_resignations(teacher_profile=profile)
+        serializer = TeacherResignationSerializer(resignations, many=True)
         return Response(serializer.data)

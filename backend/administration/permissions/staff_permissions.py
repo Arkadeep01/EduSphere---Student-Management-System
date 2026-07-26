@@ -3,6 +3,9 @@ from rest_framework.permissions import BasePermission
 
 class IsStaff(BasePermission):
     def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
-            return False
-        return request.user.role == "staff"
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and request.user.is_active
+            and request.user.role == "staff"
+        )

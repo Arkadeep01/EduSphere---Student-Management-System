@@ -10,8 +10,15 @@ from administration.serializers.fee import (
     StudentFeePaymentSerializer,
     StudentScholarshipSerializer,
     FinanceActivityLogSerializer,
+    PaymentRecordSerializer,
+    CorrectionRequestSerializer,
+    ClearanceDeadlineSerializer,
+    ReminderSerializer,
+    FeeGenerateSerializer,
 )
 
+
+# ── Fee Structure ──────────────────────────────────────────────────────────
 
 class FeeStructureListView(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]
@@ -62,6 +69,28 @@ class FeeStructureDuplicateView(APIView):
         return Response(serializer.data)
 
 
+# ── Fee Generation ─────────────────────────────────────────────────────────
+
+class FeeGenerateView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request):
+        ser = FeeGenerateSerializer(data=request.data)
+        if not ser.is_valid():
+            return Response(ser.errors, status=400)
+        try:
+            result = FeeAdminService.generate_fees_for_class(
+                ser.validated_data["class_name"],
+                ser.validated_data.get("academic_session", "2026-27"),
+                request.user,
+            )
+            return Response(result)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=400)
+
+
+# ── Payments ───────────────────────────────────────────────────────────────
+
 class FeePaymentListView(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]
 
@@ -75,15 +104,37 @@ class FeePaymentListView(APIView):
         return Response(serializer.data)
 
 
+class FeePaymentRecordView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request):
+        ser = PaymentRecordSerializer(data=request.data)
+        if not ser.is_valid():
+            return Response(ser.errors, status=400)
+        try:
+            payment = FeeAdminService.record_payment(
+                ser.validated_data["payment_id"],
+                request.user,
+                ser.validated_data,
+            )
+            serializer = StudentFeePaymentSerializer(payment)
+            return Response(serializer.data)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=400)
+
+
 class FeePaymentVerifyView(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]
 
     def post(self, request, payment_id):
-        payment = FeeAdminService.verify_payment(
-            payment_id, request.user, request.data.get("receipt_number")
-        )
-        serializer = StudentFeePaymentSerializer(payment)
-        return Response(serializer.data)
+        try:
+            payment = FeeAdminService.verify_payment(
+                payment_id, request.user, request.data.get("receipt_number")
+            )
+            serializer = StudentFeePaymentSerializer(payment)
+            return Response(serializer.data)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=400)
 
 
 class FeePaymentRejectView(APIView):
@@ -95,23 +146,100 @@ class FeePaymentRejectView(APIView):
         return Response(serializer.data)
 
 
+# ── Correction / Refund ────────────────────────────────────────────────────
+
+class FeeCorrectionRequestView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request):
+        ser = CorrectionRequestSerializer(data=request.data)
+        if not ser.is_valid():
+            return Response(ser.errors, status=400)
+        try:
+            payment = FeeAdminService.request_correction(
+                ser.validated_data["payment_id"],
+                request.user,
+                ser.validated_data["reason"],
+            )
+            serializer = StudentFeePaymentSerializer(payment)
+            return Response(serializer.data)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=400)
+
+
+class FeeCorrectionApproveView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request, payment_id):
+        try:
+            payment = FeeAdminService.approve_correction(payment_id, request.user)
+            serializer = StudentFeePaymentSerializer(payment)
+            return Response(serializer.data)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=400)
+
+
+class FeeRefundRequestView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request):
+        ser = CorrectionRequestSerializer(data=request.data)
+        if not ser.is_valid():
+            return Response(ser.errors, status=400)
+        try:
+            payment = FeeAdminService.request_refund(
+                ser.validated_data["payment_id"],
+                request.user,
+                ser.validated_data["reason"],
+            )
+            serializer = StudentFeePaymentSerializer(payment)
+            return Response(serializer.data)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=400)
+
+
+class FeeRefundApproveView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request, payment_id):
+        try:
+            payment = FeeAdminService.approve_refund(payment_id, request.user)
+            serializer = StudentFeePaymentSerializer(payment)
+            return Response(serializer.data)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=400)
+
+
+# ── Backward-compat Refund views ──────────────────────────────────────────
+
 class FeeRefundInitiateView(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]
 
     def post(self, request, payment_id):
-        payment = FeeAdminService.initiate_refund(payment_id, request.user)
-        serializer = StudentFeePaymentSerializer(payment)
-        return Response(serializer.data)
+        try:
+            payment = FeeAdminService.request_refund(
+                payment_id, request.user,
+                request.data.get("reason", "Admin initiated refund"),
+            )
+            serializer = StudentFeePaymentSerializer(payment)
+            return Response(serializer.data)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=400)
 
 
 class FeeRefundCompleteView(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]
 
     def post(self, request, payment_id):
-        payment = FeeAdminService.complete_refund(payment_id, request.user)
-        serializer = StudentFeePaymentSerializer(payment)
-        return Response(serializer.data)
+        try:
+            payment = FeeAdminService.approve_refund(payment_id, request.user)
+            serializer = StudentFeePaymentSerializer(payment)
+            return Response(serializer.data)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=400)
 
+
+# ── Scholarships ───────────────────────────────────────────────────────────
 
 class ScholarshipListView(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]
@@ -136,6 +264,8 @@ class ScholarshipRevokeView(APIView):
         return Response(serializer.data)
 
 
+# ── Analytics ──────────────────────────────────────────────────────────────
+
 class FeeAnalyticsView(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]
 
@@ -156,16 +286,23 @@ class FeeActivityLogView(APIView):
         return Response(serializer.data)
 
 
+# ── Student Ledger ─────────────────────────────────────────────────────────
+
 class StudentFeeLedgerView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        ledger = FeeAdminService.get_student_ledger(request.user.student_profile.id)
-        return Response(ledger)
+        student_id = request.user.student_profile.id
+        try:
+            ledger = FeeAdminService.get_student_ledger(student_id, requesting_user=request.user)
+            return Response(ledger)
+        except PermissionError as e:
+            return Response({"error": str(e)}, status=403)
 
     def post(self, request):
+        student_id = request.user.student_profile.id
         FeeAdminService.record_offline_payment(
-            student_id=request.user.student_profile.id,
+            student_id=student_id,
             month=request.data["month"],
             amount=request.data["amount"],
             payment_method=request.data["payment_method"],
@@ -174,6 +311,8 @@ class StudentFeeLedgerView(APIView):
         return Response({"status": "pending_verification"}, status=status.HTTP_201_CREATED)
 
 
+# ── Receipt ────────────────────────────────────────────────────────────────
+
 class FeeReceiptView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -181,6 +320,11 @@ class FeeReceiptView(APIView):
         from django.shortcuts import get_object_or_404
         from administration.models.fee import StudentFeePayment
         payment = get_object_or_404(StudentFeePayment, id=payment_id)
+
+        if hasattr(request.user, "student_profile"):
+            if payment.student_id != request.user.student_profile.id:
+                return Response({"error": "Access denied"}, status=403)
+
         student = payment.student
         receipt_html = f"""<!DOCTYPE html><html><head><meta charset="utf-8"><title>Receipt</title>
 <style>
@@ -199,17 +343,86 @@ body {{ font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; }}
 <div class="header"><h1>EduSphere Academy</h1><p>Fee Payment Receipt</p></div>
 <div class="row"><span class="label">Receipt No</span><span class="value">{payment.receipt_number or 'N/A'}</span></div>
 <div class="row"><span class="label">Student</span><span class="value">{student.user.get_full_name() or student.user.email}</span></div>
+<div class="row"><span class="label">Admission No</span><span class="value">{student.admission_number or 'N/A'}</span></div>
 <div class="row"><span class="label">Class</span><span class="value">{student.class_assigned or 'N/A'}</span></div>
-<div class="row"><span class="label">Month</span><span class="value">{payment.month}</span></div>
 <div class="row"><span class="label">Academic Session</span><span class="value">{payment.academic_session}</span></div>
+<div class="row"><span class="label">Fee Component</span><span class="value">{payment.fee_component.name if payment.fee_component else payment.month or 'General'}</span></div>
 <div class="row"><span class="label">Total Fee</span><span class="value">₹{payment.total_fee}</span></div>
 <div class="row"><span class="label">Paid Amount</span><span class="value">₹{payment.paid_amount}</span></div>
 <div class="row"><span class="label">Fine</span><span class="value">₹{payment.fine}</span></div>
-<div class="row total"><span class="label">Status</span><span class="value">{payment.status}</span></div>
+<div class="row total"><span class="label">Total Paid</span><span class="value">₹{payment.paid_amount + payment.fine}</span></div>
 <div class="row"><span class="label">Payment Method</span><span class="value">{payment.payment_method or 'N/A'}</span></div>
+<div class="row"><span class="label">Transaction Ref</span><span class="value">{payment.transaction_ref or 'N/A'}</span></div>
 <div class="row"><span class="label">Paid At</span><span class="value">{payment.paid_at.strftime('%d %b %Y') if payment.paid_at else 'N/A'}</span></div>
 <div class="row"><span class="label">Verified By</span><span class="value">{payment.verified_by.get_full_name() if payment.verified_by else 'N/A'}</span></div>
 <div class="footer">This is a computer-generated receipt.</div>
 </div></body></html>"""
         from django.http import HttpResponse
         return HttpResponse(receipt_html)
+
+
+# ── Clearance Deadline ─────────────────────────────────────────────────────
+
+class FeeClearanceDeadlineView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request):
+        ser = ClearanceDeadlineSerializer(data=request.data)
+        if not ser.is_valid():
+            return Response(ser.errors, status=400)
+        result = FeeAdminService.set_clearance_deadline(
+            ser.validated_data["student_id"],
+            ser.validated_data["deadline"],
+            request.user,
+        )
+        return Response(result)
+
+
+# ── Reminder ───────────────────────────────────────────────────────────────
+
+class FeeReminderView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request):
+        ser = ReminderSerializer(data=request.data)
+        if not ser.is_valid():
+            return Response(ser.errors, status=400)
+        result = FeeAdminService.send_reminder(
+            ser.validated_data["student_ids"],
+            request.user,
+        )
+        return Response(result)
+
+
+# ── Outstanding Dues Check ────────────────────────────────────────────────
+
+class FeeOutstandingCheckView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request, student_id):
+        has_dues = FeeAdminService.has_outstanding_dues(student_id)
+        summary = FeeAdminService.get_outstanding_summary(student_id)
+        return Response({"has_outstanding_dues": has_dues, **summary})
+
+
+# ── Admission Fee ──────────────────────────────────────────────────────────
+
+class FeeAdmissionRecordView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request, student_id):
+        payment = FeeAdminService.record_admission_fee(student_id, request.user)
+        serializer = StudentFeePaymentSerializer(payment)
+        return Response(serializer.data)
+
+
+class FeeAdmissionPaymentView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request, student_id):
+        try:
+            payment = FeeAdminService.record_admission_fee_payment(student_id, request.user)
+            serializer = StudentFeePaymentSerializer(payment)
+            return Response(serializer.data)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=400)

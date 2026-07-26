@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useEffect, useState, useRef } from "react";
+import { useAuth, getSafeRedirect } from "@/context/AuthContext";
 import { Loader2 } from "lucide-react";
+
+const API_BASE = "http://localhost:8000";
 
 export const Route = createFileRoute("/auth/callback")({
   head: () => ({ meta: [{ title: "Authenticating... — EduSphere" }] }),
@@ -12,34 +14,51 @@ function AuthCallbackPage() {
   const { user, loading, refreshSession } = useAuth();
   const navigate = useNavigate();
   const [status, setStatus] = useState("Verifying your session...");
+  const exchanged = useRef(false);
 
   useEffect(() => {
-    const checkSession = async () => {
-      setStatus("Checking authentication...");
+    if (exchanged.current) return;
+    exchanged.current = true;
+
+    const exchangeSession = async () => {
+      setStatus("Completing authentication...");
       try {
-        await refreshSession();
+        const res = await fetch(`${API_BASE}/api/oauth/callback/`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (data.access && data.refresh) {
+            localStorage.setItem("accessToken", data.access);
+            localStorage.setItem("refreshToken", data.refresh);
+          }
+          await refreshSession();
+        } else {
+          setStatus("Authentication failed. Redirecting...");
+          setTimeout(() => navigate({ to: "/login" }), 2000);
+        }
       } catch {
-        setStatus("Authentication failed. Redirecting...");
-        setTimeout(() => navigate({ to: "/login" }), 2000);
+        try {
+          await refreshSession();
+        } catch {
+          setStatus("Authentication failed. Redirecting...");
+          setTimeout(() => navigate({ to: "/login" }), 2000);
+        }
       }
     };
-    checkSession();
+    exchangeSession();
   }, []);
 
   useEffect(() => {
     if (!loading) {
       if (user) {
         setStatus(`Welcome, ${user.first_name || user.email}! Redirecting...`);
-        const redirectMap: Record<string, string> = {
-          admin: "/admin/dashboard",
-          teacher: "/teacher/dashboard",
-          student: "/student/dashboard",
-        };
-        const target = redirectMap[user.role] || "/student/dashboard";
-        setTimeout(() => navigate({ to: target }), 500);
-      } else {
-        setStatus("Not authenticated. Redirecting to login...");
-        setTimeout(() => navigate({ to: "/login" }), 2000);
+        const returnTo = sessionStorage.getItem("returnTo");
+        sessionStorage.removeItem("returnTo");
+        const target = getSafeRedirect(user, returnTo);
+        setTimeout(() => navigate({ to: target as any }), 500);
       }
     }
   }, [user, loading, navigate]);

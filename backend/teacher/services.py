@@ -27,7 +27,31 @@ def assign_class_to_teacher(teacher_profile, class_name):
 
 
 def create_timetable_entry(teacher_profile, data):
-    """Add a timetable entry for a teacher."""
+    """Add a timetable entry for a teacher with collision validation."""
+    # 1. Teacher time collision check
+    teacher_conflicts = TimetableEntry.objects.filter(
+        teacher=teacher_profile,
+        day_of_week=data["day_of_week"],
+        start_time__lt=data["end_time"],
+        end_time__gt=data["start_time"],
+    )
+    if teacher_conflicts.exists():
+        raise ValidationError(
+            "Teacher already has a timetable entry overlapping this time slot."
+        )
+
+    # 2. Class time collision check
+    class_conflicts = TimetableEntry.objects.filter(
+        class_name=data["class_name"],
+        day_of_week=data["day_of_week"],
+        start_time__lt=data["end_time"],
+        end_time__gt=data["start_time"],
+    )
+    if class_conflicts.exists():
+        raise ValidationError(
+            f"Class '{data['class_name']}' already has a timetable entry overlapping this time slot."
+        )
+
     entry = TimetableEntry.objects.create(
         teacher=teacher_profile,
         day_of_week=data["day_of_week"],
@@ -187,3 +211,72 @@ def increment_download_count(resource):
 def get_available_teachers_for_subject(subject):
     """Get teachers assigned to a given subject."""
     return TeacherProfile.objects.filter(assigned_subject=subject).select_related("user")
+
+
+# ── Teacher Resignation ─────────────────────────────────────────────────
+
+from datetime import datetime
+from django.utils import timezone
+from teacher.models import TeacherResignation
+from notification.models import Notification, NotificationRecipient, NotificationType, Priority
+
+
+def submit_resignation(teacher_profile, data):
+    resignation = TeacherResignation.objects.create(
+        teacher=teacher_profile,
+        reason=data["reason"],
+        details=data.get("details", ""),
+        effective_date=data["effective_date"],
+    )
+    return resignation
+
+
+def list_teacher_resignations(teacher_profile=None):
+    qs = TeacherResignation.objects.select_related("teacher__user").all()
+    if teacher_profile:
+        qs = qs.filter(teacher=teacher_profile)
+    return qs.order_by("-requested_at")
+
+
+def get_resignation(resignation_id):
+    return TeacherResignation.objects.select_related("teacher__user").get(id=resignation_id)
+
+
+def review_resignation(resignation_id, reviewer, status, notes=""):
+    resignation = get_resignation(resignation_id)
+    resignation.status = status
+    resignation.reviewed_by = reviewer
+    resignation.reviewed_at = timezone.now()
+    if notes:
+        resignation.details = (resignation.details + "\n" + notes).strip()
+    resignation.save()
+
+    if status == "approved":
+        teacher = resignation.teacher
+        teacher.status = "resigned"
+        teacher.save(update_fields=["status"])
+
+    Notification.objects.create(
+        user=resignation.teacher.user,
+        notification_type=NotificationType.GENERAL,
+        title=f"Resignation {status.title()}",
+        message=f"Your resignation request has been {status}. Effective date: {resignation.effective_date}.",
+        priority=Priority.HIGH if status == "approved" else Priority.MEDIUM,
+    )
+    return resignation
+
+
+def override_resignation(resignation_id, overrider, new_status, reason):
+    resignation = get_resignation(resignation_id)
+    resignation.status = "overridden"
+    resignation.override_by = overrider
+    resignation.override_at = timezone.now()
+    resignation.override_reason = reason
+    resignation.save()
+
+    if new_status == "rejected":
+        teacher = resignation.teacher
+        teacher.status = "active"
+        teacher.save(update_fields=["status"])
+
+    return resignation

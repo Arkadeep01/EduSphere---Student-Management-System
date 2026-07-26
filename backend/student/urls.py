@@ -23,6 +23,7 @@ urlpatterns = [
     path("subjects/<int:subject_id>/chapters/", views.SubjectChaptersView.as_view(), name="student-subject-chapters"),
     path("subject-request-status/", views.SubjectRequestStatusView.as_view(), name="student-subject-request-status"),
     path("exams/", views.StudentExamListView.as_view(), name="student-exams"),
+    path("subject-withdrawal/", views.SubjectWithdrawalView.as_view(), name="student-subject-withdrawal"),
     path("rechecking/eligible/", StudentRecheckingEligibleView.as_view(), name="student-rechecking-eligible"),
     path("rechecking/", StudentRecheckingListView.as_view(), name="student-rechecking-list"),
     path("rechecking/create/", StudentRecheckingCreateView.as_view(), name="student-rechecking-create"),

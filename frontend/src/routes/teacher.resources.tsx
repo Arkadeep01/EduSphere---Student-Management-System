@@ -10,9 +10,18 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, Video, Download, Search, File, Upload, Trash2, Edit, Users } from "lucide-react";
-import { teacherSubjectData, teacherProfileData, type ChapterResource } from "@/lib/mock-data";
+type ChapterResource = {
+  id: string;
+  title: string;
+  type: "note" | "video" | "document" | "reference";
+  size: string;
+  description?: string;
+  fileSize?: number;
+  downloadCount?: number;
+  uploadedAt?: string;
+  fileUrl?: string;
+};
 import { teacherResourceApi } from "@/services/teacherApi";
-import { addSharedResource, updateSharedResource, removeSharedResource } from "@/lib/resource-store";
 import { toast } from "sonner";
 import { useState, useRef, useEffect } from "react";
 
@@ -42,9 +51,7 @@ function formatDate(dateStr: string | undefined): string {
 function TeacherResourcesComponent() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [resources, setResources] = useState<ChapterResource[]>(() =>
-    teacherSubjectData.chapters?.flatMap(ch => ch.resources ?? []) ?? []
-  );
+  const [resources, setResources] = useState<ChapterResource[]>([]);
   const [showUpload, setShowUpload] = useState(false);
   const [editResource, setEditResource] = useState<ChapterResource | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -124,12 +131,6 @@ function TeacherResourcesComponent() {
       uploadedAt: new Date().toISOString(),
       fileUrl: selectedFile ? URL.createObjectURL(selectedFile) : undefined,
     };
-    addSharedResource({
-      ...newResource,
-      assignedClasses: form.targetClass ? [form.targetClass] : [],
-      uploadedBy: teacherProfileData?.personal?.fullName || teacherSubjectData.teacher,
-      subject: teacherSubjectData.name,
-    });
     try {
       const result = await teacherResourceApi.create(fd);
       if (result) {
@@ -194,10 +195,7 @@ function TeacherResourcesComponent() {
       updatedMeta.fileUrl = URL.createObjectURL(selectedFile);
       updatedMeta.uploadedAt = new Date().toISOString();
     }
-    updateSharedResource(editResource.id, {
-      ...updatedMeta,
-      assignedClasses: form.targetClass ? [form.targetClass] : undefined,
-    });
+    
     try {
       const result = await teacherResourceApi.update(editResource.id, fd);
       if (result) {
@@ -233,7 +231,6 @@ function TeacherResourcesComponent() {
   }
 
   async function handleDelete(r: ChapterResource) {
-    removeSharedResource(r.id);
     try {
       await teacherResourceApi.delete(r.id);
       setResources(prev => prev.filter(x => x.id !== r.id));
@@ -373,7 +370,7 @@ function TeacherResourcesComponent() {
               <Select value={form.targetClass} onValueChange={v => setForm({ ...form, targetClass: v })}>
                 <SelectTrigger><SelectValue placeholder="All classes" /></SelectTrigger>
                 <SelectContent>
-                  {teacherSubjectData.classes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  <SelectItem value="all">All Classes</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -412,7 +409,7 @@ function TeacherResourcesComponent() {
               <Select value={form.targetClass} onValueChange={v => setForm({ ...form, targetClass: v })}>
                 <SelectTrigger><SelectValue placeholder="All classes" /></SelectTrigger>
                 <SelectContent>
-                  {teacherSubjectData.classes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  <SelectItem value="all">All Classes</SelectItem>
                 </SelectContent>
               </Select>
             </div>

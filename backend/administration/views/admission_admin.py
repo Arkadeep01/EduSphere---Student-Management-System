@@ -5,6 +5,7 @@ from rest_framework import status
 
 from administration.permissions import IsAdmin
 from administration.services.admission_admin import AdmissionAdminService
+from administration.services.fee_admin import FeeAdminService
 from administration.serializers.admission import (
     AdmissionApplicationSerializer,
     StudentRegistrationLogSerializer,
@@ -57,9 +58,16 @@ class AdmissionCreateStudentView(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]
 
     def post(self, request, application_id):
-        # In a real scenario, you'd create a user account first
         user = request.user
         profile = AdmissionAdminService.create_student_account(application_id, user)
+        try:
+            FeeAdminService.record_admission_fee(profile.id, user)
+        except Exception:
+            pass
+        try:
+            FeeAdminService.generate_fees_for_student(profile)
+        except Exception:
+            pass
         serializer = StudentRegistrationLogSerializer(
             profile.registration_logs.first()
         )

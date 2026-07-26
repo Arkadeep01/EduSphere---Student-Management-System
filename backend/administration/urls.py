@@ -3,6 +3,14 @@ from . import views
 from .views import rechecking as rechecking_views
 
 urlpatterns = [
+    # Director
+    path("director/admins/", views.DirectorAdminListView.as_view(), name="director-admin-list"),
+    path("director/admins/create/", views.DirectorAdminCreateView.as_view(), name="director-admin-create"),
+    path("director/staff/", views.DirectorStaffListView.as_view(), name="director-staff-list"),
+    path("director/staff/create/", views.DirectorStaffCreateView.as_view(), name="director-staff-create"),
+    path("director/users/<int:user_id>/toggle-active/", views.DirectorToggleActiveView.as_view(), name="director-toggle-active"),
+    path("director/users/<int:user_id>/change-role/", views.DirectorChangeRoleView.as_view(), name="director-change-role"),
+
     # Dashboard
     path("dashboard/summary/", views.DashboardSummaryView.as_view(), name="admin-dashboard-summary"),
     path("dashboard/student-growth/", views.DashboardStudentGrowthView.as_view(), name="admin-dashboard-student-growth"),
@@ -24,6 +32,10 @@ urlpatterns = [
     path("students/<int:student_id>/assign-subjects/", views.StudentSubjectAssignmentView.as_view(), name="admin-student-assign-subjects"),
     path("students/<int:student_id>/notifications/", views.StudentNotificationsView.as_view(), name="admin-student-notifications"),
     path("students/<int:student_id>/documents/", views.StudentDocumentsView.as_view(), name="admin-student-documents"),
+    path("students/<int:student_id>/deactivate/", views.StudentDeactivateView.as_view(), name="admin-student-deactivate"),
+    path("subject-withdrawals/", views.SubjectWithdrawalListView.as_view(), name="admin-subject-withdrawals"),
+    path("subject-withdrawals/<int:request_id>/review/", views.SubjectWithdrawalReviewView.as_view(), name="admin-subject-withdrawal-review"),
+    path("class-subject-config/", views.ClassSubjectConfigView.as_view(), name="admin-class-subject-config"),
     path("subject-requests/pending/", views.PendingSubjectRequestsListView.as_view(), name="admin-pending-subject-requests"),
 
     # Teachers
@@ -32,6 +44,8 @@ urlpatterns = [
     path("teachers/<int:teacher_id>/notify/", views.TeacherNotifyView.as_view(), name="admin-teacher-notify"),
     path("teachers/<int:teacher_id>/assign-class-teacher/", views.TeacherAssignClassTeacherView.as_view(), name="admin-teacher-assign-class-teacher"),
     path("teachers/<int:teacher_id>/allocate-subject/", views.TeacherAllocateSubjectView.as_view(), name="admin-teacher-allocate-subject"),
+    path("teachers/allocations/<int:allocation_id>/deallocate/", views.TeacherDeallocateSubjectView.as_view(), name="admin-teacher-deallocate-subject"),
+    path("teacher-allocations/draft/", views.TeacherDraftAllocationsView.as_view(), name="admin-teacher-draft-allocations"),
     path("teachers/<int:teacher_id>/assign-class/", views.TeacherAssignClassView.as_view(), name="admin-teacher-assign-class"),
     path("teacher-allocations/", views.TeacherAllocationsView.as_view(), name="admin-teacher-allocations"),
     path("class-teacher-assignments/", views.TeacherClassTeacherAssignmentsView.as_view(), name="admin-class-teacher-assignments"),
@@ -139,9 +153,15 @@ urlpatterns = [
     path("fees/structures/", views.FeeStructureListView.as_view(), name="admin-fee-structures"),
     path("fees/structures/<int:structure_id>/", views.FeeStructureDetailView.as_view(), name="admin-fee-structure-detail"),
     path("fees/structures/duplicate/", views.FeeStructureDuplicateView.as_view(), name="admin-fee-structure-duplicate"),
+    path("fees/generate/", views.FeeGenerateView.as_view(), name="admin-fee-generate"),
     path("fees/payments/", views.FeePaymentListView.as_view(), name="admin-fee-payments"),
+    path("fees/payments/record/", views.FeePaymentRecordView.as_view(), name="admin-fee-payment-record"),
     path("fees/payments/<int:payment_id>/verify/", views.FeePaymentVerifyView.as_view(), name="admin-fee-payment-verify"),
     path("fees/payments/<int:payment_id>/reject/", views.FeePaymentRejectView.as_view(), name="admin-fee-payment-reject"),
+    path("fees/payments/correction/request/", views.FeeCorrectionRequestView.as_view(), name="admin-fee-correction-request"),
+    path("fees/payments/correction/<int:payment_id>/approve/", views.FeeCorrectionApproveView.as_view(), name="admin-fee-correction-approve"),
+    path("fees/payments/refund/request/", views.FeeRefundRequestView.as_view(), name="admin-fee-refund-request"),
+    path("fees/payments/refund/<int:payment_id>/approve/", views.FeeRefundApproveView.as_view(), name="admin-fee-refund-approve"),
     path("fees/payments/<int:payment_id>/refund/initiate/", views.FeeRefundInitiateView.as_view(), name="admin-fee-refund-initiate"),
     path("fees/payments/<int:payment_id>/refund/complete/", views.FeeRefundCompleteView.as_view(), name="admin-fee-refund-complete"),
     path("fees/scholarships/", views.ScholarshipListView.as_view(), name="admin-fee-scholarships"),
@@ -150,6 +170,11 @@ urlpatterns = [
     path("fees/activity-log/", views.FeeActivityLogView.as_view(), name="admin-fee-activity-log"),
     path("fees/my-ledger/", views.StudentFeeLedgerView.as_view(), name="admin-fee-my-ledger"),
     path("fees/receipt/<int:payment_id>/", views.FeeReceiptView.as_view(), name="admin-fee-receipt"),
+    path("fees/clearance-deadline/", views.FeeClearanceDeadlineView.as_view(), name="admin-fee-clearance-deadline"),
+    path("fees/reminder/", views.FeeReminderView.as_view(), name="admin-fee-reminder"),
+    path("fees/outstanding/<int:student_id>/", views.FeeOutstandingCheckView.as_view(), name="admin-fee-outstanding"),
+    path("fees/admission/<int:student_id>/record/", views.FeeAdmissionRecordView.as_view(), name="admin-fee-admission-record"),
+    path("fees/admission/<int:student_id>/pay/", views.FeeAdmissionPaymentView.as_view(), name="admin-fee-admission-pay"),
 
     # Result Engine
     path("results/grade-boundaries/", views.GradeBoundaryListView.as_view(), name="admin-grade-boundaries"),
@@ -167,7 +192,7 @@ urlpatterns = [
     path("results/pdf/transcript/<int:student_result_id>/", views.TranscriptPDFView.as_view(), name="admin-result-transcript-pdf"),
     path("results/pdf/printable/<int:student_result_id>/", views.PrintableResultPDFView.as_view(), name="admin-result-printable-pdf"),
 
-    # Blind Rechecking
+    # Rechecking
     path("rechecking/", rechecking_views.AdminRecheckingListView.as_view(), name="admin-rechecking-list"),
     path("rechecking/stats/", rechecking_views.AdminRecheckingStatsView.as_view(), name="admin-rechecking-stats"),
     path("rechecking/evaluators/", rechecking_views.AdminEvaluatorListView.as_view(), name="admin-rechecking-evaluators"),

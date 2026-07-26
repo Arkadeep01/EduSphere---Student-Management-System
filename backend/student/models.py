@@ -17,6 +17,8 @@ class Subject(models.Model):
     description = models.TextField(blank=True)
     color = models.CharField(max_length=100, blank=True, default="from-blue-500 to-indigo-500")
     progress = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    academic_session = models.ForeignKey("administration.AcademicSession", on_delete=models.SET_NULL, null=True, blank=True, related_name="subjects")
 
     class Meta:
         ordering = ["name"]
@@ -59,6 +61,7 @@ class StudentSubject(models.Model):
         ("selected", "Selected"),
         ("request_pending", "Request Pending"),
         ("not_selected", "Not Selected"),
+        ("withdrawn", "Withdrawn"),
     ]
 
     student = models.ForeignKey(
@@ -80,7 +83,7 @@ class StudentSubject(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ("student", "subject")
+        unique_together = ("student", "subject", "academic_session")
         verbose_name = "Student Subject"
         verbose_name_plural = "Student Subjects"
 
@@ -257,6 +260,34 @@ class Timetable(models.Model):
 
     def __str__(self):
         return f"{self.student.user.email} - {self.subject.name} ({self.get_day_of_week_display()})"
+
+
+class SubjectWithdrawalRequest(models.Model):
+    STATUS_CHOICES = [
+        ("pending", "Pending Approval"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
+
+    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name="withdrawal_requests")
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name="withdrawal_requests")
+    replacement_subject = models.ForeignKey(Subject, on_delete=models.SET_NULL, null=True, blank=True, related_name="replacement_requests")
+    reason = models.TextField(help_text="Reason for withdrawal")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="reviewed_withdrawals")
+    reviewed_at = models.DateTimeField(blank=True, null=True)
+    admin_remark = models.TextField(blank=True)
+    has_marks = models.BooleanField(default=False, help_text="Whether student has marks in this subject (auto-detected)")
+    exceptional_override = models.BooleanField(default=False, help_text="Admin override for marks block")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Subject Withdrawal Request"
+
+    def __str__(self):
+        return f"{self.student.user.email} - {self.subject.name} ({self.status})"
 
 
 class Notification(models.Model):

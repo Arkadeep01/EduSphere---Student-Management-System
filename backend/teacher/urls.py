@@ -38,6 +38,10 @@ urlpatterns = [
 
     # Exams
     path("exams/", views.TeacherExamListView.as_view(), name="teacher-exams"),
+
+    # Resignation
+    path("resignation/", views.TeacherResignationCreateView.as_view(), name="teacher-resignation"),
+
     path("rechecking/queue/", TeacherRecheckingQueueView.as_view(), name="teacher-rechecking-queue"),
     path("rechecking/history/", TeacherRecheckingHistoryView.as_view(), name="teacher-rechecking-history"),
     path("rechecking/<int:request_id>/draft/", TeacherRecheckingDraftView.as_view(), name="teacher-rechecking-draft"),

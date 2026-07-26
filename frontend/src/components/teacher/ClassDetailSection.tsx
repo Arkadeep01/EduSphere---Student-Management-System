@@ -30,11 +30,6 @@ import {
   MapPin,
   Trophy,
 } from "lucide-react";
-import {
-  classStudentPerformance,
-  RANK_STYLES,
-  type StudentPerformance,
-} from "@/lib/mock-data";
 
 interface ClassInfo {
   name: string;
@@ -55,6 +50,24 @@ type SortField =
   | "midtermMarks";
 
 type FilterOption = "all" | "top" | "atRisk";
+
+interface StudentPerformance {
+  id: string;
+  rollNumber: string;
+  name: string;
+  class: string;
+  attendancePercentage: number;
+  assignmentAverage: number;
+  assignmentRank: number;
+  midterm: { marksObtained: number; totalMarks: number; percentage: number; grade: string } | null;
+  overallProgress: number;
+}
+
+const RANK_STYLES = [
+  { label: "Gold", text: "text-amber-500", bg: "bg-amber-100 dark:bg-amber-900/40", icon: "🥇" },
+  { label: "Silver", text: "text-gray-400", bg: "bg-gray-100 dark:bg-gray-800", icon: "🥈" },
+  { label: "Bronze", text: "text-orange-600", bg: "bg-orange-100 dark:bg-orange-900/40", icon: "🥉" },
+];
 
 function getRankDisplay(rank: number) {
   if (rank <= 3) {

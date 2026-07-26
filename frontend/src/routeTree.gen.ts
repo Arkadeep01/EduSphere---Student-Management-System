@@ -23,6 +23,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as GuidelinesRouteImport } from './routes/guidelines'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as OauthProfileCompleteRouteImport } from './routes/oauth-profile-complete'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as StaffRouteImport } from './routes/staff'
@@ -51,6 +52,8 @@ import { Route as AdminStudentsRouteImport } from './routes/admin.students'
 import { Route as AdminSubjectsRouteImport } from './routes/admin.subjects'
 import { Route as AdminTeachersRouteImport } from './routes/admin.teachers'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as LoginFacultyRouteImport } from './routes/login.faculty'
+import { Route as LoginIndexRouteImport } from './routes/login.index'
 import { Route as StaffDashboardRouteImport } from './routes/staff.dashboard'
 import { Route as StaffHistoryRouteImport } from './routes/staff.history'
 import { Route as StaffProfileRouteImport } from './routes/staff.profile'
@@ -164,6 +167,11 @@ const GuidelinesRoute = GuidelinesRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OauthProfileCompleteRoute = OauthProfileCompleteRouteImport.update({
+  id: '/oauth-profile-complete',
+  path: '/oauth-profile-complete',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -305,6 +313,16 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
+} as any)
+const LoginFacultyRoute = LoginFacultyRouteImport.update({
+  id: '/faculty',
+  path: '/faculty',
+  getParentRoute: () => LoginRoute,
+} as any)
+const LoginIndexRoute = LoginIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LoginRoute,
 } as any)
 const StaffDashboardRoute = StaffDashboardRouteImport.update({
   id: '/dashboard',
@@ -551,7 +569,8 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/gallery': typeof GalleryRoute
   '/guidelines': typeof GuidelinesRoute
-  '/login': typeof LoginRoute
+  '/login': typeof LoginRouteWithChildren
+  '/oauth-profile-complete': typeof OauthProfileCompleteRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/staff': typeof StaffRouteWithChildren
@@ -580,6 +599,8 @@ export interface FileRoutesByFullPath {
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/login/': typeof LoginIndexRoute
+  '/login/faculty': typeof LoginFacultyRoute
   '/staff/dashboard': typeof StaffDashboardRoute
   '/staff/history': typeof StaffHistoryRoute
   '/staff/profile': typeof StaffProfileRoute
@@ -639,7 +660,8 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/gallery': typeof GalleryRoute
   '/guidelines': typeof GuidelinesRoute
-  '/login': typeof LoginRoute
+  '/login': typeof LoginRouteWithChildren
+  '/oauth-profile-complete': typeof OauthProfileCompleteRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/staff': typeof StaffRouteWithChildren
@@ -668,6 +690,8 @@ export interface FileRoutesByTo {
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/login/': typeof LoginIndexRoute
+  '/login/faculty': typeof LoginFacultyRoute
   '/staff/dashboard': typeof StaffDashboardRoute
   '/staff/history': typeof StaffHistoryRoute
   '/staff/profile': typeof StaffProfileRoute
@@ -728,7 +752,8 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/gallery': typeof GalleryRoute
   '/guidelines': typeof GuidelinesRoute
-  '/login': typeof LoginRoute
+  '/login': typeof LoginRouteWithChildren
+  '/oauth-profile-complete': typeof OauthProfileCompleteRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/staff': typeof StaffRouteWithChildren
@@ -757,6 +782,8 @@ export interface FileRoutesById {
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/login/': typeof LoginIndexRoute
+  '/login/faculty': typeof LoginFacultyRoute
   '/staff/dashboard': typeof StaffDashboardRoute
   '/staff/history': typeof StaffHistoryRoute
   '/staff/profile': typeof StaffProfileRoute
@@ -819,6 +846,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/guidelines'
     | '/login'
+    | '/oauth-profile-complete'
     | '/register'
     | '/reset-password'
     | '/staff'
@@ -847,6 +875,8 @@ export interface FileRouteTypes {
     | '/admin/subjects'
     | '/admin/teachers'
     | '/auth/callback'
+    | '/login/'
+    | '/login/faculty'
     | '/staff/dashboard'
     | '/staff/history'
     | '/staff/profile'
@@ -907,6 +937,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/guidelines'
     | '/login'
+    | '/oauth-profile-complete'
     | '/register'
     | '/reset-password'
     | '/staff'
@@ -935,6 +966,8 @@ export interface FileRouteTypes {
     | '/admin/subjects'
     | '/admin/teachers'
     | '/auth/callback'
+    | '/login/'
+    | '/login/faculty'
     | '/staff/dashboard'
     | '/staff/history'
     | '/staff/profile'
@@ -995,6 +1028,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/guidelines'
     | '/login'
+    | '/oauth-profile-complete'
     | '/register'
     | '/reset-password'
     | '/staff'
@@ -1023,6 +1057,8 @@ export interface FileRouteTypes {
     | '/admin/subjects'
     | '/admin/teachers'
     | '/auth/callback'
+    | '/login/'
+    | '/login/faculty'
     | '/staff/dashboard'
     | '/staff/history'
     | '/staff/profile'
@@ -1083,7 +1119,8 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   GalleryRoute: typeof GalleryRoute
   GuidelinesRoute: typeof GuidelinesRoute
-  LoginRoute: typeof LoginRoute
+  LoginRoute: typeof LoginRouteWithChildren
+  OauthProfileCompleteRoute: typeof OauthProfileCompleteRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   StaffRoute: typeof StaffRouteWithChildren
@@ -1191,6 +1228,20 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login/': {
+      id: '/login/'
+      path: '/'
+      fullPath: '/login/'
+      preLoaderRoute: typeof LoginIndexRouteImport
+      parentRoute: typeof LoginRoute
+    }
+    '/oauth-profile-complete': {
+      id: '/oauth-profile-complete'
+      path: '/oauth-profile-complete'
+      fullPath: '/oauth-profile-complete'
+      preLoaderRoute: typeof OauthProfileCompleteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -1388,6 +1439,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/login/faculty': {
+      id: '/login/faculty'
+      path: '/faculty'
+      fullPath: '/login/faculty'
+      preLoaderRoute: typeof LoginFacultyRouteImport
+      parentRoute: typeof LoginRoute
     }
     '/staff/dashboard': {
       id: '/staff/dashboard'
@@ -1795,6 +1853,18 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface LoginRouteChildren {
+  LoginFacultyRoute: typeof LoginFacultyRoute
+  LoginIndexRoute: typeof LoginIndexRoute
+}
+
+const LoginRouteChildren: LoginRouteChildren = {
+  LoginFacultyRoute: LoginFacultyRoute,
+  LoginIndexRoute: LoginIndexRoute,
+}
+
+const LoginRouteWithChildren = LoginRoute._addFileChildren(LoginRouteChildren)
+
 interface StaffRouteChildren {
   StaffDashboardRoute: typeof StaffDashboardRoute
   StaffHistoryRoute: typeof StaffHistoryRoute
@@ -1922,7 +1992,8 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   GalleryRoute: GalleryRoute,
   GuidelinesRoute: GuidelinesRoute,
-  LoginRoute: LoginRoute,
+  LoginRoute: LoginRouteWithChildren,
+  OauthProfileCompleteRoute: OauthProfileCompleteRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   StaffRoute: StaffRouteWithChildren,

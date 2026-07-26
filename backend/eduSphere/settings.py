@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -95,9 +96,9 @@ ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 
-LOGIN_REDIRECT_URL = "http://localhost:5173/auth/callback"
-LOGOUT_REDIRECT_URL = "http://localhost:5173/login"
-ACCOUNT_LOGOUT_REDIRECT_URL = "http://localhost:5173/"
+LOGIN_REDIRECT_URL = os.getenv("FRONTEND_URL", "http://localhost:5173") + "/auth/callback"
+LOGOUT_REDIRECT_URL = os.getenv("FRONTEND_URL", "http://localhost:5173") + "/login"
+ACCOUNT_LOGOUT_REDIRECT_URL = os.getenv("FRONTEND_URL", "http://localhost:5173") + "/login"
 
 ACCOUNT_SIGNUP_AUTO_LOGIN = True
 ACCOUNT_AUTHENTICATION_METHOD_CASE_INSENSITIVE = True
@@ -106,7 +107,7 @@ ACCOUNT_PASSWORD_MIN_LENGTH = 8
 ACCOUNT_ADAPTER = "authentication.adapters.CustomAccountAdapter"
 SOCIALACCOUNT_ADAPTER = "authentication.adapters.CustomSocialAccountAdapter"
 SOCIALACCOUNT_LOGIN_ON_GET = True
-SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_AUTO_SIGNUP = False
 
 SOCIALACCOUNT_PROVIDERS = {
     "google": {

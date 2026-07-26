@@ -59,6 +59,7 @@ class CustomUser(AbstractUser):
         ('teacher', 'Teacher'),
         ('admin', 'Admin'),
         ('staff', 'Staff'),
+        ('director', 'Director'),
     ]
     role = models.CharField(
         max_length=10,
@@ -70,6 +71,8 @@ class CustomUser(AbstractUser):
         blank=True,
         null=True,
     )
+    password_changed = models.BooleanField(default=False)
+    needs_activation = models.BooleanField(default=True)
 
     def __str__(self):
         return self.email

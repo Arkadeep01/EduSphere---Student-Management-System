@@ -14,6 +14,8 @@ from .student_admin import (
     StudentDocumentsView,
     PendingSubjectRequestsListView,
     StudentSubjectRejectView,
+    StudentDeactivateView,
+    ClassSubjectConfigView,
 )
 
 from .teacher_admin import (
@@ -25,6 +27,10 @@ from .teacher_admin import (
     TeacherAssignClassView,
     TeacherAllocationsView,
     TeacherClassTeacherAssignmentsView,
+    TeacherDeallocateSubjectView,
+    TeacherDraftAllocationsView,
+    SubjectWithdrawalListView,
+    SubjectWithdrawalReviewView,
 )
 
 from .class_admin import ClassListView, ClassDetailView
@@ -145,9 +151,15 @@ from .fee_admin import (
     FeeStructureListView,
     FeeStructureDetailView,
     FeeStructureDuplicateView,
+    FeeGenerateView,
     FeePaymentListView,
+    FeePaymentRecordView,
     FeePaymentVerifyView,
     FeePaymentRejectView,
+    FeeCorrectionRequestView,
+    FeeCorrectionApproveView,
+    FeeRefundRequestView,
+    FeeRefundApproveView,
     FeeRefundInitiateView,
     FeeRefundCompleteView,
     ScholarshipListView,
@@ -156,4 +168,18 @@ from .fee_admin import (
     FeeActivityLogView,
     StudentFeeLedgerView,
     FeeReceiptView,
+    FeeClearanceDeadlineView,
+    FeeReminderView,
+    FeeOutstandingCheckView,
+    FeeAdmissionRecordView,
+    FeeAdmissionPaymentView,
+)
+
+from .director_admin import (
+    DirectorAdminListView,
+    DirectorAdminCreateView,
+    DirectorStaffListView,
+    DirectorStaffCreateView,
+    DirectorToggleActiveView,
+    DirectorChangeRoleView,
 )

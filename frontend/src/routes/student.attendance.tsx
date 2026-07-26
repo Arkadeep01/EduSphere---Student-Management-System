@@ -5,7 +5,7 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, CheckCircle2, XCircle, Calendar as CalIcon } from "lucide-react";
-import { monthlyAttendance, dailyAttendance } from "@/lib/mock-data";
+
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts";
 import { API_BASE } from "@/services/request";
 
@@ -32,9 +32,9 @@ function StudentAttendance() {
   }
 
   const summary = realAtt?.summary;
-  const presentDays = summary?.present ?? dailyAttendance.filter(d => d.present === true).length;
-  const absentDays = summary?.absent ?? dailyAttendance.filter(d => d.present === false).length;
-  const attendancePct = Math.round(summary?.percentage ?? (presentDays / (presentDays + absentDays || 1) * 100));
+  const presentDays = summary?.present ?? 0;
+  const absentDays = summary?.absent ?? 0;
+  const attendancePct = Math.round(summary?.percentage ?? 0);
 
   return (
     <PageWrapper>
@@ -53,7 +53,7 @@ function StudentAttendance() {
         <TabsContent value="trend">
           <Card><CardHeader><CardTitle>Monthly Attendance %</CardTitle></CardHeader><CardContent>
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={monthlyAttendance}>
+              <BarChart data={[]}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis dataKey="month" className="text-xs" />
                 <YAxis domain={[0, 100]} className="text-xs" />

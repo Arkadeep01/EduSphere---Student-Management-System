@@ -1,13 +1,12 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
   createRootRouteWithContext,
   useRouter,
 } from "@tanstack/react-router";
+import { QueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
-import { AuthProvider } from "../context/AuthContext";
 import { Toaster } from "../components/ui/sonner";
 
 function NotFoundComponent() {
@@ -72,13 +71,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Outlet />
-        <Toaster richColors position="top-right" />
-      </AuthProvider>
-    </QueryClientProvider>
+    <>
+      <Outlet />
+      <Toaster richColors position="top-right" />
+    </>
   );
 }

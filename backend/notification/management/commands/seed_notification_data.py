@@ -258,7 +258,7 @@ DEFAULT_TEMPLATES = {
         "body_text": "Batch {{ batch_id }} complete: {{ passed_count }} passed, {{ failed_count }} failed.",
     },
     # -----------------------------------------------------------------------
-    # Blind Rechecking Templates
+    # Rechecking Templates
     # -----------------------------------------------------------------------
     "rechecking_requested": {
         "subject": "Rechecking Request Received – {{ exam_name }}",

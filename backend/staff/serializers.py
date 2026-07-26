@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from administration.models import AnswerScriptUpload, StaffProfile
+from teacher.models import TeacherProfile
+from authentication.models import CustomUser
 
 
 class StaffDashboardSerializer(serializers.Serializer):
@@ -71,3 +73,59 @@ class StaffProfileSerializer(serializers.ModelSerializer):
 
     def get_full_name(self, obj):
         return obj.user.get_full_name() or obj.user.email
+
+
+# ── Staff Teacher Management Serializers ──────────────────────────────
+
+class StaffTeacherCreateSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    first_name = serializers.CharField(max_length=150)
+    last_name = serializers.CharField(max_length=150, default="", allow_blank=True)
+    mobile = serializers.CharField(max_length=20, default="", allow_blank=True)
+    employee_id = serializers.CharField(max_length=20, default="", allow_blank=True)
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
+    gender = serializers.CharField(max_length=20, default="", allow_blank=True)
+    phone = serializers.CharField(max_length=20, default="", allow_blank=True)
+    address = serializers.CharField(default="", allow_blank=True)
+    department = serializers.CharField(max_length=20, default="", allow_blank=True)
+    designation = serializers.CharField(max_length=20, default="", allow_blank=True)
+    personal_email = serializers.EmailField(default="", allow_blank=True)
+    qualification = serializers.CharField(max_length=255, default="", allow_blank=True)
+    experience = serializers.IntegerField(required=False, allow_null=True)
+    primary_subject = serializers.IntegerField(required=False, allow_null=True)
+    secondary_subjects = serializers.ListField(child=serializers.IntegerField(), required=False, default=list)
+
+    def validate_email(self, value):
+        email = value.strip().lower()
+        if CustomUser.objects.filter(email=email).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return email
+
+
+class StaffTeacherUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeacherProfile
+        fields = [
+            "id", "employee_id", "date_of_birth", "gender", "phone",
+            "address", "department", "designation", "personal_email",
+            "qualification", "experience", "profile_photo",
+        ]
+
+
+class StaffTeacherListSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source="user.email", read_only=True)
+    first_name = serializers.CharField(source="user.first_name", read_only=True)
+    last_name = serializers.CharField(source="user.last_name", read_only=True)
+    mobile = serializers.CharField(source="user.mobile", read_only=True)
+    is_active = serializers.BooleanField(source="user.is_active", read_only=True)
+    assigned_subject_name = serializers.CharField(source="assigned_subject.name", read_only=True)
+
+    class Meta:
+        model = TeacherProfile
+        fields = [
+            "id", "email", "first_name", "last_name", "mobile",
+            "employee_id", "date_of_birth", "gender", "phone",
+            "address", "department", "designation", "personal_email",
+            "qualification", "experience", "assigned_subject",
+            "assigned_subject_name", "status", "is_active",
+        ]

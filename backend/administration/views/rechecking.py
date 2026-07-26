@@ -20,6 +20,7 @@ from administration.services.rechecking_service import (
     compare_and_complete,
     close_expired_windows,
 )
+from student.permissions import IsStudent, IsTeacher
 from teacher.models import TeacherProfile
 
 
@@ -238,7 +239,7 @@ class StaffRecheckingOverviewView(APIView):
 # ---------------------------------------------------------------------------
 
 class StudentRecheckingEligibleView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsStudent]
 
     def get(self, request):
         from student.models import StudentProfile
@@ -253,7 +254,7 @@ class StudentRecheckingEligibleView(APIView):
 
 
 class StudentRecheckingCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsStudent]
 
     def post(self, request):
         from student.models import StudentProfile
@@ -277,7 +278,7 @@ class StudentRecheckingCreateView(APIView):
 
 
 class StudentRecheckingListView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsStudent]
 
     def get(self, request):
         from student.models import StudentProfile
@@ -294,17 +295,13 @@ class StudentRecheckingListView(APIView):
 
 
 # ---------------------------------------------------------------------------
-# Teacher: Blind Rechecking Evaluation
+# Teacher: Rechecking Evaluation
 # ---------------------------------------------------------------------------
 
 class TeacherRecheckingQueueView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsTeacher]
 
     def get(self, request):
-        from student.permissions import IsTeacher
-        if not IsTeacher().has_permission(request, self):
-            return Response({"detail": "Teacher access required."}, status=status.HTTP_403_FORBIDDEN)
-
         from teacher.models import TeacherProfile
         try:
             teacher = TeacherProfile.objects.get(user=request.user)
@@ -330,13 +327,9 @@ class TeacherRecheckingQueueView(APIView):
 
 
 class TeacherRecheckingHistoryView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsTeacher]
 
     def get(self, request):
-        from student.permissions import IsTeacher
-        if not IsTeacher().has_permission(request, self):
-            return Response({"detail": "Teacher access required."}, status=status.HTTP_403_FORBIDDEN)
-
         from teacher.models import TeacherProfile
         try:
             teacher = TeacherProfile.objects.get(user=request.user)
@@ -362,13 +355,9 @@ class TeacherRecheckingHistoryView(APIView):
 
 
 class TeacherRecheckingDraftView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsTeacher]
 
     def post(self, request, request_id):
-        from student.permissions import IsTeacher
-        if not IsTeacher().has_permission(request, self):
-            return Response({"detail": "Teacher access required."}, status=status.HTTP_403_FORBIDDEN)
-
         from teacher.models import TeacherProfile
         try:
             teacher = TeacherProfile.objects.get(user=request.user)
@@ -394,13 +383,9 @@ class TeacherRecheckingDraftView(APIView):
 
 
 class TeacherRecheckingSubmitView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsTeacher]
 
     def post(self, request, request_id):
-        from student.permissions import IsTeacher
-        if not IsTeacher().has_permission(request, self):
-            return Response({"detail": "Teacher access required."}, status=status.HTTP_403_FORBIDDEN)
-
         from teacher.models import TeacherProfile
         try:
             teacher = TeacherProfile.objects.get(user=request.user)

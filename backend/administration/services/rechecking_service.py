@@ -197,8 +197,8 @@ def approve_rechecking_request(request_id, admin_user, second_evaluator_id=None,
     if second_evaluator_id:
         try:
             teacher = TeacherProfile.objects.get(id=second_evaluator_id)
-            if teacher == req.original_evaluator:
-                raise ValueError("Second evaluator must be different from the original evaluator.")
+            if teacher and req.original_evaluator and teacher.id == req.original_evaluator.id:
+                raise ValueError("Second evaluator cannot be the same as the original evaluator.")
             req.second_evaluator = teacher
         except TeacherProfile.DoesNotExist:
             raise ValueError("Evaluator not found.")
@@ -449,6 +449,11 @@ def compare_and_complete(request_id, admin_user):
 
     if req.status != "comparing":
         raise ValueError(f"Cannot compare results in status {req.status}.")
+
+    if req.second_evaluator_status != "completed":
+        raise ValueError("Second evaluation has not been submitted yet.")
+    if not req.marks_obtained_original or not req.second_evaluator_marks:
+        raise ValueError("Both evaluations must have marks recorded.")
 
     original = Decimal(str(req.marks_obtained_original or 0))
     new_marks = Decimal(str(req.second_evaluator_marks or 0))

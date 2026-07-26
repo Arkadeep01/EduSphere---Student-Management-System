@@ -148,7 +148,13 @@ class NotificationDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, notification_id):
-        notification = Notification.objects.get(id=notification_id)
+        try:
+            notification = Notification.objects.get(id=notification_id, user=request.user)
+        except Notification.DoesNotExist:
+            return Response(
+                {"error": "Notification not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         serializer = NotificationSerializer(notification)
         return Response(serializer.data)
 

@@ -6,18 +6,25 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/brand/animations";
-import { documentsList } from "@/lib/mock-data";
-import { validateFile, generateMockUploadResponse, ALLOWED_DOCUMENT_TYPES, MAX_FILE_SIZE_BYTES, formatFileSize, createAdmissionDocEntries } from "@/lib/upload";
+import { validateFile, ALLOWED_DOCUMENT_TYPES, MAX_FILE_SIZE_BYTES, formatFileSize } from "@/lib/upload";
 import type { UploadedFileInfo } from "@/lib/upload";
-import { addAdmissionApplication } from "@/lib/admission-store";
+import { API_BASE } from "@/services/request";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { FileText, Eye, X, Upload, CheckCircle, Image } from "lucide-react";
 
-type DocumentEntry = {
-  label: string;
-  file: UploadedFileInfo | null;
-};
+const DOCUMENT_LABELS = [
+  "Birth Certificate",
+  "Previous Report Card",
+  "Transfer Certificate",
+  "Character Certificate",
+  "Aadhaar Card (Student)",
+  "Aadhaar Card (Parent/Guardian)",
+  "Income Certificate",
+  "Caste Certificate (if applicable)",
+  "Medical Certificate",
+  "Passport-size Photos (2 copies)",
+];
 
 export const Route = createFileRoute("/admissionForms")({
   head: () => ({
@@ -33,9 +40,8 @@ function AdmissionForm() {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoUploadInfo, setPhotoUploadInfo] = useState<UploadedFileInfo | null>(null);
-  const [documents, setDocuments] = useState<DocumentEntry[]>(
-    documentsList.map(label => ({ label, file: null }))
+  const [documents, setDocuments] = useState<{ label: string; file: UploadedFileInfo | null }[]>(
+    DOCUMENT_LABELS.map(label => ({ label, file: null }))
   );
   const [previewDoc, setPreviewDoc] = useState<UploadedFileInfo | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -65,7 +71,6 @@ function AdmissionForm() {
       }
       setPhotoFile(file);
       setPhotoPreview(URL.createObjectURL(file));
-      setPhotoUploadInfo(generateMockUploadResponse(file, "applicant"));
     }
   }
 
@@ -78,9 +83,8 @@ function AdmissionForm() {
       e.target.value = "";
       return;
     }
-    const uploadInfo = generateMockUploadResponse(file, "applicant");
     setDocuments(prev => prev.map(d =>
-      d.label === label ? { ...d, file: uploadInfo } : d
+      d.label === label ? { ...d, file: { original_name: file.name, size: file.size, extension: "." + file.name.split(".").pop()?.toLowerCase(), preview_url: URL.createObjectURL(file), id: `temp_${Date.now()}`, uploaded_at: new Date().toISOString(), file: file.name, url: URL.createObjectURL(file) } } : d
     ));
     toast.success(`${label} uploaded`);
   }
@@ -101,7 +105,7 @@ function AdmissionForm() {
     if (!formData.phoneNumber) { toast.error("Please enter phone number"); return; }
     if (!formData.stream) { toast.error("Please select a stream"); return; }
     const uploadedDocs = documents.filter(d => d.file !== null);
-    if (!photoUploadInfo) {
+    if (!photoFile) {
       toast.error("Please upload a passport photo");
       return;
     }
@@ -109,31 +113,26 @@ function AdmissionForm() {
       toast.error("Please upload at least one document");
       return;
     }
-    const docEntries = uploadedDocs.map(d => ({
-      id: `doc_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-      label: d.label,
-      file: d.file,
-      verified: false,
-    }));
-    addAdmissionApplication({
-      id: `ADM_${Date.now()}`,
-      name: formData.name,
-      fatherName: formData.fatherName,
-      motherName: formData.motherName,
-      phoneNumber: formData.phoneNumber,
-      address: formData.address,
-      guardianName: formData.guardianName || formData.fatherName,
-      guardianRelationship: formData.guardianRelationship || "Father",
-      previousSchool: formData.previousSchool || "Not specified",
-      board: formData.board || "CBSE",
-      stream: formData.stream,
-      marks: [],
-      photoFile: photoUploadInfo,
-      documents: docEntries,
-      submittedAt: new Date().toISOString(),
-      status: "pending",
-    });
-    toast.success(`Application submitted with ${uploadedDocs.length} document(s) and photo`);
+    const fd = new FormData();
+    fd.append("name", formData.name);
+    fd.append("father_name", formData.fatherName);
+    fd.append("mother_name", formData.motherName);
+    fd.append("phone_number", formData.phoneNumber);
+    fd.append("address", formData.address);
+    fd.append("guardian_name", formData.guardianName || formData.fatherName);
+    fd.append("guardian_relationship", formData.guardianRelationship || "Father");
+    fd.append("previous_school", formData.previousSchool || "Not specified");
+    fd.append("board", formData.board || "CBSE");
+    fd.append("stream", formData.stream);
+    fd.append("photo", photoFile);
+    uploadedDocs.forEach(d => { if (d.file) fd.append("documents", d.file.file as Blob, d.file.original_name); });
+    fetch(`${API_BASE}/api/admissions/apply/`, {
+      method: "POST",
+      body: fd,
+    }).then(r => {
+      if (r.ok) { toast.success("Application submitted successfully!"); }
+      else { r.json().then(d => toast.error(d.error || "Submission failed")); }
+    }).catch(() => toast.error("Network error. Please try again."));
   }
 
   return (

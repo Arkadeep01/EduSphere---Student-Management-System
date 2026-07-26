@@ -10,6 +10,7 @@ from student.services import (
 )
 from administration.models.subject_request import SubjectRequestControl
 from teacher.models import TeacherProfile, TeacherClassAssignment
+from authentication.models import CustomUser
 
 
 class StudentAdminService:
@@ -133,3 +134,19 @@ def _notify_teachers_for_subject(subject, student_profile):
                 message=f"Student {student_profile.user.get_full_name() or student_profile.user.email} has been enrolled in {subject.name} ({class_name}).",
                 notification_type="general",
             )
+
+
+def deactivate_student(student_id, remark, deactivated_by):
+    profile = StudentProfile.objects.get(id=student_id)
+    user = profile.user
+    user.is_active = False
+    user.save(update_fields=["is_active"])
+
+    director_users = CustomUser.objects.filter(role="director")
+    for director in director_users:
+        Notification.objects.create(
+            user=director,
+            title="Student Deactivated",
+            message=f"Student {user.get_full_name() or user.email} (ID: {student_id}) was deactivated by {deactivated_by.email}. Remark: {remark}",
+            notification_type="general",
+        )

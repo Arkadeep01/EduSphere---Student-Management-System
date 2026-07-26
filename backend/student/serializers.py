@@ -45,6 +45,22 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
+class TeacherStudentProfileSerializer(serializers.ModelSerializer):
+    student_name = serializers.SerializerMethodField()
+    email = serializers.EmailField(source="user.email", read_only=True)
+
+    class Meta:
+        model = StudentProfile
+        fields = [
+            "id", "student_name", "email", "roll_number",
+            "admission_number", "class_assigned", "section",
+            "profile_photo",
+        ]
+
+    def get_student_name(self, obj):
+        return obj.user.get_full_name() or obj.user.email
+
+
 class StudentSubjectSerializer(serializers.ModelSerializer):
     subject_name = serializers.CharField(source="subject.name", read_only=True)
     subject_code = serializers.CharField(source="subject.code", read_only=True)

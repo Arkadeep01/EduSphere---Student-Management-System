@@ -1,4 +1,4 @@
-from .academic import AcademicSession, Class
+from .academic import AcademicSession, Class, ClassSubjectConfig
 from .audit_log import AuditLog
 from .subject_request import SubjectRequestControl
 from .teacher import ClassTeacherAssignment, TeacherSubjectAllocation, FacultyAttendance

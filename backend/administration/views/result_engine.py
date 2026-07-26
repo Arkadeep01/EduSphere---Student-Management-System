@@ -52,6 +52,11 @@ class GradeBoundaryListView(APIView):
         return Response(serializer.data)
 
     def put(self, request):
+        if ResultPublication.objects.filter(workflow_status="published").exists():
+            return Response(
+                {"error": "Cannot modify grade boundaries after results are published."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         serializer = GradeBoundarySerializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
         GradeBoundary.objects.all().delete()
@@ -202,6 +207,11 @@ class BulkPublishView(APIView):
             publication = ResultPublication.objects.get(id=pub_id)
         except ResultPublication.DoesNotExist:
             return Response({"detail": "Publication not found."}, status=status.HTTP_404_NOT_FOUND)
+        if publication.workflow_status != "ready_to_publish":
+            return Response(
+                {"error": "Publication must be in 'ready_to_publish' state."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         result = bulk_publish_results(publication, request.user)
         return Response(result)
 

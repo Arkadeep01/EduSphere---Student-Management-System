@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
+from django.shortcuts import get_object_or_404
 
 from administration.permissions import IsAdmin
 from administration.services.student_admin import StudentAdminService
@@ -125,3 +126,65 @@ class StudentSubjectRejectView(APIView):
         reason = request.data.get("reason", "")
         StudentAdminService.reject_subject_requests(student_id, subject_ids, reason)
         return Response({"status": "rejected"})
+
+
+class StudentDeactivateView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request, student_id):
+        remark = request.data.get("remark", "").strip()
+        if not remark:
+            return Response({"error": "Remark is required for deactivation."}, status=status.HTTP_400_BAD_REQUEST)
+        StudentAdminService.deactivate_student(student_id, remark, request.user)
+        return Response({"status": "deactivated", "remark": remark})
+
+
+class ClassSubjectConfigView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        from administration.models.academic import ClassSubjectConfig
+        class_name = request.query_params.get("class_name")
+        session_id = request.query_params.get("session_id")
+        qs = ClassSubjectConfig.objects.select_related("academic_session").prefetch_related("subjects")
+        if class_name:
+            qs = qs.filter(class_name=class_name)
+        if session_id:
+            qs = qs.filter(academic_session_id=session_id)
+        data = []
+        for cfg in qs:
+            data.append({
+                "id": cfg.id,
+                "class_name": cfg.class_name,
+                "academic_session": cfg.academic_session.name,
+                "session_id": cfg.academic_session_id,
+                "max_additional_subjects": cfg.max_additional_subjects,
+                "max_specialized": cfg.max_specialized,
+                "max_enriched": cfg.max_enriched,
+                "subjects": [{"id": s.id, "name": s.name, "tier": s.tier, "code": s.code} for s in cfg.subjects.all()],
+            })
+        return Response(data)
+
+    def post(self, request):
+        from administration.models.academic import ClassSubjectConfig
+        from administration.models import AcademicSession
+        data = request.data
+        session = get_object_or_404(AcademicSession, id=data["academic_session_id"])
+        cfg, created = ClassSubjectConfig.objects.get_or_create(
+            class_name=data["class_name"],
+            academic_session=session,
+            defaults={
+                "max_additional_subjects": data.get("max_additional_subjects", 2),
+                "max_specialized": data.get("max_specialized", 2),
+                "max_enriched": data.get("max_enriched", 2),
+            },
+        )
+        if not created:
+            cfg.max_additional_subjects = data.get("max_additional_subjects", cfg.max_additional_subjects)
+            cfg.max_specialized = data.get("max_specialized", cfg.max_specialized)
+            cfg.max_enriched = data.get("max_enriched", cfg.max_enriched)
+            cfg.save()
+        subject_ids = data.get("subject_ids", [])
+        if subject_ids:
+            cfg.subjects.set(subject_ids)
+        return Response({"id": cfg.id, "class_name": cfg.class_name, "created": created}, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)

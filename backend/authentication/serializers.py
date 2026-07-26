@@ -15,7 +15,7 @@ class CustomTokenObtainPairSerializer(serializers.Serializer):
         password = attrs.get("password", "")
         portal = attrs.get("portal", "").strip().lower()
 
-        if portal not in ["student", "teacher", "admin"]:
+        if portal not in ["student", "teacher", "admin", "faculty"]:
             raise serializers.ValidationError({"portal": "Invalid portal specified."})
 
         user = cast(CustomUser, authenticate(username=email, password=password))
@@ -23,7 +23,10 @@ class CustomTokenObtainPairSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid email or password.")
         if not user.is_active:
             raise serializers.ValidationError("Account is disabled.")
-        if user.role != portal:
+        if portal == "faculty":
+            if user.role not in ("teacher", "staff", "admin"):
+                raise serializers.ValidationError("Invalid portal access for this user role.")
+        elif user.role != portal:
             raise serializers.ValidationError("Invalid portal access for this user role.")
 
         refresh = RefreshToken.for_user(user)
@@ -73,4 +76,98 @@ class ChangePasswordSerializer(serializers.Serializer):
     def validate(self, attrs):
         if attrs["new_password"] != attrs["new_password2"]:
             raise serializers.ValidationError({"new_password2": "Passwords do not match."})
+        return attrs
+
+
+class ForcePasswordChangeSerializer(serializers.Serializer):
+    new_password = serializers.CharField(min_length=8, write_only=True)
+    new_password2 = serializers.CharField(min_length=8, write_only=True)
+
+    def validate(self, attrs):
+        if attrs["new_password"] != attrs["new_password2"]:
+            raise serializers.ValidationError({"new_password2": "Passwords do not match."})
+        return attrs
+
+
+class OAuthProfileCompleteSerializer(serializers.Serializer):
+    mobile = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    gender = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
+    address = serializers.CharField(required=False, allow_blank=True)
+    department = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    designation = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    qualification = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    experience = serializers.IntegerField(required=False, allow_null=True)
+    primary_subject = serializers.IntegerField(required=False, allow_null=True)
+    secondary_subjects = serializers.ListField(child=serializers.IntegerField(), required=False, default=list)
+    employee_type = serializers.CharField(max_length=50, required=False, allow_blank=True)
+
+
+class StudentSignupSerializer(serializers.Serializer):
+    first_name = serializers.CharField(max_length=150)
+    last_name = serializers.CharField(max_length=150)
+    email = serializers.EmailField()
+    mobile = serializers.CharField(max_length=20)
+    password = serializers.CharField(min_length=8, write_only=True)
+    password2 = serializers.CharField(min_length=8, write_only=True)
+    gender = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
+    address = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        if attrs["password"] != attrs["password2"]:
+            raise serializers.ValidationError({"password2": "Passwords do not match."})
+        email = attrs.get("email", "").strip().lower()
+        if CustomUser.objects.filter(email=email).exists():
+            raise serializers.ValidationError({"email": "A user with this email already exists."})
+        return attrs
+
+
+class TeacherSignupSerializer(serializers.Serializer):
+    first_name = serializers.CharField(max_length=150)
+    last_name = serializers.CharField(max_length=150)
+    email = serializers.EmailField()
+    mobile = serializers.CharField(max_length=20)
+    password = serializers.CharField(min_length=8, write_only=True)
+    password2 = serializers.CharField(min_length=8, write_only=True)
+    gender = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
+    address = serializers.CharField(required=False, allow_blank=True)
+    department = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    designation = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    qualification = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    experience = serializers.IntegerField(required=False, allow_null=True)
+    primary_subject = serializers.IntegerField()
+    secondary_subjects = serializers.ListField(child=serializers.IntegerField(), required=False, default=list)
+
+    def validate(self, attrs):
+        if attrs["password"] != attrs["password2"]:
+            raise serializers.ValidationError({"password2": "Passwords do not match."})
+        email = attrs.get("email", "").strip().lower()
+        if CustomUser.objects.filter(email=email).exists():
+            raise serializers.ValidationError({"email": "A user with this email already exists."})
+        from student.models import Subject
+        if not Subject.objects.filter(id=attrs.get("primary_subject")).exists():
+            raise serializers.ValidationError({"primary_subject": "Invalid subject selected."})
+        return attrs
+
+
+class StaffSignupSerializer(serializers.Serializer):
+    first_name = serializers.CharField(max_length=150)
+    last_name = serializers.CharField(max_length=150)
+    email = serializers.EmailField()
+    mobile = serializers.CharField(max_length=20)
+    password = serializers.CharField(min_length=8, write_only=True)
+    password2 = serializers.CharField(min_length=8, write_only=True)
+    gender = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    address = serializers.CharField(required=False, allow_blank=True)
+    department = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    employee_type = serializers.CharField(max_length=50, required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        if attrs["password"] != attrs["password2"]:
+            raise serializers.ValidationError({"password2": "Passwords do not match."})
+        email = attrs.get("email", "").strip().lower()
+        if CustomUser.objects.filter(email=email).exists():
+            raise serializers.ValidationError({"email": "A user with this email already exists."})
         return attrs

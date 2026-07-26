@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import (
     TeacherProfile, TeacherClassAssignment, TimetableEntry,
     LibrarySession, Resource, AnswerScript, Chapter, Topic, ClassChapterProgress,
+    TeacherResignation,
 )
 from student.models import StudentProfile
 
@@ -11,15 +12,21 @@ class TeacherProfileSerializer(serializers.ModelSerializer):
     assigned_subject_name = serializers.CharField(
         source="assigned_subject.name", read_only=True
     )
+    allocation_count = serializers.SerializerMethodField()
 
     class Meta:
         model = TeacherProfile
         fields = [
             "id", "email", "employee_id", "assigned_subject",
             "assigned_subject_name", "qualification", "experience",
-            "profile_photo",
+            "profile_photo", "date_of_birth", "gender", "phone",
+            "address", "department", "designation", "personal_email",
+            "status", "allocation_count",
         ]
         read_only_fields = ["employee_id"]
+
+    def get_allocation_count(self, obj):
+        return obj.subject_allocations.filter(is_active=True).count()
 
     def update(self, instance, validated_data):
         user_data = validated_data.pop("user", {})
@@ -129,3 +136,18 @@ class ClassChapterProgressSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClassChapterProgress
         fields = ["id", "chapter", "chapter_title", "chapter_order", "class_name", "completed_topics", "total_topics", "percentage"]
+
+
+class TeacherResignationSerializer(serializers.ModelSerializer):
+    teacher_name = serializers.CharField(source="teacher.user.email", read_only=True)
+    teacher_id = serializers.IntegerField(source="teacher.id", read_only=True)
+
+    class Meta:
+        model = TeacherResignation
+        fields = "__all__"
+
+
+class TeacherResignationCreateSerializer(serializers.Serializer):
+    reason = serializers.CharField()
+    details = serializers.CharField(default="", allow_blank=True)
+    effective_date = serializers.DateField()

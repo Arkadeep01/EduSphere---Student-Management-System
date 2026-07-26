@@ -1,6 +1,5 @@
 import { exportApi } from "@/services/adminApi";
 import type { ModuleExportConfig, ExportFieldGroup } from "./exportConfig";
-import { students, teachers, admissionSubmissions, contactSubmissions, fees } from "@/lib/mock-data";
 
 // ---- Students ----
 
@@ -59,7 +58,7 @@ export const studentExportConfig: ModuleExportConfig = {
     { key: "status", label: "Status", type: "select",
       options: [{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }] },
   ],
-  estimateRecordCount: () => students.length,
+  estimateRecordCount: () => 0,
   downloadFn: (format, fields, filters) => exportApi.downloadStudents(format, fields, filters),
 };
 
@@ -114,7 +113,7 @@ export const teacherExportConfig: ModuleExportConfig = {
     { key: "status", label: "Status", type: "select",
       options: [{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }] },
   ],
-  estimateRecordCount: () => teachers.length,
+  estimateRecordCount: () => 0,
   downloadFn: (format, fields, filters) => exportApi.downloadTeachers(format, fields, filters),
 };
 
@@ -261,7 +260,7 @@ export const admissionExportConfig: ModuleExportConfig = {
       ] },
     { key: "stream", label: "Stream", type: "text" },
   ],
-  estimateRecordCount: () => admissionSubmissions.length,
+  estimateRecordCount: () => 0,
   downloadFn: (format, fields, filters) => exportApi.downloadAdmissions(format, fields, filters),
 };
 
@@ -294,7 +293,7 @@ export const contactExportConfig: ModuleExportConfig = {
       ] },
   ],
   allowedFormats: ["pdf"],
-  estimateRecordCount: () => contactSubmissions.length,
+  estimateRecordCount: () => 0,
   downloadFn: (format, fields, filters) => exportApi.downloadContacts(format, fields, filters),
 };
 
@@ -410,7 +409,7 @@ export const feeExportConfig: ModuleExportConfig = {
         { value: "rejected", label: "Rejected" },
       ] },
   ],
-  estimateRecordCount: () => fees.length,
+  estimateRecordCount: () => 0,
   downloadFn: (format, fields, filters) => exportApi.downloadFees(format, fields, filters),
 };
 

@@ -5,6 +5,23 @@ from student.validators import FileExtensionValidator, FileSizeValidator
 
 
 class TeacherProfile(models.Model):
+    DEPARTMENT_CHOICES = [
+        ("science", "Science"),
+        ("arts", "Arts"),
+        ("commerce", "Commerce"),
+    ]
+    DESIGNATION_CHOICES = [
+        ("teacher", "Teacher"),
+        ("senior_teacher", "Senior Teacher"),
+        ("vp", "Vice Principal"),
+        ("principal", "Principal"),
+    ]
+    STATUS_CHOICES = [
+        ("active", "Active"),
+        ("resigned", "Resigned"),
+        ("inactive", "Inactive"),
+    ]
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -21,6 +38,14 @@ class TeacherProfile(models.Model):
     qualification = models.CharField(max_length=255, blank=True)
     experience = models.IntegerField(blank=True, null=True, help_text="Years of experience")
     profile_photo = models.ImageField(upload_to="teacher_photos/", blank=True, null=True)
+    date_of_birth = models.DateField(blank=True, null=True)
+    gender = models.CharField(max_length=20, blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    address = models.TextField(blank=True)
+    department = models.CharField(max_length=20, choices=DEPARTMENT_CHOICES, blank=True)
+    designation = models.CharField(max_length=20, choices=DESIGNATION_CHOICES, blank=True)
+    personal_email = models.EmailField(blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="active")
 
     class Meta:
         verbose_name = "Teacher Profile"
@@ -28,6 +53,52 @@ class TeacherProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.assigned_subject}"
+
+
+class TeacherResignation(models.Model):
+    RESIGNATION_STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+        ("overridden", "Overridden"),
+    ]
+
+    teacher = models.ForeignKey(
+        TeacherProfile,
+        on_delete=models.CASCADE,
+        related_name="resignations",
+    )
+    reason = models.TextField()
+    details = models.TextField(blank=True)
+    requested_at = models.DateTimeField(auto_now_add=True)
+    effective_date = models.DateField()
+    status = models.CharField(max_length=20, choices=RESIGNATION_STATUS_CHOICES, default="pending")
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reviewed_resignations",
+    )
+    reviewed_at = models.DateTimeField(blank=True, null=True)
+    override_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="overridden_resignations",
+    )
+    override_at = models.DateTimeField(blank=True, null=True)
+    override_reason = models.TextField(blank=True)
+    admin_notified = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-requested_at"]
+        verbose_name = "Teacher Resignation"
+        verbose_name_plural = "Teacher Resignations"
+
+    def __str__(self):
+        return f"{self.teacher.user.email} – {self.status} ({self.effective_date})"
 
 
 class TeacherClassAssignment(models.Model):
@@ -78,6 +149,18 @@ class TimetableEntry(models.Model):
     is_library_converted = models.BooleanField(default=False)
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["teacher", "day_of_week", "start_time"],
+                name="unique_teacher_time_slot",
+                violation_error_message="Teacher already has a class at this time slot"
+            ),
+            models.UniqueConstraint(
+                fields=["class_name", "day_of_week", "start_time"],
+                name="unique_class_time_slot",
+                violation_error_message="Class already has a lesson at this time slot"
+            ),
+        ]
         ordering = ["day_of_week", "start_time"]
         verbose_name = "Timetable Entry"
         verbose_name_plural = "Timetable Entries"

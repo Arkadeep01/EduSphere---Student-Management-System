@@ -13,7 +13,10 @@ class ClassTeacherAssignment(models.Model):
     assigned_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ("teacher", "class_name", "academic_year")
+        constraints = [
+            models.UniqueConstraint(fields=["class_name", "academic_year"], name="unique_class_teacher_per_year"),
+            models.UniqueConstraint(fields=["teacher", "class_name", "academic_year"], name="unique_teacher_class_year"),
+        ]
         verbose_name = "Class Teacher Assignment"
         verbose_name_plural = "Class Teacher Assignments"
 
@@ -38,10 +41,28 @@ class TeacherSubjectAllocation(models.Model):
         help_text="List of class names e.g. ['X-A', 'X-B']",
     )
     academic_year = models.CharField(max_length=20, default="2026-27")
+    academic_session = models.ForeignKey(
+        "administration.AcademicSession",
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="teacher_allocations",
+    )
+    is_primary = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    deallocation_reason = models.TextField(blank=True)
+    deallocation_date = models.DateField(blank=True, null=True)
+    deallocated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="deallocated_subjects",
+    )
+    draft = models.BooleanField(default=False, help_text="Draft allocation from rollover awaiting admin confirmation")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ("teacher", "subject", "academic_year")
+        unique_together = ("teacher", "subject", "academic_session")
         verbose_name = "Teacher Subject Allocation"
         verbose_name_plural = "Teacher Subject Allocations"
 

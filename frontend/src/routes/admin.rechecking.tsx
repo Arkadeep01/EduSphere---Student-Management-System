@@ -199,7 +199,7 @@ function AdminRecheckingComponent() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Blind Rechecking Management</h2>
+        <h2 className="text-xl font-bold">Rechecking Management</h2>
         <Button variant="outline" size="sm" onClick={() => closeExpiredMutation.mutate()} disabled={closeExpiredMutation.isPending}>
           <Clock className="mr-2 h-4 w-4" />Close Expired Windows
         </Button>
@@ -385,6 +385,6 @@ function AdminRecheckingComponent() {
 }
 
 export const Route = createFileRoute("/admin/rechecking")({
-  head: () => ({ meta: [{ title: "Blind Rechecking — Admin" }] }),
+  head: () => ({ meta: [{ title: "Rechecking — Admin" }] }),
   component: AdminRecheckingComponent,
 });

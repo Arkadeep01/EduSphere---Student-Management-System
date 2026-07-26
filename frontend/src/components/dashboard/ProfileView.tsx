@@ -12,8 +12,6 @@ import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/context/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { studentProfileData, teacherProfileData, teacherSubjectData } from "@/lib/mock-data";
-import { generateMockUploadResponse } from "@/lib/upload";
 import type { UploadedFileInfo } from "@/lib/upload";
 import { Camera, Download, BookOpen, GraduationCap, Briefcase, FileText, Crop, Check, X } from "lucide-react";
 import { useState, useRef, useCallback, useEffect } from "react";
@@ -23,7 +21,7 @@ interface ProfileViewProps {
 }
 
 function displayValue(val: string | undefined | null): string {
-  if (val === undefined || val === null || val.trim() === "" || val === "N/A") return "NULL";
+  if (val === undefined || val === null || val.trim() === "" || val === "N/A") return "Not Assigned";
   return val;
 }
 
@@ -70,24 +68,22 @@ export function ProfileView({ role }: ProfileViewProps) {
     ? `${user.first_name} ${user.last_name}`
     : user?.email ?? "User";
 
-  const mockPersonal = isStudent ? studentProfileData.personal : teacherProfileData.personal;
   const personal = {
     fullName,
-    email: user?.email ?? mockPersonal.email,
-    phone: (realProfile?.phone as string) ?? mockPersonal.phone,
-    dob: (realProfile?.date_of_birth as string) ?? mockPersonal.dob,
-    gender: (realProfile?.gender as string) ?? mockPersonal.gender,
-    bloodGroup: (realProfile?.blood_group as string) ?? mockPersonal.bloodGroup,
-    address: (realProfile?.address as string) ?? mockPersonal.address,
+    email: user?.email ?? "Not Assigned",
+    phone: (realProfile?.phone as string) ?? "Not Assigned",
+    dob: (realProfile?.date_of_birth as string) ?? "Not Assigned",
+    gender: (realProfile?.gender as string) ?? "Not Assigned",
+    bloodGroup: (realProfile?.blood_group as string) ?? "Not Assigned",
+    address: (realProfile?.address as string) ?? "Not Assigned",
   };
   const initials = fullName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   const academic = isStudent ? {
-    class: (realProfile?.class_assigned as string) ?? studentProfileData.academic.class,
-    section: (realProfile?.section as string) ?? studentProfileData.academic.section,
-    rollNumber: (realProfile?.roll_number as string) ?? studentProfileData.academic.rollNumber,
-    admissionNumber: (realProfile?.admission_number as string) ?? studentProfileData.academic.admissionNumber,
+    class: (realProfile?.class_assigned as string) ?? "Not Assigned",
+    section: (realProfile?.section as string) ?? "Not Assigned",
+    rollNumber: (realProfile?.roll_number as string) ?? "Not Assigned",
+    admissionNumber: (realProfile?.admission_number as string) ?? "Not Assigned",
   } : null;
-  const parents = isStudent ? studentProfileData.parents : null;
 
   const tabs = isTeacher
     ? ["personal", "qualifications", "experience", "classes", "documents", "security"]
@@ -141,8 +137,6 @@ export function ProfileView({ role }: ProfileViewProps) {
     if (imagePreview && selectedFile) {
       setProfileImage(imagePreview);
       setCropModal(false);
-      const mock = generateMockUploadResponse(selectedFile, "current_user");
-      setProfileUploadInfo(mock);
       setImagePreview(null);
       setSelectedFile(null);
       toast.success("Profile image saved");
@@ -192,7 +186,7 @@ export function ProfileView({ role }: ProfileViewProps) {
           <p className="text-muted-foreground">{personal.email}</p>
           <div className="flex gap-2 mt-1">
             <p className="text-sm text-primary capitalize">{user?.role}</p>
-            {isTeacher && <Badge variant="secondary" className="text-xs">{teacherSubjectData.name} · {teacherSubjectData.code}</Badge>}
+            {isTeacher && <Badge variant="secondary" className="text-xs">{personal.fullName}</Badge>}
             {isStudent && <Badge variant="secondary" className="text-xs">{academic?.class} · Roll {academic?.rollNumber}</Badge>}
           </div>
         </div>
@@ -210,7 +204,7 @@ export function ProfileView({ role }: ProfileViewProps) {
           <div className="space-y-2"><Label>Date of Birth</Label><Input defaultValue={displayValue(personal.dateOfBirth)} /></div>
           <div className="space-y-2"><Label>Gender</Label><Input defaultValue={displayValue(personal.gender)} /></div>
           <div className="space-y-2"><Label>Address</Label><Input defaultValue={displayValue(personal.address)} /></div>
-          {isStudent && <div className="space-y-2"><Label>Username</Label><Input defaultValue={displayValue(studentProfileData.personal.username)} /></div>}
+          {isStudent && <div className="space-y-2"><Label>Username</Label><Input defaultValue={displayValue(user?.username)} /></div>}
           <div className="sm:col-span-2"><Button onClick={() => toast.success("Profile updated")} className="bg-gradient-brand border-0">Save</Button></div>
         </CardContent></Card></TabsContent>
 
@@ -225,88 +219,31 @@ export function ProfileView({ role }: ProfileViewProps) {
         </CardContent></Card></TabsContent>}
 
         {/* Parents Tab - student only */}
-        {isStudent && <TabsContent value="parents"><Card><CardContent className="p-6 grid sm:grid-cols-2 gap-6 max-w-2xl">
-          <div className="space-y-2"><Label>Father's Name</Label><Input defaultValue={displayValue(parents?.fatherName)} /></div>
-          <div className="space-y-2"><Label>Father's Occupation</Label><Input defaultValue={displayValue(parents?.fatherOccupation)} /></div>
-          <div className="space-y-2"><Label>Father's Phone</Label><Input defaultValue={displayValue(parents?.fatherPhone)} /></div>
-          <div className="sm:col-span-2" />
-          <div className="space-y-2"><Label>Mother's Name</Label><Input defaultValue={displayValue(parents?.motherName)} /></div>
-          <div className="space-y-2"><Label>Mother's Occupation</Label><Input defaultValue={displayValue(parents?.motherOccupation)} /></div>
-          <div className="space-y-2"><Label>Mother's Phone</Label><Input defaultValue={displayValue(parents?.motherPhone)} /></div>
-          <div className="sm:col-span-2" />
-          <div className="space-y-2"><Label>Guardian Name</Label><Input defaultValue={displayValue(parents?.guardianName)} /></div>
-          <div className="space-y-2"><Label>Guardian Relation</Label><Input defaultValue={displayValue(parents?.guardianRelation)} /></div>
-          <div className="space-y-2"><Label>Guardian Phone</Label><Input defaultValue={displayValue(parents?.guardianPhone)} /></div>
-          <div className="sm:col-span-2"><Button onClick={() => toast.success("Parent info updated")} className="bg-gradient-brand border-0">Save</Button></div>
+        {isStudent && <TabsContent value="parents"><Card><CardContent className="p-6 max-w-2xl">
+          <p className="text-sm text-muted-foreground text-center py-8">No parent information available.</p>
         </CardContent></Card></TabsContent>}
 
         {/* Qualifications Tab - teacher only */}
         {isTeacher && <TabsContent value="qualifications"><Card><CardContent className="p-6 max-w-2xl space-y-4">
-          {teacherProfileData.qualifications.map((q, i) => (
-            <div key={i} className="flex items-start gap-4 p-4 border rounded-lg">
-              <GraduationCap className="h-5 w-5 text-primary mt-1" />
-              <div>
-                <p className="font-medium">{q.degree}</p>
-                <p className="text-sm text-muted-foreground">{q.institution} · {q.year}</p>
-              </div>
-            </div>
-          ))}
+          <p className="text-sm text-muted-foreground text-center py-8">No qualifications added yet.</p>
           <Button variant="outline" className="mt-2">Add Qualification</Button>
         </CardContent></Card></TabsContent>}
 
         {/* Experience Tab - teacher only */}
         {isTeacher && <TabsContent value="experience"><Card><CardContent className="p-6 max-w-2xl space-y-4">
-          {teacherProfileData.experience.map((e, i) => (
-            <div key={i} className="flex items-start gap-4 p-4 border rounded-lg">
-              <Briefcase className="h-5 w-5 text-primary mt-1" />
-              <div>
-                <p className="font-medium">{e.position}</p>
-                <p className="text-sm text-muted-foreground">{e.institution} · {e.from} – {e.to}</p>
-              </div>
-            </div>
-          ))}
+          <p className="text-sm text-muted-foreground text-center py-8">No experience added yet.</p>
           <Button variant="outline" className="mt-2">Add Experience</Button>
         </CardContent></Card></TabsContent>}
 
         {/* Classes Tab - teacher only */}
         {isTeacher && <TabsContent value="classes"><Card><CardContent className="p-6 max-w-2xl">
-          <div className="flex items-center gap-3 mb-4">
-            <BookOpen className="h-5 w-5 text-primary" />
-            <div>
-              <p className="font-medium">{teacherSubjectData.name} ({teacherSubjectData.code})</p>
-              <p className="text-sm text-muted-foreground">{teacherSubjectData.totalStudents} students across {teacherSubjectData.classes.length} classes</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {teacherSubjectData.classes.map(cls => (
-              <div key={cls} className="p-3 border rounded-lg text-center">
-                <p className="font-semibold">{cls}</p>
-                <p className="text-xs text-muted-foreground">{teacherSubjectData.name}</p>
-              </div>
-            ))}
-          </div>
+          <p className="text-sm text-muted-foreground text-center py-8">No class assignments yet.</p>
         </CardContent></Card></TabsContent>}
 
         {/* Documents Tab */}
         <TabsContent value="documents">
           <Card><CardContent className="p-6 max-w-2xl space-y-4">
-            {isTeacher ? (
-              teacherProfileData.documents.map((d, i) => (
-                <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3"><FileText className="h-4 w-4 text-primary" /><span className="text-sm font-medium">{d.name}</span></div>
-                  <div className="flex items-center gap-2"><span className="text-xs text-muted-foreground">{d.uploaded}</span><Button size="sm" variant="ghost"><Download className="h-4 w-4" /></Button></div>
-                </div>
-              ))
-            ) : (
-              <>
-                {studentProfileData.documents.map((d, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center gap-3"><FileText className="h-4 w-4 text-primary" /><span className="text-sm font-medium">{d.name}</span></div>
-                    <div className="flex items-center gap-2"><span className="text-xs text-muted-foreground">{d.uploaded}</span><Button size="sm" variant="ghost"><Download className="h-4 w-4" /></Button></div>
-                  </div>
-                ))}
-              </>
-            )}
+            <p className="text-sm text-muted-foreground text-center py-8">No documents uploaded yet.</p>
             <Button variant="outline">Upload document</Button>
           </CardContent></Card>
         </TabsContent>

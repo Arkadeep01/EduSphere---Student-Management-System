@@ -10,13 +10,16 @@ from student.models import StudentProfile, Subject, Attendance, Result, Assignme
 
 
 def get_teacher_subjects(teacher_profile):
-    """Get all subjects for a teacher from both assigned_subject and TeacherSubjectAllocation."""
+    """Get all subjects for a teacher from TeacherSubjectAllocation (authoritative source)."""
     from administration.models.teacher import TeacherSubjectAllocation
     subject_ids = set()
-    if teacher_profile.assigned_subject:
-        subject_ids.add(teacher_profile.assigned_subject_id)
-    allocated = TeacherSubjectAllocation.objects.filter(teacher=teacher_profile).values_list("subject_id", flat=True)
+    allocated = TeacherSubjectAllocation.objects.filter(
+        teacher=teacher_profile, is_active=True
+    ).values_list("subject_id", flat=True)
     subject_ids.update(allocated)
+    # Fall back to assigned_subject only if no TSA records exist
+    if not subject_ids and teacher_profile.assigned_subject:
+        subject_ids.add(teacher_profile.assigned_subject_id)
     return Subject.objects.filter(id__in=subject_ids)
 
 
@@ -131,8 +134,17 @@ def get_class_attendance_summary(teacher_profile, class_name, date=None):
 
 
 def get_teacher_assignments(teacher_profile, subject=None):
-    """Get assignments created by the teacher's subject."""
+    """Get assignments created by the teacher's subject(s)."""
+    from administration.models.teacher import TeacherSubjectAllocation
     if subject is None:
+        # Try TSA first, fall back to assigned_subject
+        tsa_subjects = TeacherSubjectAllocation.objects.filter(
+            teacher=teacher_profile, is_active=True
+        ).values_list("subject_id", flat=True)
+        if tsa_subjects:
+            return Assignment.objects.filter(
+                subject_id__in=tsa_subjects,
+            ).select_related("subject").order_by("-created_at")
         subject = teacher_profile.assigned_subject
     if not subject:
         return Assignment.objects.none()
@@ -148,7 +160,11 @@ def get_class_student_performance(teacher_profile, class_name):
     attendance percentage, assignment average, midterm results, and overall progress.
     """
     students = get_students_in_class(teacher_profile, class_name)
-    subject = teacher_profile.assigned_subject
+    from administration.models.teacher import TeacherSubjectAllocation
+    tsa = TeacherSubjectAllocation.objects.filter(
+        teacher=teacher_profile, assigned_classes__contains=class_name, is_active=True
+    ).select_related("subject").first()
+    subject = tsa.subject if tsa else teacher_profile.assigned_subject
     now = timezone.now().date()
 
     performance_data = []

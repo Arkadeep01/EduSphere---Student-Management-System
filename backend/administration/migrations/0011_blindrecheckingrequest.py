@@ -239,8 +239,8 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "verbose_name": "Blind Rechecking Request",
-                "verbose_name_plural": "Blind Rechecking Requests",
+                "verbose_name": "Rechecking Request",
+                "verbose_name_plural": "Rechecking Requests",
                 "ordering": ["-requested_at"],
                 "unique_together": {("student", "exam", "subject", "status")},
             },

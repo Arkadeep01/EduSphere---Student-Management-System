@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
-import { useNavigate } from "@tanstack/react-router";
 
 const API_BASE = "http://localhost:8000";
 const TOKEN_KEY = "accessToken";
@@ -10,17 +9,19 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
-  role: "student" | "teacher" | "admin" | "staff";
+  role: "student" | "teacher" | "admin" | "staff" | "director";
   is_active: boolean;
   is_staff: boolean;
   is_superuser: boolean;
+  password_changed: boolean;
+  needs_activation: boolean;
   date_joined: string;
 }
 
 interface LoginParams {
   email: string;
   password: string;
-  portal?: string;
+  selected_role?: string;
 }
 
 interface RegisterParams {
@@ -41,16 +42,35 @@ interface AuthCtx {
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
   clearError: () => void;
+  changeTempPassword: (newPassword: string) => Promise<void>;
 }
 
-function getRoleRedirect(role: string): string {
+export function getRoleRedirect(role: string): string {
   switch (role) {
     case "admin": return "/admin/dashboard";
     case "teacher": return "/teacher/dashboard";
     case "student": return "/student/dashboard";
     case "staff": return "/staff/dashboard";
+    case "director": return "/director/dashboard";
     default: return "/login";
   }
+}
+
+export function getRouteRole(pathname: string): User["role"] | null {
+  const match = pathname.match(/^\/(admin|teacher|student|staff|director)\//);
+  return match ? (match[1] as User["role"]) : null;
+}
+
+export function isAuthorizedForRoute(user: User, pathname: string): boolean {
+  const routeRole = getRouteRole(pathname);
+  return routeRole ? user.role === routeRole : false;
+}
+
+export function getSafeRedirect(user: User, returnTo: string | null): string {
+  if (returnTo && isAuthorizedForRoute(user, returnTo)) {
+    return returnTo;
+  }
+  return getRoleRedirect(user.role);
 }
 
 function storeTokens(access: string, refresh: string): void {
@@ -75,14 +95,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const refreshSession = useCallback(async () => {
-    const token = getAccessToken();
-    if (!token) {
-      setLoading(false);
-      return;
-    }
     try {
+      const token = getAccessToken();
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
       const res = await fetch(`${API_BASE}/api/me/`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers,
         credentials: "include",
       });
       const data = await res.json();
@@ -107,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const body = { email: params.email, password: params.password, portal: params.portal || "student" };
+      const body = { email: params.email, password: params.password, selected_role: params.selected_role || "student" };
       const res = await fetch(`${API_BASE}/api/login/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -119,6 +139,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         storeTokens(data.access, data.refresh);
         setUser(data.user);
         return data.user;
+      }
+      if (data.needs_activation) {
+        const err = new Error("needs_activation");
+        (err as any).needs_activation = true;
+        setError(data.message || "You must change your temporary password.");
+        throw err;
       }
       const msg = data.message || "Login failed.";
       setError(msg);
@@ -159,9 +185,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     setLoading(true);
     try {
+      const refresh = localStorage.getItem(REFRESH_KEY);
       await fetch(`${API_BASE}/api/logout/`, {
         method: "POST",
         credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh }),
       });
     } catch {
       // Ignore logout errors
@@ -176,9 +205,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
   }, []);
 
+  const changeTempPassword = useCallback(async (newPassword: string) => {
+    const token = getAccessToken();
+    const res = await fetch(`${API_BASE}/api/force-password-change/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      credentials: "include",
+      body: JSON.stringify({ new_password: newPassword, new_password2: newPassword }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      storeTokens(data.access, data.refresh);
+      setUser(data.user);
+      return;
+    }
+    throw new Error(data.error || "Password change failed.");
+  }, []);
+
   return (
     <Ctx.Provider
-      value={{ user, loading, error, login, register, logout, refreshSession, clearError }}
+      value={{ user, loading, error, login, register, logout, refreshSession, clearError, changeTempPassword }}
     >
       {children}
     </Ctx.Provider>
@@ -193,19 +242,22 @@ export function useAuth() {
 
 export function useRequireAuth() {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
+  const returnTo = typeof window !== "undefined" ? window.location.pathname + window.location.search : "/";
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/login" });
-  }, [user, loading, navigate]);
-  return { user, loading };
+    if (!loading && !user) {
+      sessionStorage.setItem("returnTo", returnTo);
+    }
+  }, [user, loading, returnTo]);
+  return { user, loading, authenticated: !loading && !!user };
 }
 
 export function useRequireRole(role: User["role"]) {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
+  const returnTo = typeof window !== "undefined" ? window.location.pathname + window.location.search : "/";
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/login" });
-    else if (!loading && user && user.role !== role) navigate({ to: getRoleRedirect(user.role) });
-  }, [user, loading, role, navigate]);
+    if (!loading && !user) {
+      sessionStorage.setItem("returnTo", returnTo);
+    }
+  }, [user, loading, returnTo, role]);
   return { user, loading, authorized: !loading && !!user && user.role === role };
 }

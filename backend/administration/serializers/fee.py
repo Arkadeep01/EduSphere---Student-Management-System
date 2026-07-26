@@ -46,6 +46,31 @@ class StudentFeePaymentSerializer(serializers.ModelSerializer):
         return obj.student.admission_number or ""
 
 
+class PaymentRecordSerializer(serializers.Serializer):
+    payment_id = serializers.IntegerField()
+    payment_method = serializers.ChoiceField(choices=["CASH", "BANK", "UPI"])
+    transaction_ref = serializers.CharField(required=False, allow_blank=True, default="")
+
+
+class CorrectionRequestSerializer(serializers.Serializer):
+    payment_id = serializers.IntegerField()
+    reason = serializers.CharField()
+
+
+class ClearanceDeadlineSerializer(serializers.Serializer):
+    student_id = serializers.IntegerField()
+    deadline = serializers.DateField()
+
+
+class ReminderSerializer(serializers.Serializer):
+    student_ids = serializers.ListField(child=serializers.IntegerField())
+
+
+class FeeGenerateSerializer(serializers.Serializer):
+    class_name = serializers.CharField()
+    academic_session = serializers.CharField(default="2026-27")
+
+
 class StudentScholarshipSerializer(serializers.ModelSerializer):
     student_name = serializers.SerializerMethodField()
     class_name = serializers.SerializerMethodField()

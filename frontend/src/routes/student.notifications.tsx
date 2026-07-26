@@ -4,7 +4,7 @@ import { PageWrapper, StaggerContainer, StaggerItem } from "@/components/brand/a
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Calendar, DollarSign, FileText, FileCheck, Bell } from "lucide-react";
-import { notificationCategories } from "@/lib/mock-data";
+
 import { API_BASE } from "@/services/request";
 
 const categoryIcons: Record<string, typeof Calendar> = {
@@ -30,7 +30,7 @@ function StudentNotificationsComponent() {
 
   const categories = realNotifs && realNotifs.length > 0
     ? groupIntoCategories(realNotifs)
-    : notificationCategories;
+    : [];
 
   return (
     <PageWrapper>

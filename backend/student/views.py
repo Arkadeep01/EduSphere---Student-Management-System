@@ -393,3 +393,52 @@ class StudentExamListView(APIView):
         from administration.serializers import ExamSerializer
         serializer = ExamSerializer(exams, many=True)
         return Response(serializer.data)
+
+
+class SubjectWithdrawalView(APIView):
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def post(self, request):
+        profile = StudentProfile.objects.filter(user=request.user).first()
+        if not profile:
+            return Response({"error": "Profile not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        subject_id = request.data.get("subject_id")
+        reason = request.data.get("reason", "").strip()
+        replacement_subject_id = request.data.get("replacement_subject_id")
+
+        if not subject_id or not reason:
+            return Response({"error": "subject_id and reason are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        from .services import withdraw_subject
+        try:
+            req = withdraw_subject(profile, subject_id, reason, replacement_subject_id)
+            return Response({
+                "id": req.id,
+                "subject": req.subject.name,
+                "status": req.status,
+                "message": "Withdrawal request submitted for approval.",
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        profile = StudentProfile.objects.filter(user=request.user).first()
+        if not profile:
+            return Response({"error": "Profile not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        from .models import SubjectWithdrawalRequest
+        requests_qs = SubjectWithdrawalRequest.objects.filter(student=profile).select_related("subject", "replacement_subject")
+        data = []
+        for r in requests_qs:
+            data.append({
+                "id": r.id,
+                "subject_name": r.subject.name,
+                "replacement_name": r.replacement_subject.name if r.replacement_subject else None,
+                "reason": r.reason,
+                "has_marks": r.has_marks,
+                "status": r.status,
+                "admin_remark": r.admin_remark,
+                "created_at": r.created_at.isoformat(),
+            })
+        return Response(data)

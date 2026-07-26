@@ -2,6 +2,7 @@ import os
 
 from django.db import transaction
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from rest_framework import serializers
 
 from .models import (
@@ -34,13 +35,19 @@ def create_student_profile(user, data):
 
 
 def assign_core_subjects(student_profile):
-    """Auto-assign core subjects to a student."""
+    """Auto-assign core subjects to a student with the current academic session."""
+    from administration.models import AcademicSession
+    current_session = AcademicSession.objects.filter(is_current=True).first()
     core_subjects = Subject.objects.filter(tier="core")
     for subject in core_subjects:
         StudentSubject.objects.get_or_create(
             student=student_profile,
             subject=subject,
-            defaults={"status": "approved", "assigned_by_admin": True},
+            defaults={
+                "status": "approved",
+                "assigned_by_admin": True,
+                "academic_session": current_session,
+            },
         )
 
 
@@ -80,6 +87,24 @@ def add_student_subject_selection(student_profile, subject_ids):
     ).delete()
 
     current_session = get_current_session()
+
+    # Enforce max_additional_subjects limit
+    from administration.models.subject_request import SubjectRequestControl
+    ctrl, _ = SubjectRequestControl.objects.get_or_create(
+        session=current_session,
+        defaults={"max_additional_subjects": 2},
+    )
+    existing_non_core_count = StudentSubject.objects.filter(
+        student=student_profile,
+        status="approved",
+    ).exclude(subject__tier="core").count()
+    new_non_core_ids = [sid for sid in subject_ids if Subject.objects.get(id=sid).tier != "core"]
+    if existing_non_core_count + len(new_non_core_ids) > ctrl.max_additional_subjects:
+        raise ValidationError(
+            f"Cannot add {len(new_non_core_ids)} additional subject(s). "
+            f"Maximum additional subjects allowed is {ctrl.max_additional_subjects} "
+            f"(currently have {existing_non_core_count})."
+        )
 
     # Create new pending entries
     for subj_id in subject_ids:
@@ -141,6 +166,83 @@ def admin_assign_subjects(student_profile, subject_ids):
                     "academic_session": current_session,
                 },
             )
+
+
+def withdraw_subject(student_profile, subject_id, reason, replacement_subject_id=None):
+    from student.models import SubjectWithdrawalRequest, Result
+
+    subject = Subject.objects.get(id=subject_id)
+
+    # Check if student has marks in this subject
+    has_marks = Result.objects.filter(student=student_profile, subject=subject).exists()
+
+    # For core subjects - block withdrawal
+    if subject.tier == "core":
+        raise ValidationError("Core subjects cannot be withdrawn.")
+
+    # Create withdrawal request
+    replacement = None
+    if replacement_subject_id:
+        replacement = Subject.objects.get(id=replacement_subject_id)
+
+    request = SubjectWithdrawalRequest.objects.create(
+        student=student_profile,
+        subject=subject,
+        replacement_subject=replacement,
+        reason=reason,
+        has_marks=has_marks,
+        status="pending",
+    )
+    return request
+
+
+def approve_withdrawal(request_or_id, reviewed_by, admin_remark="", exceptional_override=False):
+    if isinstance(request_or_id, int):
+        from student.models import SubjectWithdrawalRequest
+        req = SubjectWithdrawalRequest.objects.get(id=request_or_id)
+    else:
+        req = request_or_id
+
+    if req.has_marks and not exceptional_override:
+        raise ValidationError("Student has marks in this subject. Use exceptional override to proceed.")
+
+    # Update the StudentSubject to withdrawn
+    StudentSubject.objects.filter(
+        student=req.student,
+        subject=req.subject,
+    ).update(status="withdrawn")
+
+    # If replacement, create new enrollment
+    if req.replacement_subject:
+        StudentSubject.objects.get_or_create(
+            student=req.student,
+            subject=req.replacement_subject,
+            academic_session=get_current_session(),
+            defaults={"status": "approved", "assigned_by_admin": True},
+        )
+
+    req.status = "approved"
+    req.reviewed_by = reviewed_by
+    req.admin_remark = admin_remark
+    req.exceptional_override = exceptional_override
+    req.reviewed_at = timezone.now()
+    req.save()
+    return req
+
+
+def reject_withdrawal(request_or_id, reviewed_by, admin_remark=""):
+    if isinstance(request_or_id, int):
+        from student.models import SubjectWithdrawalRequest
+        req = SubjectWithdrawalRequest.objects.get(id=request_or_id)
+    else:
+        req = request_or_id
+
+    req.status = "rejected"
+    req.reviewed_by = reviewed_by
+    req.admin_remark = admin_remark
+    req.reviewed_at = timezone.now()
+    req.save()
+    return req
 
 
 def create_assignment(teacher_user, data):

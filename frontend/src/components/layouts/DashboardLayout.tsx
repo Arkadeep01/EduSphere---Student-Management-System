@@ -3,10 +3,10 @@ import { useState } from "react";
 import {
   LayoutDashboard, Users, GraduationCap, BookOpen, CalendarDays,
   ClipboardCheck, FileText, DollarSign, BarChart3, Settings, User,
-  LogOut, Menu, Bell, Sun, Moon, ChevronDown, Home as FileCheck, Layers, Clock, Award, Mail, ClipboardList, FolderOpen, Megaphone, TrendingUp, FileSpreadsheet, Search,
+  LogOut, Menu, Bell, Sun, Moon, ChevronDown, Home as FileCheck, Layers, Clock, Award, Mail, ClipboardList, FolderOpen, Megaphone, TrendingUp, FileSpreadsheet, Search, ShieldAlert,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, useRequireRole } from "@/context/AuthContext";
 import { useTheme } from "@/lib/theme";
 import { useNotifications, NotificationProvider } from "@/context/NotificationContext";
 import { cn } from "@/lib/utils";
@@ -17,11 +17,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import type { Role } from "@/lib/mock-data";
+import { ForbiddenPage } from "@/components/ForbiddenPage";
+type Role = "admin" | "teacher" | "student" | "staff" | "director";
 
 interface NavItem { label: string; to: string; icon: typeof LayoutDashboard; }
 
 const navByRole: Record<Role, NavItem[]> = {
+  director: [
+    { label: "Dashboard", to: "/director/dashboard", icon: LayoutDashboard },
+    { label: "Admin Management", to: "/director/admin-management", icon: ShieldAlert },
+    { label: "Staff Management", to: "/director/staff-management", icon: Users },
+    { label: "Profile", to: "/admin/profile", icon: User },
+  ],
   admin: [
     { label: "Dashboard", to: "/admin/dashboard", icon: LayoutDashboard },
     { label: "Students", to: "/admin/students", icon: Users },
@@ -42,7 +49,7 @@ const navByRole: Record<Role, NavItem[]> = {
     { label: "Documents", to: "/admin/documents", icon: FolderOpen },
     { label: "Reports", to: "/admin/reports", icon: BarChart3 },
     { label: "Subjects", to: "/admin/subjects", icon: BookOpen },
-    { label: "Blind Rechecking", to: "/admin/rechecking", icon: Search },
+    { label: "Rechecking", to: "/admin/rechecking", icon: Search },
     { label: "Settings", to: "/admin/settings", icon: Settings },
     { label: "Profile", to: "/admin/profile", icon: User },
   ],
@@ -55,7 +62,7 @@ const navByRole: Record<Role, NavItem[]> = {
     { label: "Exams", to: "/teacher/exams", icon: FileText },
     { label: "Timetable", to: "/teacher/timetable", icon: Clock },
     { label: "Resources", to: "/teacher/resources", icon: BookOpen },
-    { label: "Blind Rechecking", to: "/teacher/rechecking", icon: Search },
+    { label: "Rechecking", to: "/teacher/rechecking", icon: Search },
     { label: "Notification Center", to: "/teacher/notification-center", icon: Bell },
     { label: "Profile", to: "/teacher/profile", icon: User },
   ],
@@ -84,11 +91,24 @@ const navByRole: Record<Role, NavItem[]> = {
 
 export function  DashboardLayoutInner({ role }: { role: Role }) {
   const { user, logout } = useAuth();
+  const { authorized, loading: authLoading } = useRequireRole(role);
   const { unreadCount } = useNotifications();
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!authorized) {
+    return <ForbiddenPage />;
+  }
 
   const items = navByRole[role];
 
@@ -119,7 +139,7 @@ export function  DashboardLayoutInner({ role }: { role: Role }) {
     "upload": "Upload Scripts",
     "history": "Upload History",
     "rejected": "Rejected Uploads",
-    "rechecking": "Blind Rechecking",
+    "rechecking": "Rechecking",
   };
   const currentPage = pathname.split("/").pop() || "";
   const pageTitle = pageTitleMap[currentPage] || currentPage.charAt(0).toUpperCase() + currentPage.slice(1);

@@ -6,7 +6,8 @@ from django.shortcuts import get_object_or_404
 
 from administration.permissions import IsAdmin
 from administration.models import AcademicSession
-from administration.services.promotion_service import PromotionService, RepeatDetainService, SessionRolloverService, BulkPromotionService
+from administration.services.promotion_service import PromotionService, RepeatDetainService, BulkPromotionService
+from administration.services.session_rollover_service import SessionRolloverService
 
 
 class StudentPromotionView(APIView):

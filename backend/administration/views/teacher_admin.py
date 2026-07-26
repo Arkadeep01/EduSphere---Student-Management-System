@@ -21,13 +21,6 @@ class TeacherListView(APIView):
         serializer = TeacherProfileSerializer(teachers, many=True)
         return Response(serializer.data)
 
-    def post(self, request):
-        data = request.data
-        user = request.user
-        profile = TeacherAdminService.create_teacher(user, data)
-        serializer = TeacherProfileSerializer(profile)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 
 class TeacherDetailView(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]
@@ -111,3 +104,93 @@ class TeacherClassTeacherAssignmentsView(APIView):
         assignments = TeacherAdminService.get_class_teacher_assignments()
         serializer = ClassTeacherAssignmentSerializer(assignments, many=True)
         return Response(serializer.data)
+
+
+class TeacherDeallocateSubjectView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request, allocation_id):
+        reason = request.data.get("reason", "").strip()
+        if not reason:
+            return Response({"error": "Reason is required for deallocation."}, status=status.HTTP_400_BAD_REQUEST)
+        effective_date = request.data.get("effective_date")
+        obj = TeacherAdminService.deallocate_subject(allocation_id, reason, request.user, effective_date)
+        from administration.serializers.teacher import TeacherSubjectAllocationSerializer
+        serializer = TeacherSubjectAllocationSerializer(obj)
+        return Response(serializer.data)
+
+
+class TeacherDraftAllocationsView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        session_id = request.query_params.get("session_id")
+        qs = TeacherSubjectAllocation.objects.filter(draft=True).select_related("teacher__user", "subject", "academic_session")
+        if session_id:
+            qs = qs.filter(academic_session_id=session_id)
+        from administration.serializers.teacher import TeacherSubjectAllocationSerializer
+        serializer = TeacherSubjectAllocationSerializer(qs, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        session_id = request.data.get("session_id")
+        action = request.data.get("action", "confirm")
+        if action == "confirm":
+            from administration.services.session_rollover_service import SessionRolloverService
+            count = SessionRolloverService.confirm_draft_allocations(session_id, request.user)
+            return Response({"confirmed": count, "status": "confirmed"})
+        elif action == "reject":
+            qs = TeacherSubjectAllocation.objects.filter(draft=True)
+            if session_id:
+                qs = qs.filter(academic_session_id=session_id)
+            count = qs.count()
+            qs.delete()
+            return Response({"deleted": count, "status": "rejected"})
+        return Response({"error": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SubjectWithdrawalListView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        from student.models import SubjectWithdrawalRequest
+        status_filter = request.query_params.get("status")
+        qs = SubjectWithdrawalRequest.objects.select_related(
+            "student__user", "subject", "replacement_subject"
+        ).order_by("-created_at")
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        data = []
+        for r in qs:
+            data.append({
+                "id": r.id,
+                "student_name": r.student.user.get_full_name() or r.student.user.email,
+                "roll_number": r.student.roll_number or "",
+                "class_assigned": r.student.class_assigned,
+                "subject_name": r.subject.name,
+                "replacement_name": r.replacement_subject.name if r.replacement_subject else None,
+                "reason": r.reason,
+                "has_marks": r.has_marks,
+                "status": r.status,
+                "created_at": r.created_at.isoformat(),
+            })
+        return Response(data)
+
+
+class SubjectWithdrawalReviewView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request, request_id):
+        action = request.data.get("action")
+        admin_remark = request.data.get("admin_remark", "")
+        exceptional_override = request.data.get("exceptional_override", False)
+
+        from student.services import approve_withdrawal, reject_withdrawal
+
+        if action == "approve":
+            req = approve_withdrawal(request_id, request.user, admin_remark, exceptional_override)
+            return Response({"status": "approved", "id": req.id})
+        elif action == "reject":
+            req = reject_withdrawal(request_id, request.user, admin_remark)
+            return Response({"status": "rejected", "id": req.id})
+        return Response({"error": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)

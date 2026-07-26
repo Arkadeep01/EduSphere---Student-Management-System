@@ -114,8 +114,8 @@ class BlindRecheckingRequest(models.Model):
     class Meta:
         ordering = ["-requested_at"]
         unique_together = ("student", "exam", "subject", "status")
-        verbose_name = "Blind Rechecking Request"
-        verbose_name_plural = "Blind Rechecking Requests"
+        verbose_name = "Rechecking Request"
+        verbose_name_plural = "Rechecking Requests"
 
     def __str__(self):
         return f"Recheck #{self.id} – {self.student.user.email} – {self.exam.name} ({self.subject.name}) [{self.status}]"

@@ -144,15 +144,27 @@ export const feeApi = {
     duplicate: (fromClass: string, toClass: string) =>
       request("/fees/structures/duplicate/", { method: "POST", body: JSON.stringify({ from_class: fromClass, to_class: toClass }) }),
   },
+  generate: (class_name: string, academic_session?: string) =>
+    request("/fees/generate/", { method: "POST", body: JSON.stringify({ class_name, academic_session: academic_session || "2026-27" }) }),
   payments: {
     list: (params?: Record<string, string>) => {
       const qs = params ? `?${new URLSearchParams(params)}` : "";
       return request<unknown[]>(`/fees/payments/${qs}`);
     },
+    record: (data: { payment_id: number; payment_method: string; transaction_ref?: string }) =>
+      request("/fees/payments/record/", { method: "POST", body: JSON.stringify(data) }),
     verify: (id: number) => request(`/fees/payments/${id}/verify/`, { method: "POST" }),
     reject: (id: number) => request(`/fees/payments/${id}/reject/`, { method: "POST" }),
     initiateRefund: (id: number) => request(`/fees/payments/${id}/refund/initiate/`, { method: "POST" }),
     completeRefund: (id: number) => request(`/fees/payments/${id}/refund/complete/`, { method: "POST" }),
+    requestCorrection: (payment_id: number, reason: string) =>
+      request("/fees/payments/correction/request/", { method: "POST", body: JSON.stringify({ payment_id, reason }) }),
+    approveCorrection: (id: number) =>
+      request(`/fees/payments/correction/${id}/approve/`, { method: "POST" }),
+    requestRefund: (payment_id: number, reason: string) =>
+      request("/fees/payments/refund/request/", { method: "POST", body: JSON.stringify({ payment_id, reason }) }),
+    approveRefund: (id: number) =>
+      request(`/fees/payments/refund/${id}/approve/`, { method: "POST" }),
   },
   scholarships: {
     list: () => request<unknown[]>("/fees/scholarships/"),
@@ -165,6 +177,18 @@ export const feeApi = {
   myLedger: () => request<unknown>("/fees/my-ledger/"),
   recordOffline: (data: Record<string, unknown>) =>
     request("/fees/my-ledger/", { method: "POST", body: JSON.stringify(data) }),
+  clearanceDeadline: (student_id: number, deadline: string) =>
+    request("/fees/clearance-deadline/", { method: "POST", body: JSON.stringify({ student_id, deadline }) }),
+  reminder: (student_ids: number[]) =>
+    request("/fees/reminder/", { method: "POST", body: JSON.stringify({ student_ids }) }),
+  outstanding: (student_id: number) =>
+    request<unknown>(`/fees/outstanding/${student_id}/`),
+  admission: {
+    record: (student_id: number) =>
+      request(`/fees/admission/${student_id}/record/`, { method: "POST" }),
+    pay: (student_id: number) =>
+      request(`/fees/admission/${student_id}/pay/`, { method: "POST" }),
+  },
 };
 
 // Letterheads

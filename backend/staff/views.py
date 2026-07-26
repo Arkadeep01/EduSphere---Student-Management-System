@@ -11,6 +11,9 @@ from .serializers import (
     StaffBatchSerializer,
     StaffAnswerScriptUploadSerializer,
     StaffProfileSerializer,
+    StaffTeacherCreateSerializer,
+    StaffTeacherUpdateSerializer,
+    StaffTeacherListSerializer,
 )
 from .selectors import (
     get_staff_dashboard_data,
@@ -24,7 +27,17 @@ from .services import (
     upload_answer_script,
     replace_uploaded_file,
     delete_upload,
+    staff_create_teacher,
+    staff_list_teachers,
+    staff_get_teacher,
+    staff_update_teacher,
 )
+from teacher.services import (
+    review_resignation, override_resignation, list_teacher_resignations,
+    get_resignation,
+)
+from teacher.serializers import TeacherResignationSerializer
+from administration.permissions import IsDirector
 
 
 class StaffDashboardView(generics.GenericAPIView):
@@ -115,7 +128,10 @@ class StaffUploadView(generics.GenericAPIView):
         subject_id = request.query_params.get("subject")
         qs = AnswerScriptUpload.objects.select_related(
             "exam", "subject", "student__user"
-        ).filter(upload_status="pending_upload")
+        ).filter(
+            upload_status="pending_upload",
+            uploaded_by=request.user,
+        )
         if exam_id:
             qs = qs.filter(exam_id=exam_id)
         if subject_id:
@@ -213,3 +229,92 @@ class StaffProfileView(generics.GenericAPIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ── Staff Teacher Management ───────────────────────────────────────────
+
+class StaffTeacherCreateView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated, IsStaff]
+
+    def post(self, request):
+        ser = StaffTeacherCreateSerializer(data=request.data)
+        if not ser.is_valid():
+            return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+        user = staff_create_teacher(ser.validated_data)
+        return Response({
+            "success": True,
+            "message": "Teacher account created. Temporary password set to DOB (DDMMYYYY).",
+            "teacher_id": user.teacher_profile.id,
+            "email": user.email,
+        }, status=status.HTTP_201_CREATED)
+
+
+class StaffTeacherListView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated, IsStaff]
+
+    def get(self, request):
+        teachers = staff_list_teachers()
+        serializer = StaffTeacherListSerializer(teachers, many=True)
+        return Response(serializer.data)
+
+
+class StaffTeacherDetailView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated, IsStaff]
+
+    def get(self, request, teacher_id):
+        teacher = staff_get_teacher(teacher_id)
+        serializer = StaffTeacherListSerializer(teacher)
+        return Response(serializer.data)
+
+    def patch(self, request, teacher_id):
+        teacher = staff_update_teacher(teacher_id, request.data)
+        serializer = StaffTeacherListSerializer(teacher)
+        return Response(serializer.data)
+
+
+# ── Staff Resignation Processing ────────────────────────────────────────
+
+class StaffResignationListView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated, IsStaff]
+
+    def get(self, request):
+        resignations = list_teacher_resignations()
+        serializer = TeacherResignationSerializer(resignations, many=True)
+        return Response(serializer.data)
+
+
+class StaffResignationApproveView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated, IsStaff]
+
+    def post(self, request, resignation_id):
+        resignation = review_resignation(
+            resignation_id, request.user, "approved",
+            request.data.get("notes", ""),
+        )
+        serializer = TeacherResignationSerializer(resignation)
+        return Response(serializer.data)
+
+
+class StaffResignationRejectView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated, IsStaff]
+
+    def post(self, request, resignation_id):
+        resignation = review_resignation(
+            resignation_id, request.user, "rejected",
+            request.data.get("notes", ""),
+        )
+        serializer = TeacherResignationSerializer(resignation)
+        return Response(serializer.data)
+
+
+class StaffResignationOverrideView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated, IsDirector]
+
+    def post(self, request, resignation_id):
+        new_status = request.data.get("new_status", "approved")
+        reason = request.data.get("reason", "Director override")
+        resignation = override_resignation(
+            resignation_id, request.user, new_status, reason,
+        )
+        serializer = TeacherResignationSerializer(resignation)
+        return Response(serializer.data)

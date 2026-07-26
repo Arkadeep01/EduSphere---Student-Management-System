@@ -1,4 +1,14 @@
-import type { ChapterResource } from "./mock-data";
+type ChapterResource = {
+  id: string;
+  title: string;
+  type: "note" | "video" | "document" | "reference";
+  size: string;
+  description?: string;
+  fileSize?: number;
+  downloadCount?: number;
+  uploadedAt?: string;
+  fileUrl?: string;
+};
 
 export type SharedResource = ChapterResource & {
   fileUrl?: string;

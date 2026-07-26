@@ -120,9 +120,9 @@ class SessionRolloverService:
     
     @staticmethod
     def _carry_forward_teacher_allocations(from_session, to_session):
-        """Carry forward teacher allocations (session-specific data)."""
+        """Carry forward teacher allocations (session-specific data) as drafts."""
         allocations = TeacherSubjectAllocation.objects.filter(
-            academic_year=from_session.name
+            academic_year=from_session.name, is_active=True
         )
         
         for allocation in allocations:
@@ -131,8 +131,26 @@ class SessionRolloverService:
                 subject=allocation.subject,
                 assigned_classes=allocation.assigned_classes,
                 academic_year=to_session.name,
-                created_at=timezone.now()
+                academic_session=to_session,
+                is_primary=allocation.is_primary,
+                draft=True,
             )
+    
+    @staticmethod
+    def confirm_draft_allocations(to_session_id, confirmed_by):
+        """Confirm all draft teacher allocations for a session."""
+        updated = TeacherSubjectAllocation.objects.filter(
+            academic_session_id=to_session_id, draft=True
+        ).update(draft=False)
+        AuditLog.objects.create(
+            action="confirm_draft_allocations",
+            model_name="TeacherSubjectAllocation",
+            object_id=str(to_session_id),
+            user=confirmed_by,
+            description=f"Confirmed draft teacher allocations for session {to_session_id}",
+            new_value={"updated_count": updated},
+        )
+        return updated
     
     @staticmethod
     def _carry_forward_timetables(from_session, to_session):
@@ -178,7 +196,7 @@ class SessionRolloverService:
                 academic_session=to_session,
                 section=cls.section,
                 capacity=cls.capacity,
-                effective_from=to_session.start_date
+                effective_from=to_session.start_date,
             )
         
         # Also carry forward class teacher assignments
@@ -194,6 +212,18 @@ class SessionRolloverService:
                 assigned_at=timezone.now()
             )
     
+    @staticmethod
+    def confirm_draft_allocations(session_id, confirmed_by):
+        qs = TeacherSubjectAllocation.objects.filter(draft=True)
+        if session_id:
+            qs = qs.filter(academic_session_id=session_id)
+        count = 0
+        for alloc in qs:
+            alloc.draft = False
+            alloc.save(update_fields=["draft"])
+            count += 1
+        return count
+
     @staticmethod
     def mark_session_as_archived(session_id):
         """Mark an archived session as read-only."""

@@ -116,7 +116,7 @@ function TeacherRecheckingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold">Blind Rechecking</h2>
+        <h2 className="text-xl font-bold">Rechecking</h2>
         <p className="text-sm text-muted-foreground">Anonymous script re-evaluation — student identity is hidden</p>
       </div>
 
@@ -234,6 +234,6 @@ function TeacherRecheckingPage() {
 }
 
 export const Route = createFileRoute("/teacher/rechecking")({
-  head: () => ({ meta: [{ title: "Blind Rechecking — Teacher" }] }),
+  head: () => ({ meta: [{ title: "Rechecking — Teacher" }] }),
   component: TeacherRecheckingPage,
 });
