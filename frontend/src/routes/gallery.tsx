@@ -2,89 +2,68 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PublicLayout } from "@/components/layouts/PublicLayout";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { galleryImages } from "@/lib/mock-data";
+import { Loader2 } from "lucide-react";
+import { usePublicGallery } from "@/lib/usePublicData";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/brand/animations";
 
 export const Route = createFileRoute("/gallery")({
   head: () => ({
     meta: [
       { title: "Gallery — EduSphere" },
-      {
-        name: "description",
-        content: "Moments from campus life.",
-      },
+      { name: "description", content: "Moments from campus life." },
     ],
   }),
 
-  component: () => (
-    <PublicLayout>
-      {/* Hero */}
-      <section className="bg-hero-glow py-16">
-        <div className="container mx-auto px-4 text-center max-w-3xl">
-          <FadeIn direction="up" delay={0}>
-            <Badge
-              variant="outline"
-              className="mb-4 border-primary/30 text-primary"
-            >
-              Gallery
-            </Badge>
-          </FadeIn>
+  component: () => {
+    const { data: images, isLoading, isError } = usePublicGallery();
+    return (
+      <PublicLayout>
+        <section className="bg-hero-glow py-16">
+          <div className="container mx-auto px-4 text-center max-w-3xl">
+            <FadeIn direction="up" delay={0}>
+              <Badge variant="outline" className="mb-4 border-primary/30 text-primary">Gallery</Badge>
+            </FadeIn>
+            <FadeIn direction="up" delay={0.15}>
+              <h1 className="text-4xl md:text-5xl font-bold">Campus <span className="text-gradient-brand">Moments</span></h1>
+            </FadeIn>
+          </div>
+        </section>
 
-          <FadeIn direction="up" delay={0.15}>
-            <h1 className="text-4xl md:text-5xl font-bold">
-              Campus <span className="text-gradient-brand">Moments</span>
-            </h1>
-          </FadeIn>
-
-          <FadeIn direction="up" delay={0.3}>
-            <p className="mt-4 text-muted-foreground">
-              A glimpse into academics, culture, sports, innovation and student life.
-            </p>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* Masonry Gallery */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <StaggerContainer className="columns-1 md:columns-2 xl:columns-3 gap-5">
-            {galleryImages.map((g) => (
-              <StaggerItem
-                key={g.id}
-                className="mb-5 break-inside-avoid"
-              >
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <button className="group w-full overflow-hidden rounded-3xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer">
-                      <div className={`relative ${g.height}`}>
+        <section className="py-16 container mx-auto px-4">
+          {isLoading ? (
+            <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+          ) : isError ? (
+            <p className="text-center text-muted-foreground py-20">Unable to load gallery.</p>
+          ) : !images || images.length === 0 ? (
+            <p className="text-center text-muted-foreground py-20">No gallery images available yet.</p>
+          ) : (
+            <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {images.map((img) => (
+                <StaggerItem key={img.id}>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <div className="aspect-4/3 rounded-xl relative overflow-hidden hover-lift cursor-pointer group">
                         <img
-                          src={g.image}
-                          alt={g.label}
+                          src={img.image}
+                          alt={img.alt_text || img.label}
                           className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-5 text-left">
-                          <h3 className="text-white text-lg font-semibold">
-                            {g.label}
-                          </h3>
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-end p-4">
+                          <span className="text-white font-medium opacity-0 group-hover:opacity-100 transition-opacity">{img.label}</span>
                         </div>
                       </div>
-                    </button>
-                  </DialogTrigger>
-
-                  <DialogContent className="max-w-5xl p-0 overflow-hidden">
-                    <img
-                      src={g.image}
-                      alt={g.label}
-                      className="w-full max-h-[85vh] object-contain"
-                    />
-                  </DialogContent>
-                </Dialog>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-        </div>
-      </section>
-    </PublicLayout>
-  ),
+                    </DialogTrigger>
+                    <DialogContent className="max-w-3xl">
+                      <img src={img.image} alt={img.label} className="w-full h-auto rounded-lg" />
+                      {img.caption && <p className="mt-2 text-sm text-muted-foreground">{img.caption}</p>}
+                    </DialogContent>
+                  </Dialog>
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
+          )}
+        </section>
+      </PublicLayout>
+    );
+  },
 });

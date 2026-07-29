@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { PageWrapper, StaggerContainer, StaggerItem } from "@/components/brand/animations";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DollarSign, CheckCircle2, AlertCircle, Download, Receipt, Upload, Banknote, ScrollText, Landmark, Clock, AlertTriangle } from "lucide-react";
+import { DollarSign, CheckCircle2, AlertCircle, Download, Receipt, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { feeApi } from "@/services/adminApi";
 
@@ -87,7 +87,7 @@ export const Route = createFileRoute("/student/fees")({
           <StaggerItem><StatCard label="Total Fee" value={`₹${Number(summary.total_fee).toLocaleString()}`} icon={DollarSign} accent="primary" /></StaggerItem>
           <StaggerItem><StatCard label="Total Paid" value={`₹${Number(summary.paid).toLocaleString()}`} icon={CheckCircle2} accent="success" /></StaggerItem>
           <StaggerItem><StatCard label="Pending" value={`₹${Number(summary.pending).toLocaleString()}`} icon={AlertCircle} accent="warning" /></StaggerItem>
-          <StaggerItem><StatCard label="Late Fine" value={`₹${Number(summary.total_fine).toLocaleString()}`} icon={AlertTriangle} accent="destructive" /></StaggerItem>
+          <StaggerItem><StatCard label="Late Fine" value={`₹${Number(summary.total_fine).toLocaleString()}`} icon={AlertTriangle} accent="warning" /></StaggerItem>
         </StaggerContainer>
 
         {pendingEntries.length > 0 && (

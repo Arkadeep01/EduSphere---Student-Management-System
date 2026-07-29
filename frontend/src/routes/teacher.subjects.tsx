@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, BookOpen, CheckCircle2, Circle } from "lucide-react";
 import { toast } from "sonner";
-import { teacherChapterApi, teacherClassProgressApi, teacherResourceApi } from "@/services/teacherApi";
+import { teacherChapterApi, teacherClassProgressApi } from "@/services/teacherApi";
 
 interface Chapter { id: number; subject: number; title: string; description: string; order: number; progress_weight: number; topics: Topic[]; created_at: string; }
 interface Topic { id: number; chapter: number; title: string; description: string; order: number; is_completed: boolean; }
@@ -96,7 +96,7 @@ export const Route = createFileRoute("/teacher/subjects")({
           <Card><CardContent className="text-center py-12 text-muted-foreground">No chapters yet. Create your first chapter.</CardContent></Card>
         ) : (
           <div className="space-y-3">
-            {chapters.map((ch, ci) => (
+            {chapters.map((ch, _ci) => (
               <Card key={ch.id}>
                 <CardContent className="p-0">
                   <div className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/30" onClick={() => setExpandedChapter(expandedChapter === ch.id ? null : ch.id)}>

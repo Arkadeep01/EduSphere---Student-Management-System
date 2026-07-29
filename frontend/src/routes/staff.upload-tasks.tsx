@@ -10,7 +10,7 @@ export const Route = createFileRoute("/staff/upload-tasks")({
 });
 
 function StaffUploadTasks() {
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["staff-upload-tasks"],
     queryFn: () => staffApi.uploadTasks(),
   });

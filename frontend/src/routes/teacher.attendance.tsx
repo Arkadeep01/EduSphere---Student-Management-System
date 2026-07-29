@@ -9,8 +9,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { request } from "@/services/request";
-import { useAuth } from "@/context/AuthContext";
-
 const TEACHER_API = "http://localhost:8000/api/teacher";
 
 interface StudentItem {
@@ -21,7 +19,6 @@ interface StudentItem {
 }
 
 function AttendanceComponent() {
-  const { user } = useAuth();
   const [classes, setClasses] = useState<string[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
@@ -31,10 +28,10 @@ function AttendanceComponent() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    request<string[]>("/classes/", undefined, TEACHER_API).then(data => {
+    request<any[]>("/classes/", undefined, TEACHER_API).then(data => {
       const list = data || [];
       setClasses(list.map((c: any) => c.class_name || c));
-      if (list.length > 0) setSelectedClass(list[0].class_name || list[0]);
+      if (list.length > 0) setSelectedClass((list[0] as any).class_name || list[0]);
     }).catch(() => {
       toast.error("Failed to load classes");
     });

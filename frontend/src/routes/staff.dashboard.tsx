@@ -4,7 +4,7 @@ import { staffApi } from "@/services/adminApi";
 import { request } from "@/services/request";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LayoutDashboard, Upload, CheckCircle, XCircle, Layers, Loader2, AlertCircle, FileText, Clock } from "lucide-react";
+import { LayoutDashboard, Upload, CheckCircle, XCircle, Layers, Loader2, AlertCircle } from "lucide-react";
 
 interface BatchSummary {
   batch_id: string;

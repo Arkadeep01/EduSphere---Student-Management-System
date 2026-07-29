@@ -3,7 +3,7 @@ import { PageWrapper } from "@/components/brand/animations";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Coffee, Library, Beaker } from "lucide-react";
+import { Library, Beaker } from "lucide-react";
 import { useState, useEffect } from "react";
 import { request } from "@/services/request";
 

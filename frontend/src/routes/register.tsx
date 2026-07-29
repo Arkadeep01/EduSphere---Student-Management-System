@@ -19,7 +19,7 @@ function RegisterDisabledPage() {
             Public registration is currently disabled. Please contact your school administration to create an account.
           </p>
           <Button asChild className="bg-gradient-brand border-0">
-            <Link to="/login">Go to Login</Link>
+            <Link to="/login" search={{ error: undefined, actual_role: undefined, label: undefined }}>Go to Login</Link>
           </Button>
         </CardContent>
       </Card>

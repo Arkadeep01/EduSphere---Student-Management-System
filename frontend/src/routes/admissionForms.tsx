@@ -11,7 +11,7 @@ import type { UploadedFileInfo } from "@/lib/upload";
 import { API_BASE } from "@/services/request";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { FileText, Eye, X, Upload, CheckCircle, Image } from "lucide-react";
+import { FileText, Eye, X, CheckCircle } from "lucide-react";
 
 const DOCUMENT_LABELS = [
   "Birth Certificate",
@@ -84,7 +84,7 @@ function AdmissionForm() {
       return;
     }
     setDocuments(prev => prev.map(d =>
-      d.label === label ? { ...d, file: { original_name: file.name, size: file.size, extension: "." + file.name.split(".").pop()?.toLowerCase(), preview_url: URL.createObjectURL(file), id: `temp_${Date.now()}`, uploaded_at: new Date().toISOString(), file: file.name, url: URL.createObjectURL(file) } } : d
+      d.label === label ? { ...d, file: { original_name: file.name, size: file.size, extension: "." + file.name.split(".").pop()?.toLowerCase(), preview_url: URL.createObjectURL(file), id: `temp_${Date.now()}`, uploaded_at: new Date().toISOString(), file: file.name, url: URL.createObjectURL(file), filename: file.name, uploaded_by: "", download_url: URL.createObjectURL(file) } } : d
     ));
     toast.success(`${label} uploaded`);
   }
@@ -125,7 +125,7 @@ function AdmissionForm() {
     fd.append("board", formData.board || "CBSE");
     fd.append("stream", formData.stream);
     fd.append("photo", photoFile);
-    uploadedDocs.forEach(d => { if (d.file) fd.append("documents", d.file.file as Blob, d.file.original_name); });
+    uploadedDocs.forEach(d => { if (d.file) fd.append("documents", (d.file as any).file as Blob, (d.file as any).original_name); });
     fetch(`${API_BASE}/api/admissions/apply/`, {
       method: "POST",
       body: fd,
@@ -323,7 +323,7 @@ function AdmissionForm() {
                           </>
                         ) : (
                           <Input
-                            ref={el => fileInputRefs.current[doc.label] = el}
+                            ref={el => { fileInputRefs.current[doc.label] = el; }}
                             type="file"
                             accept=".pdf,.jpg,.jpeg,.png"
                             className="h-8 text-xs w-full sm:w-56 cursor-pointer bg-background"

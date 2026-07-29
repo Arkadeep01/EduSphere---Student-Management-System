@@ -37,14 +37,14 @@ function AuthCallbackPage() {
           await refreshSession();
         } else {
           setStatus("Authentication failed. Redirecting...");
-          setTimeout(() => navigate({ to: "/login" }), 2000);
+          setTimeout(() => navigate({ to: "/login", search: { error: undefined, actual_role: undefined, label: undefined } }), 2000);
         }
       } catch {
         try {
           await refreshSession();
         } catch {
           setStatus("Authentication failed. Redirecting...");
-          setTimeout(() => navigate({ to: "/login" }), 2000);
+          setTimeout(() => navigate({ to: "/login", search: { error: undefined, actual_role: undefined, label: undefined } }), 2000);
         }
       }
     };

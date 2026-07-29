@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, X, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { studentSubmissionApi } from "@/services/studentApi";
-import { request, API_BASE } from "@/services/request";
+import { request } from "@/services/request";
 
 interface Assignment {
   id: number; title: string; description: string; subject_name: string; target_class: string;
@@ -65,8 +65,6 @@ export const Route = createFileRoute("/student/assignments")({
       } catch { toast.error("Failed to submit"); }
       finally { setSubmitting(false); }
     };
-
-    const getSubmissionFor = (assignmentId: number) => submissions.find(s => s.assignment === assignmentId);
 
     if (loading) return <div className="text-center py-8 text-muted-foreground">Loading assignments...</div>;
 

@@ -19,7 +19,7 @@ function getAssignmentStatus(dueDate: string): "active" | "closed" {
   return new Date(dueDate) >= new Date() ? "active" : "closed";
 }
 
-function StudentDocViewer({ filename, fileUrl }: { filename: string; fileUrl?: string; onClose: () => void }) {
+function StudentDocViewer({ filename, fileUrl, onClose }: { filename: string; fileUrl?: string; onClose: () => void }) {
   const ext = filename.split(".").pop()?.toLowerCase() || "";
   const isPdf = ext === "pdf";
   const href = fileUrl || `http://localhost:8000/media/student_submissions/${filename}`;
@@ -89,7 +89,7 @@ function TeacherAssignmentsComponent() {
     ? assignments
     : assignments.filter(a => a.target_class === classFilter);
 
-  function getStudentsForClass(class_name: string): { id: number; name: string }[] {
+  function getStudentsForClass(_class_name: string): { id: number; name: string }[] {
     if (!submissions.length) return [];
     const seen = new Map<number, string>();
     submissions.forEach(s => {
@@ -199,7 +199,7 @@ function TeacherAssignmentsComponent() {
                       <TableCell>
                         {sub?.files?.length ? (
                           <div className="flex flex-col gap-1">
-                            {sub.files.map((f, fi) => (
+                            {sub.files.map((f, _fi) => (
                               <div key={f.id} className="flex items-center gap-1">
                                 <span className="text-xs text-muted-foreground truncate max-w-[100px]">{f.original_name}</span>
                                 <Button size="sm" variant="ghost" className="h-6 px-1.5" onClick={() => setDocViewerFile({ filename: f.original_name })}>

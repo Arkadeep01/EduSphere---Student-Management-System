@@ -1,22 +1,20 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import {
-  Bell, CheckCheck, Trash2, Search, Filter, ChevronLeft, ChevronRight,
-  Loader2, MailOpen, Mail, AlertTriangle, Info, ArrowUpCircle, Calendar,
+  Bell, CheckCheck, Trash2, Search, ChevronLeft, ChevronRight,
+  Loader2, MailOpen, Mail,
 } from "lucide-react";
 import { PageWrapper } from "@/components/brand/animations";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { notificationApi, type NotificationItem, type NotificationListResponse } from "@/services/notificationApi";
+import { notificationApi } from "@/services/notificationApi";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
-
 const priorityColors: Record<string, string> = {
   critical: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300",
   high: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300",
@@ -41,8 +39,6 @@ const typeFilters = [
 ];
 
 function NotificationCenter() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [typeFilter, setTypeFilter] = useState("");

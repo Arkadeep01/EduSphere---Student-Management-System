@@ -29,7 +29,7 @@ function ForcePasswordChangePage() {
   }
 
   if (!user) {
-    navigate({ to: "/login" });
+    navigate({ to: "/login", search: { error: undefined, actual_role: undefined, label: undefined } });
     return null;
   }
 

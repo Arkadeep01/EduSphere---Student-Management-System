@@ -4,9 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, ChevronRight, CheckCircle2, Circle, FileText, AlertCircle } from "lucide-react";
+import { BookOpen, ChevronRight, CheckCircle2, Circle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
 import { studentSubjectApi, studentChapterApi } from "@/services/studentApi";
 import { subjectRequestApi } from "@/services/adminApi";
 
@@ -16,7 +15,6 @@ interface Chapter { id: number; title: string; topics: { id: number; title: stri
 export const Route = createFileRoute("/student/subjects")({
   head: () => ({ meta: [{ title: "Subjects — Student" }] }),
   component: () => {
-    const { user } = useAuth();
     const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
     const [mySubjectsList, setMySubjectsList] = useState<Subject[]>([]);
     const [pendingSubjectIds, setPendingSubjectIds] = useState<number[]>([]);

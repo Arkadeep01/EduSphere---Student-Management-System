@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { PageWrapper, StaggerContainer, StaggerItem } from "@/components/brand/animations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar, DollarSign, FileText, FileCheck, Bell } from "lucide-react";
+import { Calendar, DollarSign, FileText, FileCheck, Bell } from "lucide-react";
 
 import { API_BASE } from "@/services/request";
 

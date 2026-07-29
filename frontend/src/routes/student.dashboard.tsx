@@ -1,12 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { PageWrapper, StaggerContainer, StaggerItem } from "@/components/brand/animations";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardCheck, Award, FileCheck, Loader2, TrendingUp, BarChart3 } from "lucide-react";
 import { useRequireRole } from "@/context/AuthContext";
 import { useStudentDashboard, useMySubjects } from "@/hooks/useStudentDashboard";
-import { studentDashboardApi } from "@/services/studentApi";
 
 export const Route = createFileRoute("/student/dashboard")({
   head: () => ({ meta: [{ title: "Student Dashboard — EduSphere" }] }),
@@ -16,7 +14,7 @@ export const Route = createFileRoute("/student/dashboard")({
 function StudentDashboard() {
   const { authorized, loading } = useRequireRole("student");
   const { data: dash, isLoading: dashLoading } = useStudentDashboard();
-  const { data: mySubjects } = useMySubjects();
+  useMySubjects();
 
   const subjects = dash?.subjects ?? [];
   const pendingAssignments = dash?.pendingAssignments ?? 0;

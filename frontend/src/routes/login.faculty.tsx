@@ -1,10 +1,10 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FuturisticLoginLayout } from "@/components/login/FuturisticLoginLayout";
-import { Eye, EyeOff, Loader2, Shield, GraduationCap, FileText, User } from "lucide-react";
+import { Eye, EyeOff, Loader2, Shield, GraduationCap, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth, getSafeRedirect } from "@/context/AuthContext";
@@ -53,7 +53,6 @@ function FacultyLoginPage() {
 
   const handleRoleChange = (r: string) => {
     setRole(r);
-    setEmail("");
     setPwd("");
     clearError();
   };
@@ -189,11 +188,6 @@ function FacultyLoginPage() {
         </>
       )}
 
-      <p className="text-center text-sm text-muted-foreground mt-6">
-        <Link to="/login" className="text-primary hover:text-primary/80 hover:underline font-medium transition-colors">
-          <User className="h-3.5 w-3.5 inline mr-1" />Student Sign In
-        </Link>
-      </p>
     </FuturisticLoginLayout>
   );
 }

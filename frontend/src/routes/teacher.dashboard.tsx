@@ -2,8 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PageWrapper, StaggerContainer, StaggerItem } from "@/components/brand/animations";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Users, Layers, FileCheck, BookOpen, GraduationCap, Loader2 } from "lucide-react";
+import { Users, Layers, BookOpen, GraduationCap, Loader2 } from "lucide-react";
 import { useRequireRole } from "@/context/AuthContext";
 import { useTeacherDashboard, useTeacherClasses } from "@/hooks/useTeacherDashboard";
 
@@ -46,9 +45,9 @@ function TeacherDashboard() {
         <Card><CardHeader><CardTitle>My Classes</CardTitle></CardHeader><CardContent>
           {classes && classes.length > 0 ? (
             <div className="space-y-2">
-              {classes.map((c: Record<string, unknown>, i: number) => (
+              {classes?.map((c: unknown, i: number) => (
                 <div key={i} className="flex items-center justify-between p-3 rounded-lg border">
-                  <span className="font-medium">{c.class_name as string}</span>
+                  <span className="font-medium">{(c as Record<string, unknown>).class_name as string}</span>
                 </div>
               ))}
             </div>

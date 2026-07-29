@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileSearch, Loader2, AlertCircle, Search, Clock, CheckCircle2, XCircle, TrendingUp, Layers } from "lucide-react";
+import { FileSearch, Loader2, AlertCircle, Search, Clock, CheckCircle2, TrendingUp, Layers } from "lucide-react";
 import { API_BASE } from "@/services/request";
 
 interface RecheckingRequest {
@@ -25,7 +25,7 @@ interface RecheckingRequest {
 }
 
 const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-const headers = token ? { Authorization: `Bearer ${token}` } : {};
+const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
 const statusBadge: Record<string, { variant: "default" | "secondary" | "outline" | "destructive"; className: string }> = {
   pending_approval: { variant: "secondary", className: "bg-amber-100 text-amber-800" },

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
-  Loader2, AlertCircle, FileSearch, CheckCircle2, XCircle, Clock, Send, History,
+  Loader2, AlertCircle, FileSearch, Send, History,
 } from "lucide-react";
 import { toast } from "sonner";
 import { API_BASE } from "@/services/request";
@@ -44,7 +44,7 @@ interface RecheckingRequest {
 }
 
 const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-const headers = token ? { Authorization: `Bearer ${token}` } : {};
+const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
 const statusBadge: Record<string, { variant: "default" | "secondary" | "outline" | "destructive"; className: string }> = {
   pending_approval: { variant: "secondary", className: "bg-amber-100 text-amber-800" },
@@ -58,7 +58,7 @@ const statusBadge: Record<string, { variant: "default" | "secondary" | "outline"
 
 function StudentRecheckingPage() {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+
   const [selectedExamId, setSelectedExamId] = useState<number | null>(null);
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
   const [showRequestDialog, setShowRequestDialog] = useState(false);

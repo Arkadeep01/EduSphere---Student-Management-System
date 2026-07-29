@@ -1,16 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { PageWrapper, StaggerContainer, StaggerItem, HoverLift } from "@/components/brand/animations";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Users, Layers, Clock, BookOpen, User, MapPin } from "lucide-react";
-import { ClassDetailSection } from "@/components/teacher/ClassDetailSection";
+import { Loader2, Layers, Clock, BookOpen, MapPin } from "lucide-react";
 import { useState } from "react";
 import { API_BASE } from "@/services/request";
 
 const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-const headers = token ? { Authorization: `Bearer ${token}` } : {};
+const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
 function useTeacherData<T>(key: string[], url: string) {
   return useQuery<T>({ queryKey: key, queryFn: async () => { const r = await fetch(url, { headers }); if (!r.ok) throw new Error("Failed"); return r.json(); }, enabled: !!token });

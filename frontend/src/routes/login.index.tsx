@@ -1,10 +1,10 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FuturisticLoginLayout } from "@/components/login/FuturisticLoginLayout";
-import { Eye, EyeOff, Loader2, User } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth, getSafeRedirect } from "@/context/AuthContext";
 import { FcGoogle } from "react-icons/fc";
@@ -148,12 +148,6 @@ function LoginPage() {
         </Button>
       </div>
 
-      <p className="text-center text-sm text-muted-foreground mt-6">
-        Faculty member?{" "}
-        <Link to="/login/faculty" className="text-primary hover:text-primary/80 hover:underline font-medium transition-colors">
-          <User className="h-3.5 w-3.5 inline mr-0.5" />Faculty Sign In
-        </Link>
-      </p>
     </FuturisticLoginLayout>
   );
 }

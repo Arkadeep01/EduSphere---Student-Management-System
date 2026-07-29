@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { FileSearch, Loader2, AlertCircle, Save, Send, CheckCircle2, Eye, ShieldBan } from "lucide-react";
+import { FileSearch, Loader2, Save, Send, CheckCircle2, Eye, ShieldBan } from "lucide-react";
 import { toast } from "sonner";
 import { API_BASE } from "@/services/request";
 
@@ -29,7 +29,7 @@ interface RecheckingScript {
 }
 
 const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-const headers = token ? { Authorization: `Bearer ${token}` } : {};
+const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
 const evalStatusBadge: Record<string, { variant: "default" | "secondary" | "outline"; className: string }> = {
   pending: { variant: "secondary", className: "" },
@@ -45,7 +45,7 @@ function TeacherRecheckingPage() {
   const [remarks, setRemarks] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const { data: queue, isLoading: queueLoading, isError: queueError } = useQuery<RecheckingScript[]>({
+  const { data: queue, isLoading: queueLoading } = useQuery<RecheckingScript[]>({
     queryKey: ["teacher-rechecking-queue"],
     queryFn: async () => {
       const r = await fetch(`${API_BASE}/api/teacher/rechecking/queue/`, { headers });
@@ -111,8 +111,6 @@ function TeacherRecheckingPage() {
   }
 
   const pending = (queue ?? []).filter(s => s.status !== "completed");
-  const completed = (queue ?? []).filter(s => s.status === "completed");
-
   return (
     <div className="space-y-6">
       <div>

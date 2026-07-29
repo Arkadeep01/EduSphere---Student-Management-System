@@ -34,7 +34,7 @@ function OAuthProfileCompletePage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate({ to: "/login" });
+      navigate({ to: "/login", search: { error: undefined, actual_role: undefined, label: undefined } });
     }
   }, [user, loading, navigate]);
 

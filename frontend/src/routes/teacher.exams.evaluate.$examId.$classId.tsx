@@ -33,10 +33,7 @@ const evalStatusBadge: Record<string, { variant: "default" | "secondary" | "outl
   completed: { variant: "default", className: "bg-success" },
 };
 
-const uploadLockBadge: Record<string, { variant: "default" | "secondary" | "outline" | "destructive"; className: string }> = {
-  evaluation_completed: { variant: "default", className: "bg-success" },
-  archived: { variant: "outline", className: "" },
-};
+
 
 export const Route = createFileRoute("/teacher/exams/evaluate/$examId/$classId")({
   head: () => ({ meta: [{ title: "Evaluate — Teacher" }] }),
@@ -132,8 +129,6 @@ export const Route = createFileRoute("/teacher/exams/evaluate/$examId/$classId")
     const pending = scripts.filter(s => s.evaluation_status === "pending" || s.evaluation_status === "evaluating");
     const completed = scripts.filter(s => s.evaluation_status === "completed");
     const locked = scripts.filter(s => s.is_locked);
-    const unlocked = scripts.filter(s => !s.is_locked);
-
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
