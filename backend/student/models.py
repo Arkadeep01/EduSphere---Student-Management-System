@@ -44,6 +44,7 @@ class StudentProfile(models.Model):
     address = models.TextField(blank=True)
     gender = models.CharField(max_length=20, blank=True)
     blood_group = models.CharField(max_length=10, blank=True)
+    github_username = models.CharField(max_length=100, blank=True, editable=False)
 
     class Meta:
         verbose_name = "Student Profile"

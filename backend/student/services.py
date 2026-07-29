@@ -35,10 +35,21 @@ def create_student_profile(user, data):
 
 
 def assign_core_subjects(student_profile):
-    """Auto-assign core subjects to a student with the current academic session."""
-    from administration.models import AcademicSession
+    from administration.models import AcademicSession, ClassSubjectConfig
     current_session = AcademicSession.objects.filter(is_current=True).first()
+    class_name = student_profile.class_assigned or ""
     core_subjects = Subject.objects.filter(tier="core")
+    if class_name and current_session:
+        class_configs = ClassSubjectConfig.objects.filter(
+            class_name=class_name,
+            academic_session=current_session,
+        )
+        allowed_core_ids = set()
+        for cfg in class_configs:
+            for subj in cfg.subjects.filter(tier="core"):
+                allowed_core_ids.add(subj.id)
+        if allowed_core_ids:
+            core_subjects = core_subjects.filter(id__in=allowed_core_ids)
     for subject in core_subjects:
         StudentSubject.objects.get_or_create(
             student=student_profile,

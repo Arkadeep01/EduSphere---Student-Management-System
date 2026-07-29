@@ -16,8 +16,11 @@ def get_student_dashboard_data(student_profile):
         student_allocations__student=student_profile,
         student_allocations__status="approved",
     )
+    target = student_profile.class_assigned
+    if student_profile.section:
+        target = f"{target}-{student_profile.section}"
     pending_assignments = Assignment.objects.filter(
-        target_class=student_profile.class_assigned,
+        target_class=target,
         due_date__gte=today,
     ).exclude(
         submissions__student=student_profile,
@@ -53,8 +56,11 @@ def get_pending_subject_requests(student_profile):
 
 def get_assignments_for_student(student_profile):
     """Get assignments relevant to the student's class."""
+    target = student_profile.class_assigned
+    if student_profile.section:
+        target = f"{target}-{student_profile.section}"
     return Assignment.objects.filter(
-        target_class=student_profile.class_assigned,
+        target_class=target,
     ).select_related("subject", "created_by")
 
 
@@ -95,7 +101,10 @@ def get_student_notifications(user, unread_only=False):
 
 def get_available_resources(student_profile):
     """Get resources shared with the student's class."""
-    return Resource.objects.filter(target_class=student_profile.class_assigned)
+    target = student_profile.class_assigned
+    if student_profile.section:
+        target = f"{target}-{student_profile.section}"
+    return Resource.objects.filter(target_class=target)
 
 
 def get_student_attendance_summary(student_profile):

@@ -27,6 +27,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             "roll_number", "admission_number", "father_name", "mother_name",
             "profile_photo", "date_of_birth", "class_assigned", "section",
             "address", "gender", "blood_group", "phone", "full_name",
+            "github_username",
         ]
         read_only_fields = ["roll_number", "admission_number"]
 
