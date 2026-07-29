@@ -31,6 +31,7 @@ from .teacher_admin import (
     TeacherDraftAllocationsView,
     SubjectWithdrawalListView,
     SubjectWithdrawalReviewView,
+    TeacherCreateView,
 )
 
 from .class_admin import ClassListView, ClassDetailView
@@ -182,4 +183,39 @@ from .director_admin import (
     DirectorStaffCreateView,
     DirectorToggleActiveView,
     DirectorChangeRoleView,
+)
+
+from .template_admin import (
+    TemplateListView,
+    TemplateDetailView,
+    TemplateUploadFileView,
+    TemplateActivateView,
+    TemplatePlaceholdersView,
+    TemplatePreviewView,
+    GeneratedDocumentListView,
+    GeneratedDocumentCreateView,
+    GeneratedDocumentDetailView,
+    GeneratedDocumentDownloadView,
+    MyDocumentListView,
+)
+
+from .media_admin import SlotListView, SlotUploadView, SlotDetailView
+from .facility_admin import FacilityListView, FacilityUploadView, FacilityDetailView
+from .public_website import PublicWebsiteSlotsView, PublicGalleryView, PublicFacilitiesView
+
+from .faq_admin import FAQListView, FAQDetailView
+from .leadership_admin import LeadershipListView, LeadershipDetailView
+from .announcement_admin import PublicAnnouncementListView, PublicAnnouncementDetailView
+from .director_cms import DirectorAboutPageView, DirectorAdmissionPageView
+from .director_dashboard import DirectorDashboardSummaryView
+
+from .public_read import (
+    PublicFAQView,
+    PublicLeadershipView,
+    PublicAnnouncementsView,
+    PublicAboutPageView,
+    PublicAdmissionPageView,
+    PublicStatsView,
+    PublicMeritView,
+    PublicInstitutionSettingsView,
 )

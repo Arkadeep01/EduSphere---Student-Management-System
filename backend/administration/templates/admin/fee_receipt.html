@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Receipt</title>
+<style>
+body { font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; }
+.receipt { max-width: 700px; margin: auto; border: 1px solid #ddd; padding: 30px; }
+.header { text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 15px; margin-bottom: 20px; }
+.header h1 { color: #2563eb; margin: 0; }
+.header p { color: #666; margin: 2px 0; }
+.row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee; }
+.label { color: #666; }
+.value { font-weight: 600; }
+.total { font-size: 1.2em; font-weight: 700; color: #2563eb; }
+.footer { text-align: center; margin-top: 30px; color: #999; font-size: 0.9em; }
+</style></head><body>
+<div class="receipt">
+<div class="header"><h1>EduSphere Academy</h1><p>Fee Payment Receipt</p></div>
+<div class="row"><span class="label">Receipt No</span><span class="value">{{ receipt_number }}</span></div>
+<div class="row"><span class="label">Student</span><span class="value">{{ student_name }}</span></div>
+<div class="row"><span class="label">Admission No</span><span class="value">{{ admission_number }}</span></div>
+<div class="row"><span class="label">Class</span><span class="value">{{ class_assigned }}</span></div>
+<div class="row"><span class="label">Academic Session</span><span class="value">{{ academic_session }}</span></div>
+<div class="row"><span class="label">Fee Component</span><span class="value">{{ fee_component }}</span></div>
+<div class="row"><span class="label">Total Fee</span><span class="value">₹{{ total_fee }}</span></div>
+<div class="row"><span class="label">Paid Amount</span><span class="value">₹{{ paid_amount }}</span></div>
+<div class="row"><span class="label">Fine</span><span class="value">₹{{ fine }}</span></div>
+<div class="row total"><span class="label">Total Paid</span><span class="value">₹{{ total_paid }}</span></div>
+<div class="row"><span class="label">Payment Method</span><span class="value">{{ payment_method }}</span></div>
+<div class="row"><span class="label">Transaction Ref</span><span class="value">{{ transaction_ref }}</span></div>
+<div class="row"><span class="label">Paid At</span><span class="value">{{ paid_at }}</span></div>
+<div class="row"><span class="label">Verified By</span><span class="value">{{ verified_by }}</span></div>
+<div class="footer">This is a computer-generated receipt.</div>
+</div></body></html>

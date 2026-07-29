@@ -2,8 +2,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
+from rest_framework import serializers as drf_serializers
 
 from administration.permissions import IsAdmin
+from administration.permissions.combined import IsAdminOrDirector
 from administration.services.teacher_admin import TeacherAdminService
 from teacher.models import TeacherProfile
 from teacher.serializers import TeacherProfileSerializer
@@ -11,6 +13,32 @@ from administration.serializers.teacher import (
     ClassTeacherAssignmentSerializer,
     TeacherSubjectAllocationSerializer,
 )
+from authentication.models import CustomUser
+
+
+class AdminTeacherCreateSerializer(drf_serializers.Serializer):
+    email = drf_serializers.EmailField()
+    first_name = drf_serializers.CharField(max_length=150, default="", allow_blank=True)
+    last_name = drf_serializers.CharField(max_length=150, default="", allow_blank=True)
+    mobile = drf_serializers.CharField(max_length=20, default="", allow_blank=True)
+    employee_id = drf_serializers.CharField(max_length=20, default="", allow_blank=True)
+    date_of_birth = drf_serializers.DateField(required=False, allow_null=True)
+    gender = drf_serializers.CharField(max_length=20, default="", allow_blank=True)
+    phone = drf_serializers.CharField(max_length=20, default="", allow_blank=True)
+    address = drf_serializers.CharField(default="", allow_blank=True)
+    department = drf_serializers.CharField(max_length=20, default="", allow_blank=True)
+    designation = drf_serializers.CharField(max_length=20, default="", allow_blank=True)
+    personal_email = drf_serializers.EmailField(default="", allow_blank=True)
+    qualification = drf_serializers.CharField(max_length=255, default="", allow_blank=True)
+    experience = drf_serializers.IntegerField(required=False, allow_null=True)
+    primary_subject = drf_serializers.IntegerField(required=False, allow_null=True)
+    secondary_subjects = drf_serializers.ListField(child=drf_serializers.IntegerField(), required=False, default=list)
+
+    def validate_email(self, value):
+        email = value.strip().lower()
+        if CustomUser.objects.filter(email=email).exists():
+            raise drf_serializers.ValidationError("A user with this email already exists.")
+        return email
 
 
 class TeacherListView(APIView):
@@ -45,12 +73,14 @@ class TeacherDetailView(APIView):
 
 
 class TeacherNotifyView(APIView):
-    permission_classes = [IsAuthenticated, IsAdmin]
+    permission_classes = [IsAuthenticated, IsAdminOrDirector]
 
     def post(self, request, teacher_id):
         title = request.data.get("title", "Notification")
         message = request.data.get("message", "")
-        TeacherAdminService.send_notification(teacher_id, title, message)
+        result = TeacherAdminService.send_notification(teacher_id, title, message)
+        if result is None:
+            return Response({"error": "Teacher not found"}, status=status.HTTP_404_NOT_FOUND)
         return Response({"status": "sent"})
 
 
@@ -194,3 +224,20 @@ class SubjectWithdrawalReviewView(APIView):
             req = reject_withdrawal(request_id, request.user, admin_remark)
             return Response({"status": "rejected", "id": req.id})
         return Response({"error": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TeacherCreateView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request):
+        from teacher.provisioning import TeacherProvisioningService
+        ser = AdminTeacherCreateSerializer(data=request.data)
+        if not ser.is_valid():
+            return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+        user, profile = TeacherProvisioningService.create_teacher(ser.validated_data)
+        return Response({
+            "success": True,
+            "message": "Teacher account created. Temporary password set to DOB (DDMMYYYY).",
+            "teacher_id": profile.id,
+            "email": user.email,
+        }, status=status.HTTP_201_CREATED)

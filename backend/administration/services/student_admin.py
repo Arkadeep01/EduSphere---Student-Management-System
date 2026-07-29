@@ -98,16 +98,23 @@ class StudentAdminService:
 
     @staticmethod
     def send_notification(student_id, title, message):
-        profile = StudentProfile.objects.get(id=student_id)
+        try:
+            profile = StudentProfile.objects.get(id=student_id)
+        except StudentProfile.DoesNotExist:
+            return None
         Notification.objects.create(
             user=profile.user,
             title=title,
             message=message,
         )
+        return True
 
     @staticmethod
     def get_notifications(student_id):
-        profile = StudentProfile.objects.get(id=student_id)
+        try:
+            profile = StudentProfile.objects.get(id=student_id)
+        except StudentProfile.DoesNotExist:
+            return None
         return Notification.objects.filter(user=profile.user)
 
     @staticmethod

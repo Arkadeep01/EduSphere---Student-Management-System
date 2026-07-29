@@ -3,12 +3,38 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from rest_framework import serializers as drf_serializers
 
 from administration.permissions import IsAdmin
+from administration.permissions.combined import IsAdminOrDirector
 from administration.services.student_admin import StudentAdminService
 from student.models import StudentProfile, StudentSubject, Subject
 from student.serializers import StudentProfileSerializer, StudentSubjectSerializer
 from administration.serializers.admission import StudentRegistrationLogSerializer
+from authentication.models import CustomUser
+
+
+class AdminStudentCreateSerializer(drf_serializers.Serializer):
+    email = drf_serializers.EmailField()
+    first_name = drf_serializers.CharField(max_length=150, default="", allow_blank=True)
+    last_name = drf_serializers.CharField(max_length=150, default="", allow_blank=True)
+    mobile = drf_serializers.CharField(max_length=20, default="", allow_blank=True)
+    father_name = drf_serializers.CharField(max_length=100, default="", allow_blank=True)
+    mother_name = drf_serializers.CharField(max_length=100, default="", allow_blank=True)
+    date_of_birth = drf_serializers.DateField(required=False, allow_null=True)
+    class_assigned = drf_serializers.CharField(max_length=20, default="", allow_blank=True)
+    section = drf_serializers.CharField(max_length=10, default="", allow_blank=True)
+    address = drf_serializers.CharField(default="", allow_blank=True)
+    gender = drf_serializers.CharField(max_length=20, default="", allow_blank=True)
+    blood_group = drf_serializers.CharField(max_length=10, default="", allow_blank=True)
+    roll_number = drf_serializers.CharField(max_length=20, default="", allow_blank=True)
+    admission_number = drf_serializers.CharField(max_length=20, default="", allow_blank=True)
+
+    def validate_email(self, value):
+        email = value.strip().lower()
+        if CustomUser.objects.filter(email=email).exists():
+            raise drf_serializers.ValidationError("A user with this email already exists.")
+        return email
 
 
 class StudentListView(APIView):
@@ -25,12 +51,13 @@ class StudentListView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        # Admin creating a student profile (user should exist or be created)
-        data = request.data
-        user = request.user
-        profile = StudentAdminService.create_student(user, data)
-        serializer = StudentProfileSerializer(profile)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        from student.provisioning import StudentProvisioningService
+        ser = AdminStudentCreateSerializer(data=request.data)
+        if not ser.is_valid():
+            return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+        user, profile = StudentProvisioningService.create_student(ser.validated_data)
+        result_ser = StudentProfileSerializer(profile)
+        return Response(result_ser.data, status=status.HTTP_201_CREATED)
 
 
 class StudentDetailView(APIView):
@@ -66,10 +93,12 @@ class StudentSubjectAssignmentView(APIView):
 
 
 class StudentNotificationsView(APIView):
-    permission_classes = [IsAuthenticated, IsAdmin]
+    permission_classes = [IsAuthenticated, IsAdminOrDirector]
 
     def get(self, request, student_id):
         notifications = StudentAdminService.get_notifications(student_id)
+        if notifications is None:
+            return Response({"error": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
         from student.serializers import NotificationSerializer
         serializer = NotificationSerializer(notifications, many=True)
         return Response(serializer.data)
@@ -77,7 +106,9 @@ class StudentNotificationsView(APIView):
     def post(self, request, student_id):
         title = request.data.get("title", "Notification")
         message = request.data.get("message", "")
-        StudentAdminService.send_notification(student_id, title, message)
+        result = StudentAdminService.send_notification(student_id, title, message)
+        if result is None:
+            return Response({"error": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
         return Response({"status": "sent"})
 
 

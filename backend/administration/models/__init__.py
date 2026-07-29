@@ -17,3 +17,9 @@ from .processing import ScriptProcessing, ScriptBatchProcessing
 from .results import GradeBoundary, ResultPublication, StudentResult
 from .promotion import PromotionLog, StudentPromotionHistory, AcademicSessionRollover, PromotionRule
 from .rechecking import BlindRecheckingRequest
+from .template import DocumentTemplate, GeneratedDocument
+from .website import WebsiteImage
+from .facility import FacilityImage
+from .faq import FAQ
+from .leadership import Leadership
+from .announcement import PublicAnnouncement

@@ -17,7 +17,10 @@ class NotificationAdminService:
 
     @staticmethod
     def send_broadcast(broadcast_id):
-        broadcast = NotificationBroadcast.objects.get(id=broadcast_id)
+        try:
+            broadcast = NotificationBroadcast.objects.get(id=broadcast_id)
+        except NotificationBroadcast.DoesNotExist:
+            return None
         if broadcast.recipient_type == "all_students":
             profiles = StudentProfile.objects.select_related("user").all()
             for p in profiles:

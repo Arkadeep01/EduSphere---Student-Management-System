@@ -14,6 +14,36 @@ from administration.services.export_service import (
 )
 from administration.serializers.export import ExportLogSerializer
 
+ALLOWED_STUDENT_FIELDS = {
+    "name", "email", "username", "roll_number", "admission_number",
+    "class_assigned", "section", "father_name", "mother_name", "phone",
+    "gender", "date_of_birth", "academic_session", "guardian_contact",
+    "core_subjects", "specialized_subjects", "enriched_subjects",
+    "attendance_percentage", "present_days", "absent_days",
+    "gpa", "overall_percentage", "rank", "assignment_average", "exam_average",
+}
+
+ALLOWED_TEACHER_FIELDS = {
+    "name", "employee_id", "email", "assigned_subject", "experience",
+    "qualification", "phone", "department", "designation",
+    "gender", "date_of_birth", "address", "status",
+}
+
+ALLOWED_EXPORT_MODULES = {
+    "students", "teachers", "classes", "exams", "admissions",
+    "contacts", "audit_logs", "documents", "fees", "receipt",
+}
+
+ALLOWED_ATTENDANCE_FIELDS = {
+    "student", "class_assigned", "date", "status", "marked_by",
+}
+
+
+def _validate_export_fields(fields, allowed_set, default):
+    if not isinstance(fields, list):
+        return default
+    return [f for f in fields if f in allowed_set] or default
+
 CONTENT_TYPES = {
     "csv": "text/csv",
     "excel": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -40,6 +70,8 @@ class GenericModuleExportView(APIView):
 
     def post(self, request):
         module = self.get_module_name()
+        if module not in ALLOWED_EXPORT_MODULES:
+            return Response({"error": "Invalid export module"}, status=status.HTTP_400_BAD_REQUEST)
         fmt = request.data.get("format", "csv")
         fields = request.data.get("fields")
         filters = request.data.get("filters")
@@ -49,6 +81,8 @@ class GenericModuleExportView(APIView):
 
     def get(self, request):
         module = self.get_module_name()
+        if module not in ALLOWED_EXPORT_MODULES:
+            return Response({"error": "Invalid export module"}, status=status.HTTP_400_BAD_REQUEST)
         fmt = request.query_params.get("format", "csv")
         data = ExportService.export_module(request.user, module, fmt)
         filename = _generate_filename(None, fmt, module.capitalize())
@@ -63,10 +97,12 @@ class ExportStudentsView(APIView):
 
     def post(self, request):
         fmt = request.data.get("format", "csv")
-        fields = request.data.get("fields")
+        raw_fields = request.data.get("fields")
         filters = request.data.get("filters")
-        if not isinstance(fields, list):
-            fields = ["name", "email", "roll_number", "class_assigned", "section"]
+        fields = _validate_export_fields(
+            raw_fields, ALLOWED_STUDENT_FIELDS,
+            ["name", "email", "roll_number", "class_assigned", "section"],
+        )
         data = ExportService.export_students(request.user, fmt, fields, filters)
         filename = _generate_filename(filters, fmt, "Students")
         return _export_response(data, fmt, filename)
@@ -82,10 +118,12 @@ class ExportTeachersView(APIView):
 
     def post(self, request):
         fmt = request.data.get("format", "csv")
-        fields = request.data.get("fields")
+        raw_fields = request.data.get("fields")
         filters = request.data.get("filters")
-        if not isinstance(fields, list):
-            fields = ["name", "employee_id", "email", "assigned_subject", "experience"]
+        fields = _validate_export_fields(
+            raw_fields, ALLOWED_TEACHER_FIELDS,
+            ["name", "employee_id", "email", "assigned_subject", "experience"],
+        )
         data = ExportService.export_teachers(request.user, fmt, fields, filters)
         filename = _generate_teacher_filename(filters, fmt)
         return _export_response(data, fmt, filename)
@@ -101,10 +139,12 @@ class ExportAttendanceView(APIView):
 
     def post(self, request):
         fmt = request.data.get("format", "csv")
-        fields = request.data.get("fields")
+        raw_fields = request.data.get("fields")
         filters = request.data.get("filters")
-        if not isinstance(fields, list):
-            fields = ["student", "class_assigned", "date", "status"]
+        fields = _validate_export_fields(
+            raw_fields, ALLOWED_ATTENDANCE_FIELDS,
+            ["student", "class_assigned", "date", "status"],
+        )
         data = ExportService.export_attendance(request.user, fmt, fields, filters)
         filename = _generate_filename(filters, fmt, "Attendance")
         return _export_response(data, fmt, filename)
@@ -180,6 +220,8 @@ class PrintView(APIView):
 
     def post(self, request):
         module = request.data.get("module", "")
+        if not module:
+            return Response({"error": "module is required"}, status=status.HTTP_400_BAD_REQUEST)
         fields = request.data.get("fields")
         filters = request.data.get("filters")
         html = PrintService.generate_print_html(request.user, module, fields, filters)

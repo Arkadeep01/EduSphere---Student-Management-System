@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
-from administration.permissions import IsAdmin
+from administration.permissions import IsAdmin, IsDirector
 from administration.services.cms_admin import CMSService
 from administration.serializers.cms import (
     AboutPageContentSerializer,
@@ -11,10 +11,11 @@ from administration.serializers.cms import (
     HomepageFeaturedImageSerializer,
     AdmissionPageContentSerializer,
 )
+from administration.utils.image_validation import validate_and_get_errors
 
 
 class AboutPageView(APIView):
-    permission_classes = [IsAuthenticated, IsAdmin]
+    permission_classes = [IsAuthenticated, IsDirector]
 
     def get(self, request):
         obj = CMSService.get_about()
@@ -37,6 +38,9 @@ class GalleryImageView(APIView):
 
     def post(self, request):
         image = request.FILES.get("image")
+        errs = validate_and_get_errors(image)
+        if errs:
+            return Response({"error": errs[0]}, status=status.HTTP_400_BAD_REQUEST)
         label = request.data.get("label", "")
         obj = CMSService.add_gallery_image(image, label)
         serializer = GalleryImageSerializer(obj)
@@ -61,6 +65,9 @@ class HomepageFeaturedImageView(APIView):
 
     def post(self, request):
         image = request.FILES.get("image")
+        errs = validate_and_get_errors(image)
+        if errs:
+            return Response({"error": errs[0]}, status=status.HTTP_400_BAD_REQUEST)
         label = request.data.get("label", "")
         obj = CMSService.add_homepage_image(image, label)
         serializer = HomepageFeaturedImageSerializer(obj)
@@ -76,7 +83,7 @@ class HomepageFeaturedImageDeleteView(APIView):
 
 
 class AdmissionPageView(APIView):
-    permission_classes = [IsAuthenticated, IsAdmin]
+    permission_classes = [IsAuthenticated, IsDirector]
 
     def get(self, request):
         obj = CMSService.get_admission_page()

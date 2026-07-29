@@ -12,3 +12,4 @@ from .export_service import ExportService
 from .document_service import DocumentService
 from .notification_service import NotificationAdminService
 from .fee_admin import FeeAdminService
+from .template_service import DocumentTemplateService, MyDocumentService

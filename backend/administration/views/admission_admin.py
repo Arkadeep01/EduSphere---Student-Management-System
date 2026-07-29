@@ -30,8 +30,9 @@ class AdmissionApplicationDetailView(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]
 
     def get(self, request, application_id):
+        from django.shortcuts import get_object_or_404
         from administration.models.admission import AdmissionApplication
-        app = AdmissionApplication.objects.get(id=application_id)
+        app = get_object_or_404(AdmissionApplication, id=application_id)
         serializer = AdmissionApplicationSerializer(app)
         return Response(serializer.data)
 
@@ -60,18 +61,22 @@ class AdmissionCreateStudentView(APIView):
     def post(self, request, application_id):
         user = request.user
         profile = AdmissionAdminService.create_student_account(application_id, user)
+        fee_errors = []
         try:
             FeeAdminService.record_admission_fee(profile.id, user)
-        except Exception:
-            pass
+        except Exception as e:
+            fee_errors.append(f"Admission fee recording failed: {str(e)}")
         try:
             FeeAdminService.generate_fees_for_student(profile)
-        except Exception:
-            pass
+        except Exception as e:
+            fee_errors.append(f"Fee generation failed: {str(e)}")
         serializer = StudentRegistrationLogSerializer(
             profile.registration_logs.first()
         )
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        data = serializer.data
+        if fee_errors:
+            data["warnings"] = fee_errors
+        return Response(data, status=status.HTTP_201_CREATED)
 
 
 class AdmissionStatsView(APIView):

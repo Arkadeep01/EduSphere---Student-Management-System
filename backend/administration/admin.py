@@ -32,6 +32,8 @@ from .models import (
     FinanceActivityLog,
     Letterhead,
     BlindRecheckingRequest,
+    WebsiteImage,
+    FacilityImage,
 )
 
 admin.site.register(AcademicSession)
@@ -65,3 +67,5 @@ admin.site.register(StudentScholarship)
 admin.site.register(FinanceActivityLog)
 admin.site.register(Letterhead)
 admin.site.register(BlindRecheckingRequest)
+admin.site.register(WebsiteImage)
+admin.site.register(FacilityImage)

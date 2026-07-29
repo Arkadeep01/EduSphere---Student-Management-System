@@ -33,7 +33,10 @@ class CMSService:
 
     @staticmethod
     def delete_gallery_image(image_id):
-        GalleryImage.objects.get(id=image_id).delete()
+        obj = GalleryImage.objects.get(id=image_id)
+        if obj.image:
+            obj.image.delete(save=False)
+        obj.delete()
 
     @staticmethod
     def reorder_gallery(image_id, new_order):
@@ -53,7 +56,10 @@ class CMSService:
 
     @staticmethod
     def delete_homepage_image(image_id):
-        HomepageFeaturedImage.objects.get(id=image_id).delete()
+        obj = HomepageFeaturedImage.objects.get(id=image_id)
+        if obj.image:
+            obj.image.delete(save=False)
+        obj.delete()
 
     @staticmethod
     def get_admission_page():

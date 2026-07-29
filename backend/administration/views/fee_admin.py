@@ -1,3 +1,5 @@
+from django.template.loader import render_to_string
+from django.utils.html import escape
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -324,41 +326,29 @@ class FeeReceiptView(APIView):
         if hasattr(request.user, "student_profile"):
             if payment.student_id != request.user.student_profile.id:
                 return Response({"error": "Access denied"}, status=403)
+        elif request.user.role not in ("admin", "staff", "director"):
+            return Response({"error": "Access denied"}, status=403)
 
         student = payment.student
-        receipt_html = f"""<!DOCTYPE html><html><head><meta charset="utf-8"><title>Receipt</title>
-<style>
-body {{ font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; }}
-.receipt {{ max-width: 700px; margin: auto; border: 1px solid #ddd; padding: 30px; }}
-.header {{ text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 15px; margin-bottom: 20px; }}
-.header h1 {{ color: #2563eb; margin: 0; }}
-.header p {{ color: #666; margin: 2px 0; }}
-.row {{ display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee; }}
-.label {{ color: #666; }}
-.value {{ font-weight: 600; }}
-.total {{ font-size: 1.2em; font-weight: 700; color: #2563eb; }}
-.footer {{ text-align: center; margin-top: 30px; color: #999; font-size: 0.9em; }}
-</style></head><body>
-<div class="receipt">
-<div class="header"><h1>EduSphere Academy</h1><p>Fee Payment Receipt</p></div>
-<div class="row"><span class="label">Receipt No</span><span class="value">{payment.receipt_number or 'N/A'}</span></div>
-<div class="row"><span class="label">Student</span><span class="value">{student.user.get_full_name() or student.user.email}</span></div>
-<div class="row"><span class="label">Admission No</span><span class="value">{student.admission_number or 'N/A'}</span></div>
-<div class="row"><span class="label">Class</span><span class="value">{student.class_assigned or 'N/A'}</span></div>
-<div class="row"><span class="label">Academic Session</span><span class="value">{payment.academic_session}</span></div>
-<div class="row"><span class="label">Fee Component</span><span class="value">{payment.fee_component.name if payment.fee_component else payment.month or 'General'}</span></div>
-<div class="row"><span class="label">Total Fee</span><span class="value">₹{payment.total_fee}</span></div>
-<div class="row"><span class="label">Paid Amount</span><span class="value">₹{payment.paid_amount}</span></div>
-<div class="row"><span class="label">Fine</span><span class="value">₹{payment.fine}</span></div>
-<div class="row total"><span class="label">Total Paid</span><span class="value">₹{payment.paid_amount + payment.fine}</span></div>
-<div class="row"><span class="label">Payment Method</span><span class="value">{payment.payment_method or 'N/A'}</span></div>
-<div class="row"><span class="label">Transaction Ref</span><span class="value">{payment.transaction_ref or 'N/A'}</span></div>
-<div class="row"><span class="label">Paid At</span><span class="value">{payment.paid_at.strftime('%d %b %Y') if payment.paid_at else 'N/A'}</span></div>
-<div class="row"><span class="label">Verified By</span><span class="value">{payment.verified_by.get_full_name() if payment.verified_by else 'N/A'}</span></div>
-<div class="footer">This is a computer-generated receipt.</div>
-</div></body></html>"""
+        ctx = {
+            "receipt_number": escape(payment.receipt_number or "N/A"),
+            "student_name": escape(student.user.get_full_name() or student.user.email or "N/A"),
+            "admission_number": escape(student.admission_number or "N/A"),
+            "class_assigned": escape(student.class_assigned or "N/A"),
+            "academic_session": escape(payment.academic_session),
+            "fee_component": escape(payment.fee_component.name if payment.fee_component else (payment.month or "General")),
+            "total_fee": str(payment.total_fee),
+            "paid_amount": str(payment.paid_amount),
+            "fine": str(payment.fine),
+            "total_paid": str(payment.paid_amount + payment.fine),
+            "payment_method": escape(payment.payment_method or "N/A"),
+            "transaction_ref": escape(payment.transaction_ref or "N/A"),
+            "paid_at": payment.paid_at.strftime("%d %b %Y") if payment.paid_at else "N/A",
+            "verified_by": escape(payment.verified_by.get_full_name()) if payment.verified_by else "N/A",
+        }
         from django.http import HttpResponse
-        return HttpResponse(receipt_html)
+        html = render_to_string("admin/fee_receipt.html", ctx)
+        return HttpResponse(html)
 
 
 # ── Clearance Deadline ─────────────────────────────────────────────────────

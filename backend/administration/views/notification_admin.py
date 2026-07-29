@@ -4,12 +4,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
 from administration.permissions import IsAdmin
+from administration.permissions.combined import IsAdminOrDirector
 from administration.services.notification_service import NotificationAdminService
 from administration.serializers.notification import NotificationBroadcastSerializer
 
 
 class NotificationBroadcastListView(APIView):
-    permission_classes = [IsAuthenticated, IsAdmin]
+    permission_classes = [IsAuthenticated, IsAdminOrDirector]
 
     def get(self, request):
         broadcasts = NotificationAdminService.list_broadcasts()
@@ -23,9 +24,11 @@ class NotificationBroadcastListView(APIView):
 
 
 class NotificationBroadcastSendView(APIView):
-    permission_classes = [IsAuthenticated, IsAdmin]
+    permission_classes = [IsAuthenticated, IsAdminOrDirector]
 
     def post(self, request, broadcast_id):
         broadcast = NotificationAdminService.send_broadcast(broadcast_id)
+        if broadcast is None:
+            return Response({"error": "Broadcast not found"}, status=status.HTTP_404_NOT_FOUND)
         serializer = NotificationBroadcastSerializer(broadcast)
         return Response(serializer.data)

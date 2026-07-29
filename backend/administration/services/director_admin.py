@@ -54,6 +54,7 @@ class DirectorAdminService:
             defaults={"department": data.get("department", "")},
         )
         return user
+    @staticmethod
     def list_admins():
         return CustomUser.objects.filter(role="admin")
 

@@ -22,12 +22,16 @@ class TeacherAdminService:
 
     @staticmethod
     def send_notification(teacher_id, title, message):
-        profile = TeacherProfile.objects.get(id=teacher_id)
+        try:
+            profile = TeacherProfile.objects.get(id=teacher_id)
+        except TeacherProfile.DoesNotExist:
+            return None
         Notification.objects.create(
             user=profile.user,
             title=title,
             message=message,
         )
+        return True
 
     @staticmethod
     def assign_class_teacher(teacher_id, class_name, academic_year):
@@ -119,21 +123,7 @@ class TeacherAdminService:
     def get_allocations():
         return TeacherSubjectAllocation.objects.select_related("teacher__user", "subject").filter(is_active=True).all()
 
-    @staticmethod
-    def deallocate_subject(allocation_id, reason, deallocated_by, effective_date=None):
-        allocation = TeacherSubjectAllocation.objects.get(id=allocation_id)
-        allocation.is_active = False
-        allocation.deallocation_reason = reason
-        allocation.deallocated_by = deallocated_by
-        if effective_date:
-            from django.utils import timezone
-            allocation.deallocation_date = effective_date
-        allocation.save()
-        return allocation
 
-    @staticmethod
-    def get_allocations():
-        return TeacherSubjectAllocation.objects.select_related("teacher__user", "subject").all()
 
     @staticmethod
     def get_class_teacher_assignments():

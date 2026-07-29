@@ -40,6 +40,7 @@ urlpatterns = [
 
     # Teachers
     path("teachers/", views.TeacherListView.as_view(), name="admin-teacher-list"),
+    path("teachers/create/", views.TeacherCreateView.as_view(), name="admin-teacher-create"),
     path("teachers/<int:teacher_id>/", views.TeacherDetailView.as_view(), name="admin-teacher-detail"),
     path("teachers/<int:teacher_id>/notify/", views.TeacherNotifyView.as_view(), name="admin-teacher-notify"),
     path("teachers/<int:teacher_id>/assign-class-teacher/", views.TeacherAssignClassTeacherView.as_view(), name="admin-teacher-assign-class-teacher"),
@@ -94,7 +95,18 @@ urlpatterns = [
     path("admissions/<int:application_id>/create-student/", views.AdmissionCreateStudentView.as_view(), name="admin-admission-create-student"),
     path("admissions/stats/", views.AdmissionStatsView.as_view(), name="admin-admission-stats"),
 
-    # Settings / CMS
+    # Director CMS
+    path("director/about/", views.DirectorAboutPageView.as_view(), name="director-about"),
+    path("director/admission/", views.DirectorAdmissionPageView.as_view(), name="director-admission"),
+    path("director/faq/", views.FAQListView.as_view(), name="director-faq-list"),
+    path("director/faq/<int:faq_id>/", views.FAQDetailView.as_view(), name="director-faq-detail"),
+    path("director/leadership/", views.LeadershipListView.as_view(), name="director-leadership-list"),
+    path("director/leadership/<int:leader_id>/", views.LeadershipDetailView.as_view(), name="director-leadership-detail"),
+    path("director/announcements/", views.PublicAnnouncementListView.as_view(), name="director-announcement-list"),
+    path("director/announcements/<int:announcement_id>/", views.PublicAnnouncementDetailView.as_view(), name="director-announcement-detail"),
+    path("director/dashboard/", views.DirectorDashboardSummaryView.as_view(), name="director-dashboard-summary"),
+
+    # Settings / CMS (existing - About/Admission moved to Director-only)
     path("settings/about/", views.AboutPageView.as_view(), name="admin-settings-about"),
     path("settings/gallery/", views.GalleryImageView.as_view(), name="admin-settings-gallery"),
     path("settings/gallery/<int:image_id>/", views.GalleryImageDeleteView.as_view(), name="admin-settings-gallery-delete"),
@@ -204,4 +216,29 @@ urlpatterns = [
 
     # Staff Rechecking Overview
     path("staff/rechecking/", rechecking_views.StaffRecheckingOverviewView.as_view(), name="staff-rechecking-overview"),
+
+    # Document Templates
+    path("templates/", views.TemplateListView.as_view(), name="admin-template-list"),
+    path("templates/<int:template_id>/", views.TemplateDetailView.as_view(), name="admin-template-detail"),
+    path("templates/<int:template_id>/upload/", views.TemplateUploadFileView.as_view(), name="admin-template-upload"),
+    path("templates/<int:template_id>/activate/", views.TemplateActivateView.as_view(), name="admin-template-activate"),
+    path("templates/<int:template_id>/placeholders/", views.TemplatePlaceholdersView.as_view(), name="admin-template-placeholders"),
+    path("templates/<int:template_id>/preview/", views.TemplatePreviewView.as_view(), name="admin-template-preview"),
+    path("templates/placeholders/", views.TemplatePlaceholdersView.as_view(), name="admin-placeholder-registry"),
+
+    # Generated Documents
+    path("generated-documents/", views.GeneratedDocumentListView.as_view(), name="admin-generated-document-list"),
+    path("generated-documents/generate/", views.GeneratedDocumentCreateView.as_view(), name="admin-generated-document-create"),
+    path("generated-documents/<int:doc_id>/", views.GeneratedDocumentDetailView.as_view(), name="admin-generated-document-detail"),
+    path("generated-documents/<int:doc_id>/download/", views.GeneratedDocumentDownloadView.as_view(), name="admin-generated-document-download"),
+
+    # Website Media - Fixed Slots
+    path("settings/slots/", views.SlotListView.as_view(), name="admin-slots"),
+    path("settings/slots/<str:slot>/", views.SlotUploadView.as_view(), name="admin-slots-upload"),
+    path("settings/slots/<str:slot>/detail/", views.SlotDetailView.as_view(), name="admin-slots-detail"),
+
+    # Website Media - Facilities
+    path("settings/facilities/", views.FacilityListView.as_view(), name="admin-facilities"),
+    path("settings/facilities/upload/", views.FacilityUploadView.as_view(), name="admin-facilities-upload"),
+    path("settings/facilities/<int:facility_id>/", views.FacilityDetailView.as_view(), name="admin-facilities-detail"),
 ]

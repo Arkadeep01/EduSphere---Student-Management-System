@@ -18,10 +18,13 @@ class LetterheadListView(APIView):
 
     def post(self, request):
         data = request.data
+        name = data.get("name")
+        if not name:
+            return Response({"error": "Name is required."}, status=status.HTTP_400_BAD_REQUEST)
         if data.get("is_default"):
             Letterhead.objects.filter(is_default=True).update(is_default=False)
         letterhead = Letterhead.objects.create(
-            name=data["name"],
+            name=name,
             branding=data.get("branding", {}),
             header_spacing=data.get("header_spacing", 40),
             footer_spacing=data.get("footer_spacing", 40),
