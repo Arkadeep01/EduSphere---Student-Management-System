@@ -49,7 +49,7 @@ export function LetterheadList({
   const active = letterheads.filter(l => l.status === "active");
   const archived = letterheads.filter(l => l.status === "archived");
 
-  function getVersionData(lh: Letterhead, ver: LetterheadVersion): LetterheadFormData {
+  function getVersionData(_lh: Letterhead, ver: LetterheadVersion): LetterheadFormData {
     return {
       name: ver.letterheadName,
       branding: ver.branding,

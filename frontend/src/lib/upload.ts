@@ -49,20 +49,6 @@ export function validateFile(
   return null;
 }
 
-export function generateMockUploadResponse(file: File, uploadedBy: string = "current_user"): UploadedFileInfo {
-  return {
-    id: `mock_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-    filename: file.name,
-    original_name: file.name,
-    extension: getFileExtension(file.name),
-    size: file.size,
-    uploaded_at: new Date().toISOString(),
-    uploaded_by: uploadedBy,
-    download_url: URL.createObjectURL(file),
-    preview_url: file.type.startsWith("image/") ? URL.createObjectURL(file) : "",
-  };
-}
-
 export interface AdmissionDocEntry {
   id: string;
   label: string;

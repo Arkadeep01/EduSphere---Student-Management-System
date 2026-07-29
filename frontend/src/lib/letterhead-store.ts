@@ -1,5 +1,4 @@
 import type { Letterhead, LetterheadFormData, BrandingConfig, LetterheadVersion } from "@/types/letterhead";
-import { DEFAULT_BRANDING } from "@/types/letterhead";
 
 const STORAGE_KEY = "edusphere_letterheads";
 
@@ -58,37 +57,7 @@ export function getDefaultBranding(): BrandingConfig | null {
   return ver?.branding || null;
 }
 
-function createDefaultLetterhead(): Letterhead {
-  const formData: LetterheadFormData = {
-    name: "Default Letterhead",
-    branding: { ...DEFAULT_BRANDING },
-    logoUrl: "",
-    letterheadImageUrl: "",
-    footerText: "This is a computer-generated document. No signature is required.",
-    watermarkText: "",
-    headerSpacing: 4,
-    footerSpacing: 4,
-    leftMargin: 15,
-    rightMargin: 15,
-    primaryColor: "#1e3a5f",
-    secondaryColor: "#475569",
-    signaturePlaceholder: "Authorized Signatory",
-    schoolSealPlaceholder: "School Seal",
-  };
-  const version = makeVersion(formData, 1, "System");
-  const letterhead: Letterhead = {
-    id: `lh_default_${Date.now()}`,
-    name: "Default Letterhead",
-    status: "active",
-    isDefault: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    versions: [version],
-    currentVersion: 1,
-  };
-  save([letterhead]);
-  return letterhead;
-}
+
 
 export function addLetterhead(data: LetterheadFormData, createdBy: string): Letterhead {
   const items = load();

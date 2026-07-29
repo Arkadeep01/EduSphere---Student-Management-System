@@ -8,12 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
+
 import { useAuth } from "@/context/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { UploadedFileInfo } from "@/lib/upload";
-import { Camera, Download, BookOpen, GraduationCap, Briefcase, FileText, Crop, Check, X } from "lucide-react";
+import { Camera, Crop } from "lucide-react";
+import { FaGithub } from "react-icons/fa";
 import { useState, useRef, useCallback, useEffect } from "react";
 
 interface ProfileViewProps {
@@ -26,6 +26,99 @@ function displayValue(val: string | undefined | null): string {
 }
 
 const API_BASE = "http://localhost:8000";
+
+function GitHubSection() {
+  const token = localStorage.getItem("accessToken");
+  const [status, setStatus] = useState<{ bound: boolean; github_username: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchStatus = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await fetch(`${API_BASE}/api/github/status/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (r.ok) {
+        const data = await r.json();
+        setStatus(data);
+      }
+    } catch { /* ignore */ } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => { fetchStatus(); }, [fetchStatus]);
+
+  const handleConnect = async () => {
+    try {
+      const r = await fetch(`${API_BASE}/api/github/connect/`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!r.ok) { toast.error("Failed to initiate GitHub connection"); return; }
+      const data = await r.json();
+      window.location.href = `${API_BASE}${data.redirect_url}`;
+    } catch {
+      toast.error("Failed to connect GitHub account");
+    }
+  };
+
+  const handleDisconnect = async () => {
+    if (!confirm("Disconnect your GitHub account?")) return;
+    try {
+      const r = await fetch(`${API_BASE}/api/github/disconnect/`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!r.ok) { toast.error("Failed to disconnect"); return; }
+      toast.success("GitHub account disconnected");
+      setStatus({ bound: false, github_username: "" });
+    } catch {
+      toast.error("Failed to disconnect GitHub account");
+    }
+  };
+
+  if (loading) {
+    return <p className="text-sm text-muted-foreground">Loading GitHub status…</p>;
+  }
+
+  if (status?.bound) {
+    return (
+      <div className="flex items-center justify-between p-3 border rounded-lg">
+        <div className="flex items-center gap-3">
+          <FaGithub className="h-5 w-5" />
+          <div>
+            <p className="text-sm font-medium">Connected as {status.github_username}</p>
+            <p className="text-xs text-muted-foreground">GitHub identity is linked to your account</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleConnect}>
+            Change
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleDisconnect}>
+            Disconnect
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-between p-3 border rounded-lg">
+      <div className="flex items-center gap-3">
+        <FaGithub className="h-5 w-5" />
+        <div>
+          <p className="text-sm font-medium">Not connected</p>
+          <p className="text-xs text-muted-foreground">Link your GitHub account for single sign-on</p>
+        </div>
+      </div>
+      <Button variant="outline" size="sm" onClick={handleConnect}>
+        Connect
+      </Button>
+    </div>
+  );
+}
 
 export function ProfileView({ role }: ProfileViewProps) {
   const { user } = useAuth();
@@ -42,7 +135,7 @@ export function ProfileView({ role }: ProfileViewProps) {
   const cropImageRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [profileUploadInfo, setProfileUploadInfo] = useState<UploadedFileInfo | null>(null);
+
   const [notifSettings, setNotifSettings] = useState({
     email: true,
     push: true,
@@ -83,6 +176,8 @@ export function ProfileView({ role }: ProfileViewProps) {
     section: (realProfile?.section as string) ?? "Not Assigned",
     rollNumber: (realProfile?.roll_number as string) ?? "Not Assigned",
     admissionNumber: (realProfile?.admission_number as string) ?? "Not Assigned",
+    academicYear: (realProfile?.academic_year as string) ?? "Not Assigned",
+    previousSchool: (realProfile?.previous_school as string) ?? "Not Assigned",
   } : null;
 
   const tabs = isTeacher
@@ -201,10 +296,10 @@ export function ProfileView({ role }: ProfileViewProps) {
           <div className="space-y-2"><Label>Full name</Label><Input defaultValue={displayValue(personal.fullName)} /></div>
           <div className="space-y-2"><Label>Email</Label><Input defaultValue={displayValue(personal.email)} /></div>
           <div className="space-y-2"><Label>Phone</Label><Input defaultValue={displayValue(personal.phone)} /></div>
-          <div className="space-y-2"><Label>Date of Birth</Label><Input defaultValue={displayValue(personal.dateOfBirth)} /></div>
+          <div className="space-y-2"><Label>Date of Birth</Label><Input defaultValue={displayValue(personal.dob)} /></div>
           <div className="space-y-2"><Label>Gender</Label><Input defaultValue={displayValue(personal.gender)} /></div>
           <div className="space-y-2"><Label>Address</Label><Input defaultValue={displayValue(personal.address)} /></div>
-          {isStudent && <div className="space-y-2"><Label>Username</Label><Input defaultValue={displayValue(user?.username)} /></div>}
+          {isStudent && <div className="space-y-2"><Label>Username</Label><Input defaultValue={displayValue(user?.email)} /></div>}
           <div className="sm:col-span-2"><Button onClick={() => toast.success("Profile updated")} className="bg-gradient-brand border-0">Save</Button></div>
         </CardContent></Card></TabsContent>
 
@@ -269,11 +364,21 @@ export function ProfileView({ role }: ProfileViewProps) {
         </CardContent></Card></TabsContent>}
 
         {/* Security Tab */}
-        <TabsContent value="security"><Card><CardContent className="p-6 space-y-4 max-w-2xl">
-          <div className="space-y-2"><Label>Current password</Label><Input type="password" /></div>
-          <div className="space-y-2"><Label>New password</Label><Input type="password" /></div>
-          <div className="space-y-2"><Label>Confirm new password</Label><Input type="password" /></div>
-          <Button onClick={() => toast.success("Password changed")} className="bg-gradient-brand border-0">Change password</Button>
+        <TabsContent value="security"><Card><CardContent className="p-6 space-y-6 max-w-2xl">
+          <div>
+            <h3 className="text-sm font-semibold mb-3">Change Password</h3>
+            <div className="space-y-3">
+              <div className="space-y-2"><Label>Current password</Label><Input type="password" /></div>
+              <div className="space-y-2"><Label>New password</Label><Input type="password" /></div>
+              <div className="space-y-2"><Label>Confirm new password</Label><Input type="password" /></div>
+              <Button onClick={() => toast.success("Password changed")} className="bg-gradient-brand border-0">Change password</Button>
+            </div>
+          </div>
+          <hr />
+          <div>
+            <h3 className="text-sm font-semibold mb-3">GitHub Identity</h3>
+            <GitHubSection />
+          </div>
         </CardContent></Card></TabsContent>
       </Tabs>
 

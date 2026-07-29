@@ -86,7 +86,7 @@ export const resultApi = {
   createPublication: (examId: number) =>
     request<ResultPublication>("/results/publications/", { method: "POST", body: JSON.stringify({ exam: examId }) }),
   listPublications: (params?: { exam?: string; status?: string }) => {
-    const qs = params ? `?${new URLSearchParams(params as Record<string, string>)}"` : "";
+    const qs = params ? `?${new URLSearchParams(params as Record<string, string>)}` : "";
     return request<ResultPublication[]>(`/results/publications/list/${qs}`);
   },
   getPublication: (pubId: number) => request<ResultPublication>(`/results/publications/${pubId}/`),

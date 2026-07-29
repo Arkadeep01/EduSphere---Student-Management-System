@@ -11,7 +11,7 @@ export function ForbiddenPage() {
     if (user) {
       navigate({ to: getRoleRedirect(user.role) as any });
     } else {
-      navigate({ to: "/login" });
+      navigate({ to: "/login", search: { error: undefined, actual_role: undefined, label: undefined } });
     }
   };
 

@@ -16,16 +16,16 @@ import { Route as AdmissionFormsRouteImport } from './routes/admissionForms'
 import { Route as AdmissionsRouteImport } from './routes/admissions'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CoursesRouteImport } from './routes/courses'
+import { Route as DirectorRouteImport } from './routes/director'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as FacilitiesRouteImport } from './routes/facilities'
 import { Route as FaqRouteImport } from './routes/faq'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as ForcePasswordChangeRouteImport } from './routes/force-password-change'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as GuidelinesRouteImport } from './routes/guidelines'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as OauthProfileCompleteRouteImport } from './routes/oauth-profile-complete'
 import { Route as RegisterRouteImport } from './routes/register'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as StaffRouteImport } from './routes/staff'
 import { Route as StudentRouteImport } from './routes/student'
 import { Route as TeacherRouteImport } from './routes/teacher'
@@ -35,6 +35,7 @@ import { Route as AdminAttendanceRouteImport } from './routes/admin.attendance'
 import { Route as AdminAuditLogsRouteImport } from './routes/admin.audit-logs'
 import { Route as AdminClassesRouteImport } from './routes/admin.classes'
 import { Route as AdminContactsRouteImport } from './routes/admin.contacts'
+import { Route as AdminCreateTeacherRouteImport } from './routes/admin.create-teacher'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminDocumentsRouteImport } from './routes/admin.documents'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
@@ -52,8 +53,14 @@ import { Route as AdminStudentsRouteImport } from './routes/admin.students'
 import { Route as AdminSubjectsRouteImport } from './routes/admin.subjects'
 import { Route as AdminTeachersRouteImport } from './routes/admin.teachers'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
-import { Route as LoginFacultyRouteImport } from './routes/login.faculty'
+import { Route as DirectorAdminManagementRouteImport } from './routes/director.admin-management'
+import { Route as DirectorDashboardRouteImport } from './routes/director.dashboard'
+import { Route as DirectorStaffManagementRouteImport } from './routes/director.staff-management'
 import { Route as LoginIndexRouteImport } from './routes/login.index'
+import { Route as LoginDirectorRouteImport } from './routes/login.director'
+import { Route as LoginFacultyRouteImport } from './routes/login.faculty'
+import { Route as StaffCreateStudentRouteImport } from './routes/staff.create-student'
+import { Route as StaffCreateTeacherRouteImport } from './routes/staff.create-teacher'
 import { Route as StaffDashboardRouteImport } from './routes/staff.dashboard'
 import { Route as StaffHistoryRouteImport } from './routes/staff.history'
 import { Route as StaffProfileRouteImport } from './routes/staff.profile'
@@ -134,6 +141,11 @@ const CoursesRoute = CoursesRouteImport.update({
   path: '/courses',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DirectorRoute = DirectorRouteImport.update({
+  id: '/director',
+  path: '/director',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EventsRoute = EventsRouteImport.update({
   id: '/events',
   path: '/events',
@@ -149,9 +161,9 @@ const FaqRoute = FaqRouteImport.update({
   path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
+const ForcePasswordChangeRoute = ForcePasswordChangeRouteImport.update({
+  id: '/force-password-change',
+  path: '/force-password-change',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GalleryRoute = GalleryRouteImport.update({
@@ -177,11 +189,6 @@ const OauthProfileCompleteRoute = OauthProfileCompleteRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StaffRoute = StaffRouteImport.update({
@@ -227,6 +234,11 @@ const AdminClassesRoute = AdminClassesRouteImport.update({
 const AdminContactsRoute = AdminContactsRouteImport.update({
   id: '/contacts',
   path: '/contacts',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCreateTeacherRoute = AdminCreateTeacherRouteImport.update({
+  id: '/create-teacher',
+  path: '/create-teacher',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
@@ -314,15 +326,45 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LoginFacultyRoute = LoginFacultyRouteImport.update({
-  id: '/faculty',
-  path: '/faculty',
-  getParentRoute: () => LoginRoute,
+const DirectorAdminManagementRoute = DirectorAdminManagementRouteImport.update({
+  id: '/admin-management',
+  path: '/admin-management',
+  getParentRoute: () => DirectorRoute,
+} as any)
+const DirectorDashboardRoute = DirectorDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => DirectorRoute,
+} as any)
+const DirectorStaffManagementRoute = DirectorStaffManagementRouteImport.update({
+  id: '/staff-management',
+  path: '/staff-management',
+  getParentRoute: () => DirectorRoute,
 } as any)
 const LoginIndexRoute = LoginIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => LoginRoute,
+} as any)
+const LoginDirectorRoute = LoginDirectorRouteImport.update({
+  id: '/director',
+  path: '/director',
+  getParentRoute: () => LoginRoute,
+} as any)
+const LoginFacultyRoute = LoginFacultyRouteImport.update({
+  id: '/faculty',
+  path: '/faculty',
+  getParentRoute: () => LoginRoute,
+} as any)
+const StaffCreateStudentRoute = StaffCreateStudentRouteImport.update({
+  id: '/create-student',
+  path: '/create-student',
+  getParentRoute: () => StaffRoute,
+} as any)
+const StaffCreateTeacherRoute = StaffCreateTeacherRouteImport.update({
+  id: '/create-teacher',
+  path: '/create-teacher',
+  getParentRoute: () => StaffRoute,
 } as any)
 const StaffDashboardRoute = StaffDashboardRouteImport.update({
   id: '/dashboard',
@@ -563,16 +605,16 @@ export interface FileRoutesByFullPath {
   '/admissions': typeof AdmissionsRoute
   '/contact': typeof ContactRoute
   '/courses': typeof CoursesRoute
+  '/director': typeof DirectorRouteWithChildren
   '/events': typeof EventsRoute
   '/facilities': typeof FacilitiesRoute
   '/faq': typeof FaqRoute
-  '/forgot-password': typeof ForgotPasswordRoute
+  '/force-password-change': typeof ForcePasswordChangeRoute
   '/gallery': typeof GalleryRoute
   '/guidelines': typeof GuidelinesRoute
   '/login': typeof LoginRouteWithChildren
   '/oauth-profile-complete': typeof OauthProfileCompleteRoute
   '/register': typeof RegisterRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/staff': typeof StaffRouteWithChildren
   '/student': typeof StudentRouteWithChildren
   '/teacher': typeof TeacherRouteWithChildren
@@ -582,6 +624,7 @@ export interface FileRoutesByFullPath {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/classes': typeof AdminClassesRoute
   '/admin/contacts': typeof AdminContactsRoute
+  '/admin/create-teacher': typeof AdminCreateTeacherRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/events': typeof AdminEventsRoute
@@ -599,8 +642,13 @@ export interface FileRoutesByFullPath {
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/login/': typeof LoginIndexRoute
+  '/director/admin-management': typeof DirectorAdminManagementRoute
+  '/director/dashboard': typeof DirectorDashboardRoute
+  '/director/staff-management': typeof DirectorStaffManagementRoute
+  '/login/director': typeof LoginDirectorRoute
   '/login/faculty': typeof LoginFacultyRoute
+  '/staff/create-student': typeof StaffCreateStudentRoute
+  '/staff/create-teacher': typeof StaffCreateTeacherRoute
   '/staff/dashboard': typeof StaffDashboardRoute
   '/staff/history': typeof StaffHistoryRoute
   '/staff/profile': typeof StaffProfileRoute
@@ -631,6 +679,7 @@ export interface FileRoutesByFullPath {
   '/teacher/resources': typeof TeacherResourcesRoute
   '/teacher/subjects': typeof TeacherSubjectsRoute
   '/teacher/timetable': typeof TeacherTimetableRoute
+  '/login/': typeof LoginIndexRoute
   '/admin/notification/analytics': typeof AdminNotificationAnalyticsRoute
   '/admin/notification/create': typeof AdminNotificationCreateRoute
   '/admin/notification/delivery-logs': typeof AdminNotificationDeliveryLogsRoute
@@ -654,16 +703,15 @@ export interface FileRoutesByTo {
   '/admissions': typeof AdmissionsRoute
   '/contact': typeof ContactRoute
   '/courses': typeof CoursesRoute
+  '/director': typeof DirectorRouteWithChildren
   '/events': typeof EventsRoute
   '/facilities': typeof FacilitiesRoute
   '/faq': typeof FaqRoute
-  '/forgot-password': typeof ForgotPasswordRoute
+  '/force-password-change': typeof ForcePasswordChangeRoute
   '/gallery': typeof GalleryRoute
   '/guidelines': typeof GuidelinesRoute
-  '/login': typeof LoginRouteWithChildren
   '/oauth-profile-complete': typeof OauthProfileCompleteRoute
   '/register': typeof RegisterRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/staff': typeof StaffRouteWithChildren
   '/student': typeof StudentRouteWithChildren
   '/teacher': typeof TeacherRouteWithChildren
@@ -673,6 +721,7 @@ export interface FileRoutesByTo {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/classes': typeof AdminClassesRoute
   '/admin/contacts': typeof AdminContactsRoute
+  '/admin/create-teacher': typeof AdminCreateTeacherRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/events': typeof AdminEventsRoute
@@ -690,8 +739,13 @@ export interface FileRoutesByTo {
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/login/': typeof LoginIndexRoute
+  '/director/admin-management': typeof DirectorAdminManagementRoute
+  '/director/dashboard': typeof DirectorDashboardRoute
+  '/director/staff-management': typeof DirectorStaffManagementRoute
+  '/login/director': typeof LoginDirectorRoute
   '/login/faculty': typeof LoginFacultyRoute
+  '/staff/create-student': typeof StaffCreateStudentRoute
+  '/staff/create-teacher': typeof StaffCreateTeacherRoute
   '/staff/dashboard': typeof StaffDashboardRoute
   '/staff/history': typeof StaffHistoryRoute
   '/staff/profile': typeof StaffProfileRoute
@@ -722,6 +776,7 @@ export interface FileRoutesByTo {
   '/teacher/resources': typeof TeacherResourcesRoute
   '/teacher/subjects': typeof TeacherSubjectsRoute
   '/teacher/timetable': typeof TeacherTimetableRoute
+  '/login': typeof LoginIndexRoute
   '/admin/notification/analytics': typeof AdminNotificationAnalyticsRoute
   '/admin/notification/create': typeof AdminNotificationCreateRoute
   '/admin/notification/delivery-logs': typeof AdminNotificationDeliveryLogsRoute
@@ -746,16 +801,16 @@ export interface FileRoutesById {
   '/admissions': typeof AdmissionsRoute
   '/contact': typeof ContactRoute
   '/courses': typeof CoursesRoute
+  '/director': typeof DirectorRouteWithChildren
   '/events': typeof EventsRoute
   '/facilities': typeof FacilitiesRoute
   '/faq': typeof FaqRoute
-  '/forgot-password': typeof ForgotPasswordRoute
+  '/force-password-change': typeof ForcePasswordChangeRoute
   '/gallery': typeof GalleryRoute
   '/guidelines': typeof GuidelinesRoute
   '/login': typeof LoginRouteWithChildren
   '/oauth-profile-complete': typeof OauthProfileCompleteRoute
   '/register': typeof RegisterRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/staff': typeof StaffRouteWithChildren
   '/student': typeof StudentRouteWithChildren
   '/teacher': typeof TeacherRouteWithChildren
@@ -765,6 +820,7 @@ export interface FileRoutesById {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/classes': typeof AdminClassesRoute
   '/admin/contacts': typeof AdminContactsRoute
+  '/admin/create-teacher': typeof AdminCreateTeacherRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/documents': typeof AdminDocumentsRoute
   '/admin/events': typeof AdminEventsRoute
@@ -782,8 +838,13 @@ export interface FileRoutesById {
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/teachers': typeof AdminTeachersRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/login/': typeof LoginIndexRoute
+  '/director/admin-management': typeof DirectorAdminManagementRoute
+  '/director/dashboard': typeof DirectorDashboardRoute
+  '/director/staff-management': typeof DirectorStaffManagementRoute
+  '/login/director': typeof LoginDirectorRoute
   '/login/faculty': typeof LoginFacultyRoute
+  '/staff/create-student': typeof StaffCreateStudentRoute
+  '/staff/create-teacher': typeof StaffCreateTeacherRoute
   '/staff/dashboard': typeof StaffDashboardRoute
   '/staff/history': typeof StaffHistoryRoute
   '/staff/profile': typeof StaffProfileRoute
@@ -814,6 +875,7 @@ export interface FileRoutesById {
   '/teacher/resources': typeof TeacherResourcesRoute
   '/teacher/subjects': typeof TeacherSubjectsRoute
   '/teacher/timetable': typeof TeacherTimetableRoute
+  '/login/': typeof LoginIndexRoute
   '/admin/notification/analytics': typeof AdminNotificationAnalyticsRoute
   '/admin/notification/create': typeof AdminNotificationCreateRoute
   '/admin/notification/delivery-logs': typeof AdminNotificationDeliveryLogsRoute
@@ -839,16 +901,16 @@ export interface FileRouteTypes {
     | '/admissions'
     | '/contact'
     | '/courses'
+    | '/director'
     | '/events'
     | '/facilities'
     | '/faq'
-    | '/forgot-password'
+    | '/force-password-change'
     | '/gallery'
     | '/guidelines'
     | '/login'
     | '/oauth-profile-complete'
     | '/register'
-    | '/reset-password'
     | '/staff'
     | '/student'
     | '/teacher'
@@ -858,6 +920,7 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/classes'
     | '/admin/contacts'
+    | '/admin/create-teacher'
     | '/admin/dashboard'
     | '/admin/documents'
     | '/admin/events'
@@ -875,8 +938,13 @@ export interface FileRouteTypes {
     | '/admin/subjects'
     | '/admin/teachers'
     | '/auth/callback'
-    | '/login/'
+    | '/director/admin-management'
+    | '/director/dashboard'
+    | '/director/staff-management'
+    | '/login/director'
     | '/login/faculty'
+    | '/staff/create-student'
+    | '/staff/create-teacher'
     | '/staff/dashboard'
     | '/staff/history'
     | '/staff/profile'
@@ -907,6 +975,7 @@ export interface FileRouteTypes {
     | '/teacher/resources'
     | '/teacher/subjects'
     | '/teacher/timetable'
+    | '/login/'
     | '/admin/notification/analytics'
     | '/admin/notification/create'
     | '/admin/notification/delivery-logs'
@@ -930,16 +999,15 @@ export interface FileRouteTypes {
     | '/admissions'
     | '/contact'
     | '/courses'
+    | '/director'
     | '/events'
     | '/facilities'
     | '/faq'
-    | '/forgot-password'
+    | '/force-password-change'
     | '/gallery'
     | '/guidelines'
-    | '/login'
     | '/oauth-profile-complete'
     | '/register'
-    | '/reset-password'
     | '/staff'
     | '/student'
     | '/teacher'
@@ -949,6 +1017,7 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/classes'
     | '/admin/contacts'
+    | '/admin/create-teacher'
     | '/admin/dashboard'
     | '/admin/documents'
     | '/admin/events'
@@ -966,8 +1035,13 @@ export interface FileRouteTypes {
     | '/admin/subjects'
     | '/admin/teachers'
     | '/auth/callback'
-    | '/login/'
+    | '/director/admin-management'
+    | '/director/dashboard'
+    | '/director/staff-management'
+    | '/login/director'
     | '/login/faculty'
+    | '/staff/create-student'
+    | '/staff/create-teacher'
     | '/staff/dashboard'
     | '/staff/history'
     | '/staff/profile'
@@ -998,6 +1072,7 @@ export interface FileRouteTypes {
     | '/teacher/resources'
     | '/teacher/subjects'
     | '/teacher/timetable'
+    | '/login'
     | '/admin/notification/analytics'
     | '/admin/notification/create'
     | '/admin/notification/delivery-logs'
@@ -1021,16 +1096,16 @@ export interface FileRouteTypes {
     | '/admissions'
     | '/contact'
     | '/courses'
+    | '/director'
     | '/events'
     | '/facilities'
     | '/faq'
-    | '/forgot-password'
+    | '/force-password-change'
     | '/gallery'
     | '/guidelines'
     | '/login'
     | '/oauth-profile-complete'
     | '/register'
-    | '/reset-password'
     | '/staff'
     | '/student'
     | '/teacher'
@@ -1040,6 +1115,7 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/classes'
     | '/admin/contacts'
+    | '/admin/create-teacher'
     | '/admin/dashboard'
     | '/admin/documents'
     | '/admin/events'
@@ -1057,8 +1133,13 @@ export interface FileRouteTypes {
     | '/admin/subjects'
     | '/admin/teachers'
     | '/auth/callback'
-    | '/login/'
+    | '/director/admin-management'
+    | '/director/dashboard'
+    | '/director/staff-management'
+    | '/login/director'
     | '/login/faculty'
+    | '/staff/create-student'
+    | '/staff/create-teacher'
     | '/staff/dashboard'
     | '/staff/history'
     | '/staff/profile'
@@ -1089,6 +1170,7 @@ export interface FileRouteTypes {
     | '/teacher/resources'
     | '/teacher/subjects'
     | '/teacher/timetable'
+    | '/login/'
     | '/admin/notification/analytics'
     | '/admin/notification/create'
     | '/admin/notification/delivery-logs'
@@ -1113,16 +1195,16 @@ export interface RootRouteChildren {
   AdmissionsRoute: typeof AdmissionsRoute
   ContactRoute: typeof ContactRoute
   CoursesRoute: typeof CoursesRoute
+  DirectorRoute: typeof DirectorRouteWithChildren
   EventsRoute: typeof EventsRoute
   FacilitiesRoute: typeof FacilitiesRoute
   FaqRoute: typeof FaqRoute
-  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  ForcePasswordChangeRoute: typeof ForcePasswordChangeRoute
   GalleryRoute: typeof GalleryRoute
   GuidelinesRoute: typeof GuidelinesRoute
   LoginRoute: typeof LoginRouteWithChildren
   OauthProfileCompleteRoute: typeof OauthProfileCompleteRoute
   RegisterRoute: typeof RegisterRoute
-  ResetPasswordRoute: typeof ResetPasswordRoute
   StaffRoute: typeof StaffRouteWithChildren
   StudentRoute: typeof StudentRouteWithChildren
   TeacherRoute: typeof TeacherRouteWithChildren
@@ -1181,6 +1263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoursesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/director': {
+      id: '/director'
+      path: '/director'
+      fullPath: '/director'
+      preLoaderRoute: typeof DirectorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/events': {
       id: '/events'
       path: '/events'
@@ -1202,11 +1291,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
+    '/force-password-change': {
+      id: '/force-password-change'
+      path: '/force-password-change'
+      fullPath: '/force-password-change'
+      preLoaderRoute: typeof ForcePasswordChangeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gallery': {
@@ -1230,13 +1319,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/login/': {
-      id: '/login/'
-      path: '/'
-      fullPath: '/login/'
-      preLoaderRoute: typeof LoginIndexRouteImport
-      parentRoute: typeof LoginRoute
-    }
     '/oauth-profile-complete': {
       id: '/oauth-profile-complete'
       path: '/oauth-profile-complete'
@@ -1249,13 +1331,6 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/staff': {
@@ -1319,6 +1394,13 @@ declare module '@tanstack/react-router' {
       path: '/contacts'
       fullPath: '/admin/contacts'
       preLoaderRoute: typeof AdminContactsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/create-teacher': {
+      id: '/admin/create-teacher'
+      path: '/create-teacher'
+      fullPath: '/admin/create-teacher'
+      preLoaderRoute: typeof AdminCreateTeacherRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/dashboard': {
@@ -1440,12 +1522,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/director/admin-management': {
+      id: '/director/admin-management'
+      path: '/admin-management'
+      fullPath: '/director/admin-management'
+      preLoaderRoute: typeof DirectorAdminManagementRouteImport
+      parentRoute: typeof DirectorRoute
+    }
+    '/director/dashboard': {
+      id: '/director/dashboard'
+      path: '/dashboard'
+      fullPath: '/director/dashboard'
+      preLoaderRoute: typeof DirectorDashboardRouteImport
+      parentRoute: typeof DirectorRoute
+    }
+    '/director/staff-management': {
+      id: '/director/staff-management'
+      path: '/staff-management'
+      fullPath: '/director/staff-management'
+      preLoaderRoute: typeof DirectorStaffManagementRouteImport
+      parentRoute: typeof DirectorRoute
+    }
+    '/login/': {
+      id: '/login/'
+      path: '/'
+      fullPath: '/login/'
+      preLoaderRoute: typeof LoginIndexRouteImport
+      parentRoute: typeof LoginRoute
+    }
+    '/login/director': {
+      id: '/login/director'
+      path: '/director'
+      fullPath: '/login/director'
+      preLoaderRoute: typeof LoginDirectorRouteImport
+      parentRoute: typeof LoginRoute
+    }
     '/login/faculty': {
       id: '/login/faculty'
       path: '/faculty'
       fullPath: '/login/faculty'
       preLoaderRoute: typeof LoginFacultyRouteImport
       parentRoute: typeof LoginRoute
+    }
+    '/staff/create-student': {
+      id: '/staff/create-student'
+      path: '/create-student'
+      fullPath: '/staff/create-student'
+      preLoaderRoute: typeof StaffCreateStudentRouteImport
+      parentRoute: typeof StaffRoute
+    }
+    '/staff/create-teacher': {
+      id: '/staff/create-teacher'
+      path: '/create-teacher'
+      fullPath: '/staff/create-teacher'
+      preLoaderRoute: typeof StaffCreateTeacherRouteImport
+      parentRoute: typeof StaffRoute
     }
     '/staff/dashboard': {
       id: '/staff/dashboard'
@@ -1794,6 +1925,7 @@ interface AdminRouteChildren {
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
   AdminClassesRoute: typeof AdminClassesRoute
   AdminContactsRoute: typeof AdminContactsRoute
+  AdminCreateTeacherRoute: typeof AdminCreateTeacherRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminDocumentsRoute: typeof AdminDocumentsRoute
   AdminEventsRoute: typeof AdminEventsRoute
@@ -1825,6 +1957,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAuditLogsRoute: AdminAuditLogsRoute,
   AdminClassesRoute: AdminClassesRoute,
   AdminContactsRoute: AdminContactsRoute,
+  AdminCreateTeacherRoute: AdminCreateTeacherRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminDocumentsRoute: AdminDocumentsRoute,
   AdminEventsRoute: AdminEventsRoute,
@@ -1853,12 +1986,30 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface DirectorRouteChildren {
+  DirectorAdminManagementRoute: typeof DirectorAdminManagementRoute
+  DirectorDashboardRoute: typeof DirectorDashboardRoute
+  DirectorStaffManagementRoute: typeof DirectorStaffManagementRoute
+}
+
+const DirectorRouteChildren: DirectorRouteChildren = {
+  DirectorAdminManagementRoute: DirectorAdminManagementRoute,
+  DirectorDashboardRoute: DirectorDashboardRoute,
+  DirectorStaffManagementRoute: DirectorStaffManagementRoute,
+}
+
+const DirectorRouteWithChildren = DirectorRoute._addFileChildren(
+  DirectorRouteChildren,
+)
+
 interface LoginRouteChildren {
+  LoginDirectorRoute: typeof LoginDirectorRoute
   LoginFacultyRoute: typeof LoginFacultyRoute
   LoginIndexRoute: typeof LoginIndexRoute
 }
 
 const LoginRouteChildren: LoginRouteChildren = {
+  LoginDirectorRoute: LoginDirectorRoute,
   LoginFacultyRoute: LoginFacultyRoute,
   LoginIndexRoute: LoginIndexRoute,
 }
@@ -1866,6 +2017,8 @@ const LoginRouteChildren: LoginRouteChildren = {
 const LoginRouteWithChildren = LoginRoute._addFileChildren(LoginRouteChildren)
 
 interface StaffRouteChildren {
+  StaffCreateStudentRoute: typeof StaffCreateStudentRoute
+  StaffCreateTeacherRoute: typeof StaffCreateTeacherRoute
   StaffDashboardRoute: typeof StaffDashboardRoute
   StaffHistoryRoute: typeof StaffHistoryRoute
   StaffProfileRoute: typeof StaffProfileRoute
@@ -1876,6 +2029,8 @@ interface StaffRouteChildren {
 }
 
 const StaffRouteChildren: StaffRouteChildren = {
+  StaffCreateStudentRoute: StaffCreateStudentRoute,
+  StaffCreateTeacherRoute: StaffCreateTeacherRoute,
   StaffDashboardRoute: StaffDashboardRoute,
   StaffHistoryRoute: StaffHistoryRoute,
   StaffProfileRoute: StaffProfileRoute,
@@ -1986,16 +2141,16 @@ const rootRouteChildren: RootRouteChildren = {
   AdmissionsRoute: AdmissionsRoute,
   ContactRoute: ContactRoute,
   CoursesRoute: CoursesRoute,
+  DirectorRoute: DirectorRouteWithChildren,
   EventsRoute: EventsRoute,
   FacilitiesRoute: FacilitiesRoute,
   FaqRoute: FaqRoute,
-  ForgotPasswordRoute: ForgotPasswordRoute,
+  ForcePasswordChangeRoute: ForcePasswordChangeRoute,
   GalleryRoute: GalleryRoute,
   GuidelinesRoute: GuidelinesRoute,
   LoginRoute: LoginRouteWithChildren,
   OauthProfileCompleteRoute: OauthProfileCompleteRoute,
   RegisterRoute: RegisterRoute,
-  ResetPasswordRoute: ResetPasswordRoute,
   StaffRoute: StaffRouteWithChildren,
   StudentRoute: StudentRouteWithChildren,
   TeacherRoute: TeacherRouteWithChildren,

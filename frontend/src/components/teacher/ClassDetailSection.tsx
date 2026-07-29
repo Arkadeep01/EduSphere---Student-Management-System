@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +28,6 @@ import {
   GraduationCap,
   Calendar,
   MapPin,
-  Trophy,
 } from "lucide-react";
 
 interface ClassInfo {
@@ -110,6 +109,8 @@ interface ClassDetailSectionProps {
   classInfo: ClassInfo;
   onClose: () => void;
 }
+
+const classStudentPerformance: Record<string, StudentPerformance[]> = {};
 
 export function ClassDetailSection({ classInfo, onClose }: ClassDetailSectionProps) {
   const [search, setSearch] = useState("");

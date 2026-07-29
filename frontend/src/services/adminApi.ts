@@ -1,6 +1,5 @@
 import { request, ADMIN_API_BASE, STAFF_API_BASE } from "./request";
-import { isMockExportMode } from "@/lib/app-config";
-import { generateMockExport } from "@/lib/mock-export";
+
 
 // Dashboard
 export const dashboardApi = {
@@ -17,6 +16,8 @@ export const studentAdminApi = {
     return request<unknown[]>(`/students/${qs}`);
   },
   detail: (id: number) => request<unknown>(`/students/${id}/`),
+  createStudent: (data: Record<string, unknown>) =>
+    request<Record<string, unknown>>("/students/", { method: "POST", body: JSON.stringify(data) }),
   approveSubjects: (id: number, subjectIds: number[]) =>
     request(`/students/${id}/approve-subjects/`, { method: "POST", body: JSON.stringify({ subject_ids: subjectIds }) }),
   assignSubjects: (id: number, subjectIds: number[]) =>
@@ -31,6 +32,8 @@ export const studentAdminApi = {
 export const teacherAdminApi = {
   list: () => request<unknown[]>("/teachers/"),
   detail: (id: number) => request<unknown>(`/teachers/${id}/`),
+  createTeacher: (data: Record<string, unknown>) =>
+    request<Record<string, unknown>>("/teachers/create/", { method: "POST", body: JSON.stringify(data) }),
   notify: (id: number, title: string, message: string) =>
     request(`/teachers/${id}/notify/`, { method: "POST", body: JSON.stringify({ title, message }) }),
   assignClassTeacher: (id: number, class_name: string, academic_year?: string) =>
@@ -317,9 +320,6 @@ async function downloadModule(
   filters: Record<string, unknown>,
   defaultPrefix: string,
 ): Promise<{ blob: Blob; filename: string }> {
-  if (isMockExportMode()) {
-    return generateMockExport(endpoint, format, fields, filters);
-  }
   const token = localStorage.getItem("accessToken");
   const res = await fetch(`${ADMIN_API_BASE}/exports/${endpoint}/`, {
     method: "POST",
@@ -441,4 +441,9 @@ export const staffApi = {
   profile: () => request<Record<string, unknown>>("/profile/", undefined, STAFF_API_BASE),
   updateProfile: (data: Record<string, unknown>) =>
     request<Record<string, unknown>>("/profile/", { method: "PUT", body: JSON.stringify(data) }, STAFF_API_BASE),
+  classList: () => request<{ id: number; name: string; section: string; academic_session: string | null; session_id: number | null }[]>("/classes/", undefined, STAFF_API_BASE),
+  createStudent: (data: Record<string, unknown>) =>
+    request<Record<string, unknown>>("/students/create/", { method: "POST", body: JSON.stringify(data) }, STAFF_API_BASE),
+  createTeacher: (data: Record<string, unknown>) =>
+    request<Record<string, unknown>>("/teachers/create/", { method: "POST", body: JSON.stringify(data) }, STAFF_API_BASE),
 };

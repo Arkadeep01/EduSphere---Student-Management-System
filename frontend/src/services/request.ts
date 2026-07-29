@@ -1,7 +1,7 @@
-const API_BASE = "http://localhost:8000";
-const ADMIN_API_BASE = "http://localhost:8000/api/admin";
-const STAFF_API_BASE = "http://localhost:8000/api/staff";
-const STUDENT_API_BASE = "http://localhost:8000/api/student";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const ADMIN_API_BASE = `${API_BASE}/api/admin`;
+const STAFF_API_BASE = `${API_BASE}/api/staff`;
+const STUDENT_API_BASE = `${API_BASE}/api/student`;
 const TOKEN_KEY = "accessToken";
 const REFRESH_KEY = "refreshToken";
 

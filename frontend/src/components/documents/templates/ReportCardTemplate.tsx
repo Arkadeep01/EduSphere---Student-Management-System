@@ -1,5 +1,5 @@
 import { BaseLetterHead } from "../BaseLetterHead";
-import { DocumentTable, type DocumentTableColumn } from "../DocumentTable";
+import { DocumentTable } from "../DocumentTable";
 import { SignatureSection } from "../SignatureSection";
 
 interface SubjectGrade {

@@ -5,9 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Download, Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
-import type { ExportFormat, ExportScope, ModuleExportConfig, ExportFieldGroup, ExportFilterConfig } from "./exportConfig";
+import type { ExportFormat, ExportScope, ModuleExportConfig } from "./exportConfig";
 
 interface ExportDialogProps {
   open: boolean;
@@ -26,13 +26,10 @@ export function ExportDialog({ open, onOpenChange, config, renderScopeInputs }: 
     return filterValues[key] || "all";
   }
 
-  function isFilterActive(key: string): boolean {
-    return !!filterValues[key] && filterValues[key] !== "all";
-  }
   const [showConfirm, setShowConfirm] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [showLargeWarning, setShowLargeWarning] = useState(false);
-  const [pendingLargeExport, setPendingLargeExport] = useState(false);
+  const [_pendingLargeExport, setPendingLargeExport] = useState(false);
 
   function toggleField(key: string) {
     setSelectedFields(prev =>

@@ -10,7 +10,6 @@ interface DocumentMetaProps {
 }
 
 export function DocumentMeta({
-  title,
   generatedBy,
   generatedDate,
   generatedTime,

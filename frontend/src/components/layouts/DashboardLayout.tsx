@@ -18,6 +18,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ForbiddenPage } from "@/components/ForbiddenPage";
+import { AppFooter } from "@/components/layout/AppFooter";
 type Role = "admin" | "teacher" | "student" | "staff" | "director";
 
 interface NavItem { label: string; to: string; icon: typeof LayoutDashboard; }
@@ -33,6 +34,7 @@ const navByRole: Record<Role, NavItem[]> = {
     { label: "Dashboard", to: "/admin/dashboard", icon: LayoutDashboard },
     { label: "Students", to: "/admin/students", icon: Users },
     { label: "Teachers", to: "/admin/teachers", icon: GraduationCap },
+    { label: "Create Teacher", to: "/admin/create-teacher", icon: GraduationCap },
     { label: "Classes", to: "/admin/classes", icon: Layers },
     { label: "Promotions", to: "/admin/promotions", icon: TrendingUp },
     { label: "Attendance", to: "/admin/attendance", icon: ClipboardCheck },
@@ -85,6 +87,8 @@ const navByRole: Record<Role, NavItem[]> = {
     { label: "Upload History", to: "/staff/history", icon: Clock },
     { label: "Rejected", to: "/staff/rejected", icon: FileCheck },
     { label: "Rechecking", to: "/staff/rechecking", icon: Search },
+    { label: "Create Student", to: "/staff/create-student", icon: Users },
+    { label: "Create Teacher", to: "/staff/create-teacher", icon: GraduationCap },
     { label: "Profile", to: "/staff/profile", icon: User },
   ],
 };
@@ -132,8 +136,6 @@ export function  DashboardLayoutInner({ role }: { role: Role }) {
     "admissions": "Admission Forms",
     "documents": "Document Repository",
     "reports": "Reports",
-    "subjects": "Subject Management",
-    "notifications": "Notification Broadcast",
     "settings": "Settings",
     "upload-tasks": "Upload Tasks",
     "upload": "Upload Scripts",
@@ -146,7 +148,7 @@ export function  DashboardLayoutInner({ role }: { role: Role }) {
 
   const handleLogout = () => {
     logout();
-    navigate({ to: "/login" });
+    navigate({ to: "/login", search: { error: undefined, actual_role: undefined, label: undefined } });
   };
 
   const roleLabels: Record<string, string> = { admin: "Administrator", teacher: "Teacher", student: "Student", staff: "Staff" };
@@ -273,6 +275,7 @@ export function  DashboardLayoutInner({ role }: { role: Role }) {
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto" style={{ maxHeight: "calc(100vh - 4rem)" }}>
           <Outlet />
         </main>
+        <AppFooter />
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { request, ADMIN_API_BASE, API_BASE } from "./request";
+import { request, API_BASE } from "./request";
 
 export interface NotificationItem {
   recipient_id: number;
