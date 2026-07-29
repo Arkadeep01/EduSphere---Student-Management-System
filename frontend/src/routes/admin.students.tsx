@@ -61,6 +61,9 @@ function AdminStudentsComponent() {
   const [subjectReqEnabled, setSubjectReqEnabled] = useState(true);
   const [showAddStudent, setShowAddStudent] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const [addForm, setAddForm] = useState<Record<string, string>>({ email: "", first_name: "", last_name: "", class_assigned: "", section: "" });
+  const [addingStudent, setAddingStudent] = useState(false);
+
   const [q, setQ] = useState("");
   const [cls, setCls] = useState("all");
 
@@ -74,7 +77,7 @@ function AdminStudentsComponent() {
     enabled: !!token,
   });
 
-  const students: StudentItem[] = realStudents ? realStudents.map((s: any, i) => ({
+  const students: StudentItem[] = realStudents ? realStudents.map((s: any, _i) => ({
     id: s.id?.toString(),
     name: s.full_name || `${s.user?.first_name || ""} ${s.user?.last_name || ""}`,
     class: s.class_assigned || "",
@@ -133,6 +136,24 @@ function AdminStudentsComponent() {
     } catch { toast.error("Failed to reject"); }
   }
 
+  async function handleAddStudent() {
+    if (!addForm.email) {
+      toast.error("Email is required.");
+      return;
+    }
+    setAddingStudent(true);
+    try {
+      await studentAdminApi.createStudent(addForm);
+      toast.success("Student added successfully");
+      setShowAddStudent(false);
+      setAddForm({ email: "", first_name: "", last_name: "", class_assigned: "", section: "" });
+    } catch {
+      toast.error("Failed to create student. Check email and try again.");
+    } finally {
+      setAddingStudent(false);
+    }
+  }
+
   async function handleToggle() {
     const newVal = !subjectReqEnabled;
     try {
@@ -142,10 +163,7 @@ function AdminStudentsComponent() {
     } catch { toast.error("Failed to toggle"); }
   }
 
-  const filtered = students.filter(s =>
-    (s.name?.toLowerCase().includes(q.toLowerCase()) || s.id?.toLowerCase().includes(q.toLowerCase()))
-    && (cls === "all" || s.class === cls)
-  );
+
 
   useEffect(() => {
     if (selectedClass) fetchClassDetail(selectedClass);
@@ -362,11 +380,16 @@ function AdminStudentsComponent() {
       <Dialog open={showAddStudent} onOpenChange={setShowAddStudent}>
         <DialogContent><DialogHeader><DialogTitle>Add Student</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div className="space-y-2"><Label>Full Name</Label><Input placeholder="Enter full name" /></div>
-            <div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>Email</Label><Input type="email" placeholder="student@edusphere.edu" /></div><div className="space-y-2"><Label>Phone</Label><Input placeholder="Phone number" /></div></div>
-            <div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>Class</Label><Select><SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger><SelectContent>{classNames.map(c => (<SelectItem key={c} value={c}>Class {c}</SelectItem>))}</SelectContent></Select></div><div className="space-y-2"><Label>Section</Label><Select><SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger><SelectContent><SelectItem value="A">A</SelectItem><SelectItem value="B">B</SelectItem><SelectItem value="C">C</SelectItem></SelectContent></Select></div></div>
+            <div className="space-y-2"><Label>Email *</Label><Input type="email" placeholder="student@edusphere.edu" value={addForm.email} onChange={e => setAddForm(f => ({...f, email: e.target.value}))} /></div>
+            <div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>First Name</Label><Input value={addForm.first_name} onChange={e => setAddForm(f => ({...f, first_name: e.target.value}))} /></div><div className="space-y-2"><Label>Last Name</Label><Input value={addForm.last_name} onChange={e => setAddForm(f => ({...f, last_name: e.target.value}))} /></div></div>
+            <div className="grid grid-cols-2 gap-3"><div className="space-y-2"><Label>Class</Label><Select value={addForm.class_assigned} onValueChange={v => setAddForm(f => ({...f, class_assigned: v}))}><SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger><SelectContent>{classNames.map(c => (<SelectItem key={c} value={c}>Class {c}</SelectItem>))}</SelectContent></Select></div><div className="space-y-2"><Label>Section</Label><Select value={addForm.section} onValueChange={v => setAddForm(f => ({...f, section: v}))}><SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger><SelectContent><SelectItem value="A">A</SelectItem><SelectItem value="B">B</SelectItem><SelectItem value="C">C</SelectItem></SelectContent></Select></div></div>
           </div>
-          <DialogFooter><Button variant="outline" onClick={() => setShowAddStudent(false)}>Cancel</Button><Button className="bg-gradient-brand border-0" onClick={() => { toast.success("Student added successfully"); setShowAddStudent(false); }}>Add Student</Button></DialogFooter>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddStudent(false)}>Cancel</Button>
+            <Button className="bg-gradient-brand border-0" onClick={handleAddStudent} disabled={addingStudent}>
+              {addingStudent ? "Adding..." : "Add Student"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, GraduationCap, Layers, TrendingUp, FileText, Calendar, Loader2 } from "lucide-react";
+import { Users, GraduationCap, Layers, TrendingUp, FileText, Calendar, Loader2, AlertCircle } from "lucide-react";
 import { useRequireRole } from "@/context/AuthContext";
 import { useAdminDashboardSummary } from "@/hooks/useAdminDashboard";
 
@@ -11,10 +11,10 @@ export const Route = createFileRoute("/admin/dashboard")({
 });
 
 function AdminDashboard() {
-  const { authorized, loading } = useRequireRole("admin");
-  const { data: summary, isLoading: summaryLoading } = useAdminDashboardSummary();
+  const { authorized, loading: authLoading } = useRequireRole("admin");
+  const { data: summary, isLoading: summaryLoading, isError } = useAdminDashboardSummary();
 
-  if (loading || summaryLoading) {
+  if (authLoading || summaryLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -24,9 +24,24 @@ function AdminDashboard() {
 
   if (!authorized) return null;
 
-  const totalStudents = (summary?.total_students as number) ?? 0;
-  const totalTeachers = (summary?.total_teachers as number) ?? 0;
-  const totalClasses = (summary?.total_classes as number) ?? 0;
+  if (isError) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center gap-3 p-6">
+          <AlertCircle className="h-6 w-6 text-destructive" />
+          <p className="text-muted-foreground">Unable to load dashboard data.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const summaryData = summary as Record<string, unknown> | undefined;
+  const totalStudents = (summaryData?.students as number) ?? 0;
+  const totalTeachers = (summaryData?.teachers as number) ?? 0;
+  const totalClasses = (summaryData?.classes as number) ?? 0;
+  const attendance = (summaryData?.attendance as number) ?? null;
+  const upcomingExams = (summaryData?.upcomingExams as number) ?? null;
+  const upcomingEvents = (summaryData?.upcomingEvents as number) ?? null;
 
   return (
     <>
@@ -34,9 +49,9 @@ function AdminDashboard() {
         <StatCard label="Total Students" value={totalStudents.toLocaleString()} icon={Users} accent="primary" />
         <StatCard label="Total Teachers" value={totalTeachers} icon={GraduationCap} accent="info" />
         <StatCard label="Total Classes" value={totalClasses} icon={Layers} accent="brand" />
-        <StatCard label="Attendance" value="--" icon={TrendingUp} accent="success" />
-        <StatCard label="Upcoming Exams" value="--" icon={FileText} accent="info" />
-        <StatCard label="Upcoming Events" value="--" icon={Calendar} accent="brand" />
+        <StatCard label="Attendance" value={attendance !== null ? `${attendance}%` : "--"} icon={TrendingUp} accent="success" />
+        <StatCard label="Upcoming Exams" value={upcomingExams !== null ? String(upcomingExams) : "--"} icon={FileText} accent="info" />
+        <StatCard label="Upcoming Events" value={upcomingEvents !== null ? String(upcomingEvents) : "--"} icon={Calendar} accent="brand" />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4 mt-6">

@@ -1,15 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { Bell, BarChart3, Mail, Calendar, ClipboardList, Settings, Plus, Search, Send, Loader2 } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Bell, BarChart3, Mail, Calendar, ClipboardList, Settings, Plus } from "lucide-react";
 import { PageWrapper } from "@/components/brand/animations";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { notificationApi } from "@/services/notificationApi";
-import { useAuth } from "@/context/AuthContext";
-import { useNavigate } from "@tanstack/react-router";
+import { Card, CardContent } from "@/components/ui/card";
 
 const quickLinks = [
   { label: "Create Notification", to: "/admin/notification/create", icon: Plus, color: "bg-blue-500" },

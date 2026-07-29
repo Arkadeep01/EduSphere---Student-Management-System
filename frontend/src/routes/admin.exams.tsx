@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import { Calendar, Clock, MapPin, Plus, CheckCircle2, Archive, Upload, FileText,
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { examAdminApi } from "@/services/adminApi";
-import { request, ADMIN_API_BASE } from "@/services/request";
+import { request } from "@/services/request";
 import { ExportDialog } from "@/components/export";
 import { examExportConfig } from "@/components/export/moduleConfigs";
 
@@ -79,21 +79,7 @@ const statusBadge: Record<string, { variant: "default" | "secondary" | "outline"
   archived: { variant: "outline", className: "" },
 };
 
-const uploadStatusBadge: Record<string, { variant: "default" | "secondary" | "outline" | "destructive"; className: string }> = {
-  pending_upload: { variant: "secondary", className: "" },
-  uploaded: { variant: "default", className: "bg-info" },
-  verified: { variant: "default", className: "bg-success" },
-  rejected: { variant: "destructive", className: "" },
-  assigned: { variant: "default", className: "bg-warning" },
-  evaluation_completed: { variant: "default", className: "bg-success" },
-  archived: { variant: "outline", className: "" },
-};
 
-const evalStatusBadge: Record<string, { variant: "default" | "secondary" | "outline"; className: string }> = {
-  pending: { variant: "secondary", className: "" },
-  evaluating: { variant: "default", className: "bg-warning" },
-  completed: { variant: "default", className: "bg-success" },
-};
 
 function AdminExamsComponent() {
   const [showExport, setShowExport] = useState(false);
@@ -121,7 +107,7 @@ function AdminExamsComponent() {
   const [verifyingBatch, setVerifyingBatch] = useState<string | null>(null);
 
   const [showScriptDetail, setShowScriptDetail] = useState(false);
-  const [selectedScripts, setSelectedScripts] = useState<any[]>([]);
+  const [_selectedScripts, setSelectedScripts] = useState<any[]>([]);
   const [scriptDetailLoading, setScriptDetailLoading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -264,11 +250,7 @@ function AdminExamsComponent() {
     try {
       const batch = batches.find(b => b.batch_id === assignForm.batch_id);
       if (!batch) { toast.error("Batch not found"); return; }
-      const scriptIdsRes = await request<BatchItem[]>("/exams/staff-batches/");
-      let scriptIds: number[] = [];
       try {
-        const allScripts = await request<any[]>(`/exams/staff-batches/`);
-        scriptIds = [];
       } catch { }
       await request("/exams/assign-scripts/", {
         method: "POST",
@@ -283,11 +265,11 @@ function AdminExamsComponent() {
     }
   };
 
-  const loadScriptDetail = async (batchId: string) => {
+  const loadScriptDetail = async (_batchId: string) => {
     setScriptDetailLoading(true);
     setShowScriptDetail(true);
     try {
-      const data = await request<any[]>(`/exams/staff-batches/?status=uploaded`);
+      await request<any[]>(`/exams/staff-batches/?status=uploaded`);
       setSelectedScripts([]);
     } catch {
       toast.error("Failed to load script details");

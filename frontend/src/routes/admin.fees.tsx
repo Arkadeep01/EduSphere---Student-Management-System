@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo, useEffect } from "react";
 import { StatCard } from "@/components/dashboard/StatCard";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { DollarSign, TrendingUp, AlertCircle, Wallet, CheckCircle2, XCircle, RotateCcw, Plus, Pencil, Trash2, Copy, Eye, Download, Ban, History, CalendarDays, Receipt, Search, CreditCard, Landmark, Banknote, Bell, Gauge, Clock } from "lucide-react";
+import { DollarSign, TrendingUp, AlertCircle, Wallet, CheckCircle2, XCircle, RotateCcw, Plus, Pencil, Trash2, Copy, Eye, Download, Ban, History, CalendarDays, CreditCard, Landmark, Banknote, Gauge } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { toast } from "sonner";
 import { ExportDialog } from "@/components/export";
@@ -31,7 +31,7 @@ interface FeePayment {
   month: string; total_fee: string; paid_amount: string; fine: string; gst: string; status: string;
   payment_method: string | null; transaction_ref: string | null; receipt_number: string | null;
   advance_payment: string; refund_status: string; paid_at: string | null; correction_status: string;
-  fee_component: string | null; paid_at_fine: string;
+  fee_component: string | null; paid_at_fine: string; due_date: string;
 }
 interface Scholarship { id: number; student_name: string; class_name: string; type: string; value: string; reason: string; is_active: boolean; }
 interface AnalyticsData { summary: { total_collection: string; pending_fees: string; monthly_collection: string }; monthly: { month: string; collection: string; pending: string }[]; class_wise: { class_name: string; collection: string; pending: string; total: string }[]; }
@@ -82,8 +82,8 @@ function AdminFeesComponent() {
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const [generateForm, setGenerateForm] = useState<{ class_name: string; academic_session: string }>({ class_name: "", academic_session: "2026-27" });
 
-  const [showClearanceDialog, setShowClearanceDialog] = useState(false);
-  const [clearanceForm, setClearanceForm] = useState<{ student_id: number; student_name: string; deadline: string }>({ student_id: 0, student_name: "", deadline: "" });
+  const [_showClearanceDialog, setShowClearanceDialog] = useState(false);
+  const [_clearanceForm, setClearanceForm] = useState<{ student_id: number; student_name: string; deadline: string }>({ student_id: 0, student_name: "", deadline: "" });
 
   const f = async () => {
     setLoading(true);
@@ -217,15 +217,7 @@ function AdminFeesComponent() {
     }
   }
 
-  async function handleSetClearanceDeadline() {
-    if (!clearanceForm.deadline) { toast.error("Select a deadline date"); return; }
-    try {
-      await feeApi.clearanceDeadline(clearanceForm.student_id, clearanceForm.deadline);
-      toast.success(`Clearance deadline set to ${clearanceForm.deadline}`);
-      setShowClearanceDialog(false);
-      f();
-    } catch { toast.error("Failed to set deadline"); }
-  }
+
 
   async function handleApproveCorrection(id: number) {
     try { await feeApi.payments.approveCorrection(id); toast.success("Correction approved"); f(); } catch { toast.error("Failed"); }
@@ -569,7 +561,7 @@ function AdminFeesComponent() {
                       <SelectContent><SelectItem value="monthly">Monthly</SelectItem><SelectItem value="annual">Annual</SelectItem><SelectItem value="one-time">One-Time</SelectItem></SelectContent>
                     </Select>
                     <div className="flex items-center gap-1">
-                      <input type="checkbox" id={`opt_${i}`} checked={comp.isOptional} onChange={e => updateComponentInForm(i, "isOptional", e.target.checked)} className="rounded border-input" />
+                      <input type="checkbox" id={`opt_${i}`} checked={comp.is_optional} onChange={e => updateComponentInForm(i, "is_optional", e.target.checked)} className="rounded border-input" />
                       <Label htmlFor={`opt_${i}`} className="text-xs">Optional</Label>
                     </div>
                   </div>

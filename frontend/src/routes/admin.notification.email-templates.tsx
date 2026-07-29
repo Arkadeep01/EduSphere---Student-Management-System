@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Mail, Plus, Save, Loader2, Eye, Trash2 } from "lucide-react";
+import { Mail, Save, Loader2, Eye } from "lucide-react";
 import { PageWrapper } from "@/components/brand/animations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

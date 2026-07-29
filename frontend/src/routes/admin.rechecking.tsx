@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
-  Loader2, AlertCircle, Search, CheckCircle2, XCircle, UserCheck,
+  Loader2, Search, CheckCircle2, XCircle, UserCheck,
   FileSearch, Clock, TrendingUp, Users, Layers, Scale,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -73,10 +73,9 @@ const statusBadge: Record<string, { variant: "default" | "secondary" | "outline"
 };
 
 const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-const headers = token ? { Authorization: `Bearer ${token}` } : {};
+const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
 function AdminRecheckingComponent() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("requests");
   const [search, setSearch] = useState("");

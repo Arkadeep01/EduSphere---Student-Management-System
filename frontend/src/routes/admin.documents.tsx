@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, Download, RefreshCw, Trash2, Plus, Search, Eye } from "lucide-react";
+import { Upload, FileText, Download, Trash2, Plus, Search, Eye } from "lucide-react";
 import { useState, useRef, useCallback } from "react";
 import { documentApi } from "@/services/adminApi";
 import { ADMIN_API_BASE } from "@/services/request";
@@ -98,9 +98,10 @@ function AdminDocumentsComponent() {
   const [letterheads, setLetterheads] = useState(getLetterheads);
   const [showLetterheadEditor, setShowLetterheadEditor] = useState(false);
   const [editingLetterhead, setEditingLetterhead] = useState<Letterhead | null>(null);
-  const [uploadTitle, setUploadTitle] = useState("");
+
   const [uploadFileType, setUploadFileType] = useState("other");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [_uploadTitle, setUploadTitle] = useState("");
   const [uploading, setUploading] = useState(false);
   const [q, setQ] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -168,8 +169,6 @@ function AdminDocumentsComponent() {
     { label: "Audit Logs", status: "ready" },
   ];
 
-  const activeLetterheads = letterheads.filter(l => l.status === "active");
-  const archivedLetterheads = letterheads.filter(l => l.status === "archived");
 
   function handleAddLetterhead() { setEditingLetterhead(null); setShowLetterheadEditor(true); }
   function handleEditLetterhead(lh: Letterhead) { setEditingLetterhead(lh); setShowLetterheadEditor(true); }

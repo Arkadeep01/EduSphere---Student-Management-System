@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Star, Mail, Plus, Search, GraduationCap, BookOpen, Users, Download } from "lucide-react";
+import { Loader2, Star, Mail, Plus, Search, BookOpen, Users, Download } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { teacherAdminApi } from "@/services/adminApi";

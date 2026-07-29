@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Plus, UserX, UserCheck } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
 
 const API_BASE = "http://localhost:8000";
 
@@ -16,7 +15,6 @@ export const Route = createFileRoute("/director/admin-management")({
 });
 
 function DirectorAdminManagement() {
-  const { user } = useAuth();
   const [admins, setAdmins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Settings, Save, Loader2, Upload } from "lucide-react";
+import { Save, Loader2 } from "lucide-react";
 import { PageWrapper } from "@/components/brand/animations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ function InstitutionSettingsPage() {
   const queryClient = useQueryClient();
   const [settings, setSettings] = useState<Partial<InstitutionSettings>>({});
 
-  const { data, isLoading } = useQuery({
+  const { isLoading } = useQuery({
     queryKey: ["institution-settings"],
     queryFn: () => notificationApi.institutionSettings.get(),
     onSuccess: (d) => setSettings(d as InstitutionSettings),

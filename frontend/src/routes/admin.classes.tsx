@@ -45,8 +45,9 @@ function AdminClassesComponent() {
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [detail, setDetail] = useState<ClassDetail | null>(null);
   const [showAddClass, setShowAddClass] = useState(false);
-  const [showAssignTeacher, setShowAssignTeacher] = useState<{ subject: string; class: string } | null>(null);
+
   const [newClass, setNewClass] = useState({ name: "", section: "A", academic_session_id: "" });
+  const [_showAssignTeacher, setShowAssignTeacher] = useState<{ subject: string; class: string } | null>(null);
   const [showExport, setShowExport] = useState(false);
   const [loading, setLoading] = useState(true);
 

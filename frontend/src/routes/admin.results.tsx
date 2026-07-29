@@ -11,7 +11,7 @@ import { Loader2, FileText, Plus, Play, ChevronRight, BarChart3, Award, Download
 import { useState } from "react";
 import { toast } from "sonner";
 import { resultApi, examApi } from "@/services/resultApi";
-import type { ResultPublication, StudentResult } from "@/services/resultApi";
+import type { ResultPublication } from "@/services/resultApi";
 
 const statusBadge: Record<string, { variant: "default" | "secondary" | "outline" | "destructive"; className: string }> = {
   draft: { variant: "secondary", className: "bg-muted text-muted-foreground" },
