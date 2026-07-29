@@ -27,9 +27,20 @@ def get_teacher_dashboard_data(teacher_profile):
     """Aggregate dashboard metrics for a teacher."""
     today = timezone.now().date()
     subjects = get_teacher_subjects(teacher_profile)
-    total_students = StudentProfile.objects.filter(
-        class_assigned__in=teacher_profile.class_assignments.values("class_name")
-    ).count() if subjects else 0
+    total_students = 0
+    if subjects:
+        student_ids = set()
+        for ca in teacher_profile.class_assignments.all():
+            parts = ca.class_name.split('-', 1)
+            cls = parts[0]
+            section = parts[1] if len(parts) > 1 else ''
+            q = Q(class_assigned=cls)
+            if section:
+                q &= Q(section=section)
+            student_ids.update(
+                StudentProfile.objects.filter(q).values_list('id', flat=True)
+            )
+        total_students = len(student_ids)
 
     from administration.models import AnswerScriptUpload as AdminAnswerScriptUpload
     pending_evaluations = AdminAnswerScriptUpload.objects.filter(
@@ -59,9 +70,13 @@ def get_assigned_classes(teacher_profile):
 
 def get_students_in_class(teacher_profile, class_name):
     """Get students belonging to a specific class."""
-    return StudentProfile.objects.filter(
-        class_assigned=class_name,
-    ).select_related("user").order_by("roll_number")
+    parts = class_name.split('-', 1)
+    cls = parts[0]
+    section = parts[1] if len(parts) > 1 else ''
+    q = Q(class_assigned=cls)
+    if section:
+        q &= Q(section=section)
+    return StudentProfile.objects.filter(q).select_related("user").order_by("roll_number")
 
 
 def get_today_timetable(teacher_profile):

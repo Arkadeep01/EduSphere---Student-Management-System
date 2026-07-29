@@ -21,7 +21,7 @@ class TeacherProfileSerializer(serializers.ModelSerializer):
             "assigned_subject_name", "qualification", "experience",
             "profile_photo", "date_of_birth", "gender", "phone",
             "address", "department", "designation", "personal_email",
-            "status", "allocation_count",
+            "status", "allocation_count", "github_username",
         ]
         read_only_fields = ["employee_id"]
 

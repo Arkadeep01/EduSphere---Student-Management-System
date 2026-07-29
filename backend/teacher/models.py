@@ -46,6 +46,7 @@ class TeacherProfile(models.Model):
     designation = models.CharField(max_length=20, choices=DESIGNATION_CHOICES, blank=True)
     personal_email = models.EmailField(blank=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="active")
+    github_username = models.CharField(max_length=100, blank=True, editable=False)
 
     class Meta:
         verbose_name = "Teacher Profile"

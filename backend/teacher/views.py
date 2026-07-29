@@ -368,6 +368,13 @@ class SubmissionMarksView(APIView):
         profile = get_or_create_teacher_profile(request.user)
         from .selectors import get_teacher_subjects
         teacher_subjects = get_teacher_subjects(profile)
+        grade = request.data.get("grade")
+        remarks = request.data.get("remarks", "")
+        if grade is None:
+            return Response(
+                {"error": "grade is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         try:
             submission = AssignmentSubmission.objects.select_related("assignment").get(
                 id=submission_id, assignment__subject__in=teacher_subjects
@@ -376,13 +383,6 @@ class SubmissionMarksView(APIView):
             return Response(
                 {"error": "Submission not found or not in your subjects."},
                 status=status.HTTP_404_NOT_FOUND,
-            )
-        grade = request.data.get("grade")
-        remarks = request.data.get("remarks", "")
-        if grade is None:
-            return Response(
-                {"error": "grade is required."},
-                status=status.HTTP_400_BAD_REQUEST,
             )
         submission = evaluate_submission(submission, grade, remarks)
         serializer = AssignmentSubmissionSerializer(submission)
