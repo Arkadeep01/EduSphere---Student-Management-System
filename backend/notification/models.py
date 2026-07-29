@@ -21,8 +21,6 @@ class NotificationType(models.TextChoices):
     SUBJECT_APPROVED = "subject_approved", "Subject Request Approved"
     SUBJECT_REJECTED = "subject_rejected", "Subject Request Rejected"
     STUDENT_PROMOTED = "student_promoted", "Student Promoted"
-    OTP_VERIFICATION = "otp_verification", "OTP Verification"
-    PASSWORD_RESET = "password_reset", "Password Reset"
     EMAIL_VERIFICATION = "email_verification", "Email Verification"
     MAINTENANCE = "maintenance", "Maintenance"
     ASSIGNMENT_ANNOUNCEMENT = "assignment_announcement", "Assignment Announcement"
@@ -108,6 +106,19 @@ class InstitutionSettings(models.Model):
     email_footer = models.TextField(blank=True, help_text="Additional footer text for emails")
     brand_color_primary = models.CharField(max_length=7, default="#2563eb")
     brand_color_secondary = models.CharField(max_length=7, default="#1e40af")
+
+    director_message = models.TextField(blank=True, help_text="Director's message for public display")
+    public_email = models.EmailField(blank=True, help_text="Public contact email")
+    public_phone = models.CharField(max_length=50, blank=True, help_text="Public contact phone")
+    public_address = models.TextField(blank=True, help_text="Public institution address")
+
+    public_website_data_mode = models.CharField(
+        max_length=10,
+        choices=[("DEMO", "Demo Data"), ("LIVE", "Live Data")],
+        default="LIVE",
+        help_text="Director-controlled public website data mode",
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

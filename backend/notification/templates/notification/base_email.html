@@ -16,7 +16,7 @@
     <tr>
       <td style="padding: 40px; color: #374151; font-size: 15px; line-height: 1.6;">
         <p style="margin-top: 0;">{% if user_name %}Dear {{ user_name }},{% else %}Hello,{% endif %}</p>
-        {{ message|safe }}
+        {% if safe_message %}{{ safe_message|safe }}{% else %}{{ message }}{% endif %}
       </td>
     </tr>
 

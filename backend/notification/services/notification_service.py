@@ -216,6 +216,8 @@ class TemplateEngine:
         }
 
 
+
+
 class NotificationService:
     @classmethod
     def create_notification(cls, notification_type: str, title: str, message: str,
@@ -306,8 +308,6 @@ class NotificationService:
         ).select_related("user")
 
         template_map = {
-            NotificationType.OTP_VERIFICATION: "otp_verification",
-            NotificationType.PASSWORD_RESET: "password_reset",
             NotificationType.EMAIL_VERIFICATION: "email_verification",
             NotificationType.WELCOME: "welcome",
             NotificationType.ASSIGNMENT_CREATED: "assignment_notification",
@@ -399,7 +399,10 @@ class NotificationService:
 
     @classmethod
     def delete_notification(cls, notification_id: int, user) -> bool:
-        notification = Notification.objects.get(id=notification_id)
+        try:
+            notification = Notification.objects.get(id=notification_id)
+        except Notification.DoesNotExist:
+            return False
         NotificationAuditLog.objects.create(
             notification=notification,
             action="deleted",
