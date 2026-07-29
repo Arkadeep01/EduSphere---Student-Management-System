@@ -62,34 +62,3 @@ def link_social_account(user: CustomUser, provider: str, uid: str) -> None:
         defaults={"uid": uid},
     )
 
-
-class OTPRateThrottle:
-    def __init__(self):
-        self._cache = {}
-
-    def is_allowed(self, email: str, max_requests: int = 3, window_hours: int = 2) -> tuple[bool, int]:
-        import time
-        now = time.time()
-        window = window_hours * 3600
-        key = f"otp:{email}"
-        entry = self._cache.get(key, [])
-        entry = [t for t in entry if now - t < window]
-        if len(entry) >= max_requests:
-            remaining = max_requests - len(entry)
-            return False, max(0, remaining)
-        entry.append(now)
-        self._cache[key] = entry
-        remaining = max_requests - len(entry)
-        return True, max(0, remaining)
-
-    def get_remaining(self, email: str, max_requests: int = 3, window_hours: int = 2) -> int:
-        import time
-        now = time.time()
-        window = window_hours * 3600
-        key = f"otp:{email}"
-        entry = self._cache.get(key, [])
-        entry = [t for t in entry if now - t < window]
-        return max(0, max_requests - len(entry))
-
-
-otp_throttle = OTPRateThrottle()

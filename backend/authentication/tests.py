@@ -2,7 +2,6 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 import json
-from .models import OTP
 
 User = get_user_model()
 
@@ -14,8 +13,6 @@ class AuthenticationAPITest(TestCase):
         self.me_url = reverse('me')
         self.logout_url = reverse('logout_api')
         self.csrf_url = reverse('csrf_token')
-        self.send_otp_url = reverse('send_otp_api')
-        self.verify_otp_url = reverse('verify_otp_api')
         self.user_data = {
             "email": "teststudent@example.com",
             "username": "teststudent",

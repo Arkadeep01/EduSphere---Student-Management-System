@@ -81,14 +81,24 @@ STUDENT_DATA = [
 
 
 class Command(BaseCommand):
-    help = "Seed the database with foundational data"
+    help = "Seed the database with foundational data (SAFE: only creates subjects)"
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--include-users",
+            action="store_true",
+            help="DANGER: Also create fake teacher/student users. Not for production.",
+        )
 
     def handle(self, *args, **options):
         self._seed_subjects()
-        self._ensure_admin()
-        self._seed_teachers()
-        self._seed_students()
-        self.stdout.write(self.style.SUCCESS("Seeding complete."))
+        if options.get("include_users"):
+            self._ensure_admin()
+            self._seed_teachers()
+            self._seed_students()
+            self.stdout.write(self.style.WARNING("Fake users created. Use --include-users only in isolated dev databases."))
+        else:
+            self.stdout.write(self.style.SUCCESS("Subjects seeded. Use --include-users to also create test users (not for production)."))
 
     def _seed_subjects(self):
         all_subjects = CORE_SUBJECTS + SPECIALIZED_SUBJECTS + ENRICHMENT_SUBJECTS

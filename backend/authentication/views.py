@@ -1,28 +1,23 @@
 import json
-import os
-import secrets
-from datetime import timedelta
 
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
-from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView as BaseTokenRefreshView
 
-from .models import CustomUser, OTP
+from eduSphere.version import APP_NAME, APP_VERSION, get_full_version_string
+from administration.throttles import LoginRateThrottle
+
+from .models import CustomUser
 from .serializers import (
     CustomTokenObtainPairSerializer,
-    PasswordResetRequestSerializer,
-    PasswordResetConfirmSerializer,
     ChangePasswordSerializer,
     ForcePasswordChangeSerializer,
     OAuthProfileCompleteSerializer,
@@ -35,17 +30,51 @@ from .utils import (
     clear_jwt_cookies,
     get_user_data,
     link_social_account,
-    otp_throttle,
 )
-from notification.services.email_service import EmailService
 
 
-# ─── Health / CSRF ──────────────────────────────────────────────────────
+# ─── Health / CSRF / Version ─────────────────────────────────────────────
 
 def test_api(request):
     return JsonResponse({
         "success": True,
         "message": "Django Backend Connected Successfully"
+    })
+
+
+def health_api(request):
+    import os
+    from django.db import connection
+    health = {"status": "healthy"}
+    try:
+        connection.ensure_connection()
+        health["database"] = "connected"
+    except Exception as e:
+        health["database"] = f"error: {e}"
+        health["status"] = "degraded"
+
+    redis_available = os.environ.get("REDIS_URL") is not None
+    if redis_available:
+        try:
+            import redis
+            r = redis.from_url(os.environ["REDIS_URL"])
+            r.ping()
+            health["redis"] = "connected"
+        except Exception:
+            health["redis"] = "not available"
+    else:
+        health["redis"] = "not configured"
+
+    status_code = 200 if health["status"] == "healthy" else 503
+    from django.http import JsonResponse
+    return JsonResponse(health, status=status_code)
+
+
+def version_api(request):
+    return JsonResponse({
+        "name": APP_NAME,
+        "version": APP_VERSION,
+        "full": get_full_version_string(),
     })
 
 
@@ -69,7 +98,7 @@ def login_api(request):
         if not email or not password or not selected_role:
             return JsonResponse({"success": False, "message": "Email, password, and selected_role are required."}, status=400)
 
-        if selected_role not in ("student", "teacher", "staff", "admin"):
+        if selected_role not in ("student", "teacher", "staff", "admin", "director"):
             return JsonResponse({"success": False, "message": "Invalid role specified."}, status=400)
 
         user = authenticate(request, username=email, password=password)
@@ -82,6 +111,8 @@ def login_api(request):
             role_label = dict(CustomUser.ROLE_CHOICES).get(user.role, user.role)
             if user.role == "student":
                 hint = "Please use the Student login."
+            elif user.role == "director":
+                hint = "Please use the Director login."
             elif user.role in ("teacher", "staff", "admin"):
                 hint = f"Please use the Faculty login as {role_label}."
             else:
@@ -109,96 +140,6 @@ def login_api(request):
         })
         set_jwt_cookies(resp, user)
         return resp
-    except json.JSONDecodeError:
-        return JsonResponse({"success": False, "message": "Invalid JSON."}, status=400)
-    except Exception as e:
-        return JsonResponse({"success": False, "message": str(e)}, status=500)
-
-
-# ─── OTP ─────────────────────────────────────────────────────────────────
-
-@csrf_exempt
-def send_otp_api(request):
-    if request.method != "POST":
-        return JsonResponse({"success": False, "message": "POST request required."}, status=405)
-    try:
-        data = json.loads(request.body)
-        email = data.get("email", "").strip().lower()
-        if not email:
-            return JsonResponse({"success": False, "message": "Email is required."}, status=400)
-
-        allowed, remaining = otp_throttle.is_allowed(email)
-        if not allowed:
-            return JsonResponse({
-                "success": False,
-                "message": f"Too many OTP requests. Please try again later. ({remaining} remaining)",
-            }, status=429)
-
-        try:
-            user = CustomUser.objects.get(email=email)
-        except CustomUser.DoesNotExist:
-            return JsonResponse({"success": False, "message": "User not found."}, status=404)
-
-        otp_code = f"{secrets.randbelow(10**6):06}"
-        expires_at = timezone.now() + timedelta(minutes=10)
-        OTP.objects.create(user=user, email=email, otp_code=otp_code, expires_at=expires_at)
-
-        context = {
-            "user_name": f"{user.first_name} {user.last_name}".strip() or user.email,
-            "user_email": user.email,
-            "otp_code": otp_code,
-            "expiry_minutes": "10",
-            "title": "EduSphere OTP Verification",
-            "message": f"Your verification code is: <strong>{otp_code}</strong><br/>This code is valid for 10 minutes.",
-        }
-        EmailService.send_templated_email(
-            to_email=email,
-            template_name="otp_verification",
-            context=context,
-        )
-        warn = ""
-        if remaining <= 1:
-            warn = "Warning: This is your last OTP request for the next 2 hours."
-        return JsonResponse({"success": True, "message": "OTP sent.", "remaining": remaining, "warning": warn})
-    except json.JSONDecodeError:
-        return JsonResponse({"success": False, "message": "Invalid JSON."}, status=400)
-    except Exception as e:
-        return JsonResponse({"success": False, "message": str(e)}, status=500)
-
-
-@csrf_exempt
-def verify_otp_api(request):
-    if request.method != "POST":
-        return JsonResponse({"success": False, "message": "POST request required."}, status=405)
-    try:
-        data = json.loads(request.body)
-        email = data.get("email", "").strip().lower()
-        otp_code = data.get("otp_code", "").strip()
-        if not email or not otp_code:
-            return JsonResponse({"success": False, "message": "Email and otp_code are required."}, status=400)
-
-        try:
-            otp_obj = OTP.objects.filter(email=email, is_verified=False, expires_at__gt=timezone.now()).latest('created_at')
-        except OTP.DoesNotExist:
-            return JsonResponse({"success": False, "message": "Invalid or expired OTP."}, status=400)
-
-        if otp_obj.otp_code != otp_code:
-            return JsonResponse({"success": False, "message": "Incorrect OTP."}, status=400)
-
-        otp_obj.is_verified = True
-        otp_obj.save()
-        user = otp_obj.user
-        user.is_active = True
-        user.save()
-
-        if user.role == "student":
-            from student.models import StudentProfile
-            StudentProfile.objects.get_or_create(user=user)
-        elif user.role == "teacher":
-            from teacher.models import TeacherProfile
-            TeacherProfile.objects.get_or_create(user=user)
-
-        return JsonResponse({"success": True, "message": "OTP verified. Account activated."})
     except json.JSONDecodeError:
         return JsonResponse({"success": False, "message": "Invalid JSON."}, status=400)
     except Exception as e:
@@ -239,10 +180,35 @@ def staff_signup_api(request):
 
 @csrf_exempt
 def oauth_init_view(request, provider):
-    """Store the selected role in session and redirect to allauth's provider login."""
+    """Store the selected role or connect identity in session and redirect to allauth's provider login."""
     if request.method not in ("GET", "POST"):
         return JsonResponse({"success": False, "message": "GET or POST required."}, status=405)
 
+    connect_token = request.GET.get("connect_token")
+
+    if connect_token:
+        # GitHub connect flow — decode the JWT to identify the user
+        if provider != "github":
+            return JsonResponse({"success": False, "message": "Connect token only valid for GitHub."}, status=400)
+        from authentication.models import CustomUser
+        try:
+            from rest_framework_simplejwt.tokens import AccessToken
+            from rest_framework_simplejwt.exceptions import TokenError
+            decoded = AccessToken(connect_token)
+            user_id = decoded.get("user_id")
+            if not user_id:
+                return JsonResponse({"success": False, "message": "Invalid connect token."}, status=400)
+            user = CustomUser.objects.get(id=user_id, is_active=True)
+            request.session["github_connect_user_id"] = user.id
+            request.session["oauth_role"] = user.role
+        except (TokenError, CustomUser.DoesNotExist, Exception) as e:
+            return JsonResponse({"success": False, "message": f"Invalid connect token: {e}"}, status=400)
+
+        request.session.modified = True
+        from django.shortcuts import redirect
+        return redirect(f"/authentication/{provider}/login/")
+
+    # Normal OAuth flow — role-based
     role = request.GET.get("role") or (json.loads(request.body).get("role") if request.method == "POST" and request.body else None)
     if not role or role not in ("student", "teacher"):
         return JsonResponse({"success": False, "message": "Role must be 'student' or 'teacher'."}, status=400)
@@ -445,6 +411,7 @@ def session_api(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([LoginRateThrottle])
 def token_obtain_pair(request):
     serializer = CustomTokenObtainPairSerializer(data=request.data)
     if not serializer.is_valid():
@@ -462,80 +429,6 @@ def token_obtain_pair(request):
 
 class TokenRefreshView(BaseTokenRefreshView):
     pass
-
-
-@api_view(["POST"])
-@permission_classes([AllowAny])
-def password_reset_request(request):
-    serializer = PasswordResetRequestSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    email = serializer.validated_data["email"]
-
-    allowed, remaining = otp_throttle.is_allowed(email)
-    if not allowed:
-        return Response(
-            {"error": f"Too many requests. Please try again later. ({remaining} remaining)"},
-            status=429,
-        )
-
-    user = CustomUser.objects.get(email=email)
-    otp_code = f"{secrets.randbelow(10**6):06}"
-    expires_at = timezone.now() + timedelta(minutes=10)
-    OTP.objects.create(user=user, email=email, otp_code=otp_code, expires_at=expires_at)
-
-    context = {
-        "user_name": f"{user.first_name} {user.last_name}".strip() or user.email,
-        "user_email": user.email,
-        "otp_code": otp_code,
-        "expiry_minutes": "10",
-        "title": "EduSphere Password Reset OTP",
-        "message": f"Your password reset code is: <strong>{otp_code}</strong><br/>This code is valid for 10 minutes.",
-    }
-    EmailService.send_templated_email(
-        to_email=email,
-        template_name="password_reset",
-        context=context,
-    )
-    warn = ""
-    if remaining <= 1:
-        warn = "Warning: This is your last OTP request for the next 2 hours."
-    return Response({"success": True, "message": "Password reset OTP sent.", "remaining": remaining, "warning": warn})
-
-
-@api_view(["POST"])
-@permission_classes([AllowAny])
-def password_reset_confirm(request):
-    serializer = PasswordResetConfirmSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    email = serializer.validated_data["email"]
-    otp_code = serializer.validated_data["otp_code"]
-    new_password = serializer.validated_data["new_password"]
-
-    try:
-        otp_obj = OTP.objects.filter(
-            email=email,
-            otp_code=otp_code,
-            is_verified=False,
-            expires_at__gt=timezone.now(),
-        ).latest("created_at")
-    except OTP.DoesNotExist:
-        return Response({"error": "Invalid or expired OTP."}, status=status.HTTP_400_BAD_REQUEST)
-
-    try:
-        user = CustomUser.objects.get(email=email)
-    except CustomUser.DoesNotExist:
-        return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-
-    otp_obj.is_verified = True
-    otp_obj.save()
-    user.set_password(new_password)
-    user.save()
-
-    return Response({"success": True, "message": "Password reset successful."})
 
 
 @api_view(["POST"])
@@ -599,16 +492,18 @@ def resend_credentials_api(request):
         except CustomUser.DoesNotExist:
             return JsonResponse({"success": False, "message": "User not found."}, status=404)
 
+        safe_msg = (
+            f"Your account has been created. Your login email is: <strong>{user.email}</strong><br/>"
+            f"Your temporary password is your date of birth in DDMMYYYY format.<br/>"
+            f"Please log in and change your password immediately."
+        )
         context = {
             "user_name": f"{user.first_name} {user.last_name}".strip() or user.email,
             "user_email": user.email,
             "user_role": user.get_role_display(),
             "title": "Your EduSphere Account Credentials",
-            "message": (
-                f"Your account has been created. Your login email is: <strong>{user.email}</strong><br/>"
-                f"Your temporary password is your date of birth in DDMMYYYY format.<br/>"
-                f"Please log in and change your password immediately."
-            ),
+            "message": safe_msg,
+            "safe_message": safe_msg,
         }
         EmailService.send_templated_email(
             to_email=user.email,
@@ -620,3 +515,66 @@ def resend_credentials_api(request):
         return JsonResponse({"success": False, "message": "Invalid JSON."}, status=400)
     except Exception as e:
         return JsonResponse({"success": False, "message": str(e)}, status=500)
+
+
+# ─── GitHub Identity Binding ─────────────────────────────────────────────
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def github_status(request):
+    """Return whether the authenticated user has a GitHub account bound."""
+    from allauth.socialaccount.models import SocialAccount
+    github_account = SocialAccount.objects.filter(
+        user=request.user,
+        provider="github",
+    ).first()
+    return Response({
+        "bound": github_account is not None,
+        "github_username": github_account.extra_data.get("login", "") if github_account else "",
+        "github_id": github_account.uid if github_account else "",
+    })
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def github_connect_init(request):
+    """Initiate GitHub account binding for the authenticated user.
+
+    Returns a redirect URL that kicks off GitHub OAuth with the
+    user's identity pre-authenticated.
+    """
+    from rest_framework_simplejwt.tokens import AccessToken
+    token = AccessToken.for_user(request.user)
+    token.set_exp(lifetime=timedelta(minutes=5))
+    redirect_url = f"/api/oauth/init/github/?connect_token={token}"
+    return Response({"redirect_url": redirect_url})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def github_disconnect(request):
+    """Disconnect GitHub from the authenticated user's account."""
+    from allauth.socialaccount.models import SocialAccount
+
+    SocialAccount.objects.filter(
+        user=request.user,
+        provider="github",
+    ).delete()
+
+    user = request.user
+    if user.role == "student":
+        from student.models import StudentProfile
+        StudentProfile.objects.filter(user=user).update(github_username="")
+    elif user.role == "teacher":
+        from teacher.models import TeacherProfile
+        TeacherProfile.objects.filter(user=user).update(github_username="")
+
+    from administration.models.audit_log import AuditLog
+    AuditLog.objects.create(
+        user=user,
+        action="github_unlinked",
+        model_name="SocialAccount",
+        description=f"GitHub account unlinked from {user.email}",
+    )
+
+    return Response({"success": True, "message": "GitHub account disconnected."})

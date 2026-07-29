@@ -46,28 +46,6 @@ class CustomTokenObtainPairSerializer(serializers.Serializer):
         }
 
 
-class PasswordResetRequestSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-
-    def validate_email(self, value):
-        email = value.strip().lower()
-        if not CustomUser.objects.filter(email=email).exists():
-            raise serializers.ValidationError("No user found with this email address.")
-        return email
-
-
-class PasswordResetConfirmSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    otp_code = serializers.CharField(max_length=6)
-    new_password = serializers.CharField(min_length=8, write_only=True)
-    new_password2 = serializers.CharField(min_length=8, write_only=True)
-
-    def validate(self, attrs):
-        if attrs["new_password"] != attrs["new_password2"]:
-            raise serializers.ValidationError({"new_password2": "Passwords do not match."})
-        return attrs
-
-
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(write_only=True)
     new_password = serializers.CharField(min_length=8, write_only=True)

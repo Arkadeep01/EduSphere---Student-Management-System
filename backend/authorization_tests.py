@@ -222,6 +222,44 @@ class RoleGatingTests(AuthorizationBaseTest):
         response = client.get("/api/staff/upload/")
         self.assertEqual(response.status_code, 403)
 
+    def test_staff_can_create_student(self):
+        client = self._login(self.staff_user)
+        payload = {
+            "email": "staffcreated@test.com",
+            "first_name": "Staff",
+            "last_name": "Created",
+            "class_assigned": "X-A",
+            "section": "A",
+        }
+        response = client.post("/api/staff/students/create/", payload, format="json")
+        self.assertEqual(response.status_code, 201)
+
+    def test_teacher_cannot_use_staff_student_create(self):
+        client = self._login(self.teacher_a_user)
+        payload = {"email": "teachercreate@test.com", "first_name": "Test"}
+        response = client.post("/api/staff/students/create/", payload, format="json")
+        self.assertEqual(response.status_code, 403)
+
+    def test_student_cannot_use_staff_student_create(self):
+        client = self._login(self.student_a_user)
+        payload = {"email": "studentcreate@test.com", "first_name": "Test"}
+        response = client.post("/api/staff/students/create/", payload, format="json")
+        self.assertEqual(response.status_code, 403)
+
+    def test_unauthenticated_cannot_use_staff_student_create(self):
+        client = APIClient()
+        payload = {"email": "anoncreate@test.com", "first_name": "Test"}
+        response = client.post("/api/staff/students/create/", payload, format="json")
+        self.assertEqual(response.status_code, 401)
+
+    def test_staff_profile_endpoint_accessible(self):
+        client = self._login(self.staff_user)
+        response = client.get("/api/staff/profile/")
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertIn("email", data)
+        self.assertEqual(data["email"], self.staff_user.email)
+
 
 # ===========================================================================
 # INACTIVE ACCOUNT TESTS
