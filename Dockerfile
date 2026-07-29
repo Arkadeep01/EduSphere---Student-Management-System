@@ -6,11 +6,11 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app/backend
 
 COPY backend/requirements.txt /app/backend/
-RUN pip install --upgrade pip && pip install -r requirements.txt gunicorn
+RUN pip install --upgrade pip && pip install -r requirements.txt daphne
 
 COPY backend/ /app/backend/
 
 RUN python manage.py collectstatic --noinput 2>/dev/null || true
 
-CMD ["gunicorn", "eduSphere.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "eduSphere.asgi:application"]
 
