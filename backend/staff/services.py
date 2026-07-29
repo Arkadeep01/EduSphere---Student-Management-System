@@ -1,5 +1,6 @@
 import uuid
 import secrets
+from django.db import transaction
 from django.utils import timezone
 from administration.models import AnswerScriptUpload
 from administration.models.audit_log import AuditLog
@@ -113,100 +114,25 @@ def delete_upload(script, uploaded_by):
     return script
 
 
+# ── Staff Student Creation Service ────────────────────────────────────
+
+
+@transaction.atomic
+def staff_create_student(data):
+    from student.provisioning import StudentProvisioningService
+    user, profile = StudentProvisioningService.create_student(data)
+    return user, profile
+
+
 # ── Staff Teacher Management Services ─────────────────────────────────
 
-from django.db import transaction
 from authentication.models import CustomUser
-from teacher.models import TeacherProfile
-from student.models import Subject
-from administration.models.teacher import TeacherSubjectAllocation
 
 
 @transaction.atomic
 def staff_create_teacher(data):
-    email = data["email"].strip().lower()
-    username = email.split("@")[0] + str(secrets.randbelow(9000) + 1000)
-
-    dob = data.get("date_of_birth")
-    if dob:
-        temp_password = dob.strftime("%d%m%Y")
-    else:
-        temp_password = "01012000"
-
-    user = CustomUser.objects.create_user(
-        email=email,
-        password=temp_password,
-        username=username,
-        mobile=data.get("mobile", ""),
-        first_name=data.get("first_name", ""),
-        last_name=data.get("last_name", ""),
-        role="teacher",
-        is_staff=True,
-        is_superuser=False,
-        is_active=True,
-        password_changed=False,
-        needs_activation=True,
-    )
-
-    profile = TeacherProfile.objects.create(
-        user=user,
-        employee_id=data.get("employee_id", ""),
-        qualification=data.get("qualification", ""),
-        experience=data.get("experience"),
-        date_of_birth=dob,
-        gender=data.get("gender", ""),
-        phone=data.get("phone", ""),
-        address=data.get("address", ""),
-        department=data.get("department", ""),
-        designation=data.get("designation", ""),
-        personal_email=data.get("personal_email", ""),
-    )
-
-    primary_subject_id = data.get("primary_subject")
-    if primary_subject_id:
-        try:
-            subj = Subject.objects.get(id=primary_subject_id)
-            profile.assigned_subject = subj
-            profile.save(update_fields=["assigned_subject"])
-            TeacherSubjectAllocation.objects.get_or_create(
-                teacher=profile,
-                subject=subj,
-                defaults={"is_primary": True},
-            )
-        except Subject.DoesNotExist:
-            pass
-
-    for subj_id in data.get("secondary_subjects", []):
-        try:
-            subj = Subject.objects.get(id=subj_id)
-            TeacherSubjectAllocation.objects.get_or_create(
-                teacher=profile,
-                subject=subj,
-                defaults={"is_primary": False},
-            )
-        except Subject.DoesNotExist:
-            pass
-
-    try:
-        EmailService.send_templated_email(
-            to_email=email,
-            template_name="welcome",
-            context={
-                "user_name": f"{user.first_name} {user.last_name}".strip() or user.email,
-                "user_email": user.email,
-                "user_role": "Teacher",
-                "title": "Your EduSphere Teacher Account",
-                "message": (
-                    f"Your teacher account has been created.<br/>"
-                    f"Login email: <strong>{email}</strong><br/>"
-                    f"Temporary password: <strong>{temp_password}</strong> (your date of birth in DDMMYYYY format)<br/>"
-                    f"Please log in and change your password immediately."
-                ),
-            },
-        )
-    except Exception:
-        pass
-
+    from teacher.provisioning import TeacherProvisioningService
+    user, profile = TeacherProvisioningService.create_teacher(data)
     return user
 
 

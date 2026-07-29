@@ -29,7 +29,7 @@ def get_upload_tasks(user):
     tasks = AnswerScriptUpload.objects.filter(
         Q(uploaded_by=user) | Q(upload_status="pending_upload"),
     )
-    tasks = tasks.select_related("exam", "subject", "student__user").order_by("-created_at")
+    tasks = tasks.select_related("exam", "subject", "student__user").order_by("-uploaded_at")
     return tasks
 
 

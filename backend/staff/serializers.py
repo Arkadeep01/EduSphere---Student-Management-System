@@ -75,6 +75,32 @@ class StaffProfileSerializer(serializers.ModelSerializer):
         return obj.user.get_full_name() or obj.user.email
 
 
+# ── Staff Student Creation Serializer ────────────────────────────────
+
+
+class StaffStudentCreateSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    first_name = serializers.CharField(max_length=150, default="", allow_blank=True)
+    last_name = serializers.CharField(max_length=150, default="", allow_blank=True)
+    mobile = serializers.CharField(max_length=20, default="", allow_blank=True)
+    father_name = serializers.CharField(max_length=100, default="", allow_blank=True)
+    mother_name = serializers.CharField(max_length=100, default="", allow_blank=True)
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
+    class_assigned = serializers.CharField(max_length=20, default="", allow_blank=True)
+    section = serializers.CharField(max_length=10, default="", allow_blank=True)
+    address = serializers.CharField(default="", allow_blank=True)
+    gender = serializers.CharField(max_length=20, default="", allow_blank=True)
+    blood_group = serializers.CharField(max_length=10, default="", allow_blank=True)
+    roll_number = serializers.CharField(max_length=20, default="", allow_blank=True)
+    admission_number = serializers.CharField(max_length=20, default="", allow_blank=True)
+
+    def validate_email(self, value):
+        email = value.strip().lower()
+        if CustomUser.objects.filter(email=email).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return email
+
+
 # ── Staff Teacher Management Serializers ──────────────────────────────
 
 class StaffTeacherCreateSerializer(serializers.Serializer):

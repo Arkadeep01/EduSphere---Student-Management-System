@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 
-from administration.models import AnswerScriptUpload, Exam
+from administration.models import AnswerScriptUpload, Exam, AcademicSession, Class
 from student.models import Subject
 from .permissions import IsStaff
 from .serializers import (
@@ -11,6 +11,7 @@ from .serializers import (
     StaffBatchSerializer,
     StaffAnswerScriptUploadSerializer,
     StaffProfileSerializer,
+    StaffStudentCreateSerializer,
     StaffTeacherCreateSerializer,
     StaffTeacherUpdateSerializer,
     StaffTeacherListSerializer,
@@ -27,6 +28,7 @@ from .services import (
     upload_answer_script,
     replace_uploaded_file,
     delete_upload,
+    staff_create_student,
     staff_create_teacher,
     staff_list_teachers,
     staff_get_teacher,
@@ -229,6 +231,43 @@ class StaffProfileView(generics.GenericAPIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ── Staff Class Listing (for student creation) ────────────────────────
+
+class StaffClassListView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated, IsStaff]
+
+    def get(self, request):
+        classes = Class.objects.select_related("academic_session").all()
+        data = []
+        for c in classes:
+            data.append({
+                "id": c.id,
+                "name": c.name,
+                "section": c.section,
+                "academic_session": c.academic_session.name if c.academic_session else None,
+                "session_id": c.academic_session_id,
+            })
+        return Response(data)
+
+# ── Staff Student Creation ─────────────────────────────────────────────
+
+class StaffStudentCreateView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated, IsStaff]
+
+    def post(self, request):
+        ser = StaffStudentCreateSerializer(data=request.data)
+        if not ser.is_valid():
+            return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+        user, profile = staff_create_student(ser.validated_data)
+        return Response({
+            "success": True,
+            "message": "Student account created.",
+            "student_id": profile.id,
+            "email": user.email,
+            "needs_activation": user.needs_activation,
+        }, status=status.HTTP_201_CREATED)
 
 
 # ── Staff Teacher Management ───────────────────────────────────────────
