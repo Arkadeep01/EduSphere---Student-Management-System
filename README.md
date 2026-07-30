@@ -95,13 +95,21 @@ DATABASE_URL=postgres://user:password@localhost:5432/your_db_name
 
 Make sure to configure settings like database, static files, and email backend properly for production.
 
-## **Running the Project with Docker (Optional)**
-If you've Dockerized the project, you can run it as follows:
+## **Running with Docker (Production)**
 
 ```bash
-docker-compose up --build
+# Build with VITE_API_URL pointing to your domain (or omit for same-origin)
+docker compose build --build-arg VITE_API_URL=https://yourdomain.com
+
+# Start all services
+docker compose up -d
+
+# Run migrations manually if entrypoint migration is disabled
+docker compose exec backend python manage.py migrate --noinput
 ```
-This will build the Docker image and run the Django application and the PostgreSQL service.
+
+Services: PostgreSQL, Redis, Django (daphne ASGI), frontend (Nginx).
+The entrypoint script waits for PostgreSQL, runs migrations, then starts daphne.
 
 ## **Video Links**
 Watch the videos to learn in proper way.
@@ -116,6 +124,18 @@ python manage.py test
 ```
 
 This will run all the tests located in the `tests.py` files of your Django apps.
+
+## **Deferred / Future Work**
+
+| Feature | Status |
+|---------|--------|
+| OCR auto-extraction (answer scripts) | Models/views exist, not integrated |
+| Real-time analytics charts | Placeholder only |
+| Salary module | Stub export only |
+| Student CSV bulk import | CSV exists, no endpoint |
+| Contact export CSV/Excel parity | Untested |
+| Public admission submission | Admin-only; needs public endpoint |
+| Multi-replica deployment | Entrypoint assumes single replica |
 
 ## **Contributing**
 If you want to contribute to this project, please follow the steps below:
