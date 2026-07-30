@@ -1,4 +1,9 @@
+import os
+
 from .settings import *  # noqa: F403
+
+# Prevent EmailService from making real HTTP calls to Resend during tests
+os.environ["RESEND_API_KEY"] = ""
 
 DATABASES = {
     "default": {
