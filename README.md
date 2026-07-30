@@ -6,11 +6,12 @@ A comprehensive **Student Management System** built using **Django**, designed t
 
 ### Core Stack
 
-![React](https://img.shields.io/badge/Frontend-React-61DAFB?style=for-the-badge&logo=react&logoColor=white)
-![TypeScript](https://img.shields.io/badge/Language-TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Django](https://img.shields.io/badge/Backend-Django-092E20?style=for-the-badge&logo=django&logoColor=white)
-![Python](https://img.shields.io/badge/Language-Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+### Core Technologies
+![React](https://img.shields.io/badge/React-18181B?style=for-the-badge&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-18181B?style=for-the-badge&logo=typescript)
+![Django](https://img.shields.io/badge/Django-18181B?style=for-the-badge&logo=django)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18181B?style=for-the-badge&logo=postgresql)
+![Python](https://img.shields.io/badge/Language-Python-3776AB?style=for-the-badge&logo=python)
 
 ### Infrastructure & Deployment
 
