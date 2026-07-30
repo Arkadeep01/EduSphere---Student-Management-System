@@ -75,3 +75,5 @@ async function request<T>(
 }
 
 export { request, API_BASE, ADMIN_API_BASE, STAFF_API_BASE, STUDENT_API_BASE };
+
+export const TEACHER_API_BASE = `${API_BASE}/api/teacher`;

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback, type ReactNode } from "react";
 import { useAuth } from "./AuthContext";
 import { notificationApi } from "@/services/notificationApi";
+import { API_BASE } from "@/services/request";
 
 interface NotificationContextValue {
   unreadCount: number;
@@ -71,7 +72,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     const connect = () => {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const host = "localhost:8000";
+      const host = window.location.host || new URL(API_BASE).host;
       const ws = new WebSocket(`${protocol}//${host}/ws/notifications/?token=${token}`);
 
       ws.onopen = () => {

@@ -1,6 +1,4 @@
-import { request } from "./request";
-
-const TEACHER_API_BASE = "http://localhost:8000/api/teacher";
+import { request, TEACHER_API_BASE } from "./request";
 
 export interface AssignmentData {
   id: string;

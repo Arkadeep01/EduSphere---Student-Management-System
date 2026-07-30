@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Camera, Crop } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
 import { useState, useRef, useCallback, useEffect } from "react";
+import { API_BASE } from "@/services/request";
 
 interface ProfileViewProps {
   role?: "student" | "teacher";
@@ -24,8 +25,6 @@ function displayValue(val: string | undefined | null): string {
   if (val === undefined || val === null || val.trim() === "" || val === "N/A") return "Not Assigned";
   return val;
 }
-
-const API_BASE = "http://localhost:8000";
 
 function GitHubSection() {
   const token = localStorage.getItem("accessToken");

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
+import { API_BASE } from "@/services/request";
 
-const API_BASE = "http://localhost:8000";
 const TOKEN_KEY = "accessToken";
 const REFRESH_KEY = "refreshToken";
 

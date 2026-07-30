@@ -1,4 +1,4 @@
-import { request } from "./request";
+import { request, API_BASE } from "./request";
 
 export interface GradeBoundary {
   id: number;
@@ -108,10 +108,10 @@ export const resultApi = {
   getSubjectRanks: (pubId: number) => request<SubjectRanking[]>(`/results/publications/${pubId}/subject-ranks/`),
 
   // PDFs
-  getReportCardPDF: (studentResultId: number) => `${import.meta.env.VITE_API_BASE || "http://localhost:8000"}/api/admin/results/pdf/report-card/${studentResultId}/`,
-  getMarksheetPDF: (pubId: number) => `${import.meta.env.VITE_API_BASE || "http://localhost:8000"}/api/admin/results/pdf/marksheet/${pubId}/`,
-  getTranscriptPDF: (studentResultId: number) => `${import.meta.env.VITE_API_BASE || "http://localhost:8000"}/api/admin/results/pdf/transcript/${studentResultId}/`,
-  getPrintablePDF: (studentResultId: number) => `${import.meta.env.VITE_API_BASE || "http://localhost:8000"}/api/admin/results/pdf/printable/${studentResultId}/`,
+  getReportCardPDF: (studentResultId: number) => `${API_BASE}/api/admin/results/pdf/report-card/${studentResultId}/`,
+  getMarksheetPDF: (pubId: number) => `${API_BASE}/api/admin/results/pdf/marksheet/${pubId}/`,
+  getTranscriptPDF: (studentResultId: number) => `${API_BASE}/api/admin/results/pdf/transcript/${studentResultId}/`,
+  getPrintablePDF: (studentResultId: number) => `${API_BASE}/api/admin/results/pdf/printable/${studentResultId}/`,
 
   // Analytics
   getAnalytics: () => request<ExamAnalytics>("/exams/analytics/"),
