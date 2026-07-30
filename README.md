@@ -2,13 +2,37 @@
 
 A comprehensive **Student Management System** built using **Django**, designed to manage student information, including enrollment, attendance, grades, and other administrative functionalities. This application is ideal for schools or educational institutions looking for a streamlined solution to manage student data.
 
+## **Technologies Used**
+
+### Core Stack
+
+![React](https://img.shields.io/badge/Frontend-React-61DAFB?style=for-the-badge&logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/Language-TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Django](https://img.shields.io/badge/Backend-Django-092E20?style=for-the-badge&logo=django&logoColor=white)
+![Python](https://img.shields.io/badge/Language-Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+
+### Infrastructure & Deployment
+
+![Docker](https://img.shields.io/badge/Container-Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Render](https://img.shields.io/badge/Backend-Render-000000?style=for-the-badge&logo=render&logoColor=white)
+![Vercel](https://img.shields.io/badge/Frontend-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+![Nginx](https://img.shields.io/badge/Web_Server-Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)
+![Redis](https://img.shields.io/badge/Cache-Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+
+### Development & API
+
+![Vite](https://img.shields.io/badge/Build-Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Django REST Framework](https://img.shields.io/badge/API-Django_REST_Framework-A30000?style=for-the-badge)
+![Git](https://img.shields.io/badge/Version_Control-Git-F05032?style=for-the-badge&logo=git&logoColor=white)
+![GitHub](https://img.shields.io/badge/Repository-GitHub-181717?style=for-the-badge&logo=github&logoColor=white)
+
 ## **Table of Contents**
 - [Features](#features)
-- [Technologies Used](#technologies-used)
 - [Project Structure](#project-structure)
 - [Installation](#installation)
 - [Configuration](#configuration)
-- [Running the Project](#running-with-docker)
+- [Running the Project](#running-with-docker-production)
 - [Screenshots](#screenshots)
 - [Testing](#testing)
 - [Contributing](#contributing)
@@ -23,13 +47,6 @@ A comprehensive **Student Management System** built using **Django**, designed t
 - **Reports**: Generate reports for student progress, attendance, and performance.
 - **Responsive UI**: Mobile-friendly design using HTML/CSS or integrated frontend frameworks.
 
-## **Technologies Used**
-- **Backend**: Django (Python), Django ORM
-- **Frontend**: HTML5, CSS3, JavaScript, Bootstrap (or other UI libraries you used)
-- **Database**: PostgreSQL (or SQLite during development)
-- **Version Control**: Git
-- **Deployment**: Docker (if Dockerized), Nginx, Gunicorn (for production)
-- **Testing**: Django's built-in testing framework
 
 ## **Project Structure**
 ```
