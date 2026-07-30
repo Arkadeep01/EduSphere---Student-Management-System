@@ -10,6 +10,20 @@ A comprehensive **Student Management System** built using **Django**, designed t
 <p align="center">
   <strong>React · TypeScript · Vite · Django · PostgreSQL · Redis · Docker · Nginx · Git · Vercel</strong>
 </p>
+
+## **Technology Stack**
+
+<p align="center">
+  <img src="https://skillicons.dev/icons?i=react,ts,vite,python,django,postgres,redis,docker,nginx,git,github,vercel" />
+</p>
+
+<br>
+
+| **Frontend** | **Backend** | **Database & Cache** | **Deployment** |
+|:---:|:---:|:---:|:---:|
+| React | Django | PostgreSQL | Render |
+| TypeScript | Django REST Framework | Redis | Vercel |
+| Vite | Daphne / ASGI | Django ORM | Docker + Nginx |
 ### Core Stack
 
 ### Core Stack
