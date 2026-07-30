@@ -7,10 +7,9 @@ import { FuturisticLoginLayout } from "@/components/login/FuturisticLoginLayout"
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth, getSafeRedirect } from "@/context/AuthContext";
+import { API_BASE } from "@/services/request";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
-
-const API_BASE = "http://localhost:8000";
 
 export const Route = createFileRoute("/login/")({
   head: () => ({ meta: [{ title: "Student Sign in — EduSphere" }] }),

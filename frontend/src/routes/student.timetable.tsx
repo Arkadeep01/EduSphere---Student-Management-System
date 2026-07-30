@@ -4,9 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
-import { request } from "@/services/request";
-
-const STUDENT_API = "http://localhost:8000/api/student";
+import { request, STUDENT_API_BASE } from "@/services/request";
 
 interface TimetableItem {
   id: number;
@@ -28,7 +26,7 @@ function StudentTimetableComponent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    request<TimetableItem[]>("/timetable/", undefined, STUDENT_API).then(data => {
+    request<TimetableItem[]>("/timetable/", undefined, STUDENT_API_BASE).then(data => {
       setEntries(data || []);
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);

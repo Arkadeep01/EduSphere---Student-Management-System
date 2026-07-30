@@ -1,9 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { useAuth, getSafeRedirect } from "@/context/AuthContext";
+import { API_BASE } from "@/services/request";
 import { Loader2 } from "lucide-react";
-
-const API_BASE = "http://localhost:8000";
 
 export const Route = createFileRoute("/auth/callback")({
   head: () => ({ meta: [{ title: "Authenticating... — EduSphere" }] }),

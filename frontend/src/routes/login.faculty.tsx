@@ -8,10 +8,9 @@ import { Eye, EyeOff, Loader2, Shield, GraduationCap, FileText } from "lucide-re
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth, getSafeRedirect } from "@/context/AuthContext";
+import { API_BASE } from "@/services/request";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
-
-const API_BASE = "http://localhost:8000";
 
 export const Route = createFileRoute("/login/faculty")({
   head: () => ({ meta: [{ title: "Faculty Sign in — EduSphere" }] }),

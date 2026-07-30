@@ -8,8 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { request } from "@/services/request";
-const TEACHER_API = "http://localhost:8000/api/teacher";
+import { request, TEACHER_API_BASE } from "@/services/request";
 
 interface StudentItem {
   id: number;
@@ -28,7 +27,7 @@ function AttendanceComponent() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    request<any[]>("/classes/", undefined, TEACHER_API).then(data => {
+    request<any[]>("/classes/", undefined, TEACHER_API_BASE).then(data => {
       const list = data || [];
       setClasses(list.map((c: any) => c.class_name || c));
       if (list.length > 0) setSelectedClass((list[0] as any).class_name || list[0]);
@@ -40,7 +39,7 @@ function AttendanceComponent() {
   const fetchStudents = useCallback(async () => {
     if (!selectedClass) return;
     try {
-      const data = await request<StudentItem[]>(`/classes/${selectedClass}/students/`, undefined, TEACHER_API);
+      const data = await request<StudentItem[]>(`/classes/${selectedClass}/students/`, undefined, TEACHER_API_BASE);
       setStudents(data || []);
       const allPresent = Object.fromEntries((data || []).map(s => [s.id, true]));
       setPresent(allPresent);
@@ -66,7 +65,7 @@ function AttendanceComponent() {
       await request("/attendance/mark/", {
         method: "POST",
         body: JSON.stringify({ records }),
-      }, TEACHER_API);
+      }, TEACHER_API_BASE);
       setSaved(true);
       toast.success(`Attendance saved for ${presentCount} present, ${absentCount} absent`);
     } catch {

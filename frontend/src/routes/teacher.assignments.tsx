@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useState, useEffect, useCallback } from "react";
 import { teacherAssignmentApi } from "@/services/teacherApi";
 import type { AssignmentData, SubmissionData } from "@/services/teacherApi";
+import { API_BASE } from "@/services/request";
 
 function getAssignmentStatus(dueDate: string): "active" | "closed" {
   return new Date(dueDate) >= new Date() ? "active" : "closed";
@@ -22,7 +23,7 @@ function getAssignmentStatus(dueDate: string): "active" | "closed" {
 function StudentDocViewer({ filename, fileUrl, onClose }: { filename: string; fileUrl?: string; onClose: () => void }) {
   const ext = filename.split(".").pop()?.toLowerCase() || "";
   const isPdf = ext === "pdf";
-  const href = fileUrl || `http://localhost:8000/media/student_submissions/${filename}`;
+  const href = fileUrl || `${API_BASE}/media/student_submissions/${filename}`;
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>

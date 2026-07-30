@@ -5,9 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Library, Beaker } from "lucide-react";
 import { useState, useEffect } from "react";
-import { request } from "@/services/request";
-
-const TEACHER_API = "http://localhost:8000/api/teacher";
+import { request, TEACHER_API_BASE } from "@/services/request";
 
 interface TimetableEntry {
   id: number;
@@ -29,7 +27,7 @@ function TeacherTimetableComponent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    request<TimetableEntry[]>("/timetable/", undefined, TEACHER_API).then(data => {
+    request<TimetableEntry[]>("/timetable/", undefined, TEACHER_API_BASE).then(data => {
       setEntries(data || []);
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);

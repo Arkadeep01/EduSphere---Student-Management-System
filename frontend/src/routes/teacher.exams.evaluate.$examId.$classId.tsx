@@ -10,9 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { FileText, CheckCircle2, Save, Send, Loader2, AlertCircle, ShieldBan, Lock, Unlock } from "lucide-react";
 import { toast } from "sonner";
-import { request } from "@/services/request";
-
-const TEACHER_API_BASE = "http://localhost:8000/api/teacher";
+import { request, TEACHER_API_BASE } from "@/services/request";
 
 interface AnonymousScript {
   script_id: string;

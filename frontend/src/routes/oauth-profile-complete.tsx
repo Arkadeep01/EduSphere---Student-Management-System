@@ -8,8 +8,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-
-const API_BASE = "http://localhost:8000";
+import { API_BASE } from "@/services/request";
 
 export const Route = createFileRoute("/oauth-profile-complete")({
   head: () => ({ meta: [{ title: "Complete Profile — EduSphere" }] }),

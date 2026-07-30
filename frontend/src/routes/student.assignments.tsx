@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, X, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { studentSubmissionApi } from "@/services/studentApi";
-import { request } from "@/services/request";
+import { request, STUDENT_API_BASE } from "@/services/request";
 
 interface Assignment {
   id: number; title: string; description: string; subject_name: string; target_class: string;
@@ -21,8 +21,6 @@ interface Submission {
   status: string; grade: string | null; remarks: string; submitted_at: string;
   files: { id: number; file: string; original_name: string; file_size: number; uploaded_at: string }[];
 }
-
-const STUDENT_API_BASE = "http://localhost:8000/api/student";
 
 export const Route = createFileRoute("/student/assignments")({
   head: () => ({ meta: [{ title: "Assignments — Student" }] }),
