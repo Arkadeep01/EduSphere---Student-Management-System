@@ -66,13 +66,13 @@ def validate_elective_counts(student_profile, subject_ids):
     """Validate that the student has selected the correct number of electives."""
     chosen = Subject.objects.filter(id__in=subject_ids)
     specialized_count = chosen.filter(tier="specialized").count()
-    enriched_count = chosen.filter(tier="enriched").count()
+    enriched_count = chosen.filter(tier="enrichment").count()
 
     errors = {}
     if specialized_count < 2:
         errors["specialized"] = "Minimum 2 specialized subjects required."
     if enriched_count < 1:
-        errors["enriched"] = "Minimum 1 enriched subject required."
+        errors["enrichment"] = "Minimum 1 enrichment subject required."
 
     if errors:
         raise serializers.ValidationError(errors)
