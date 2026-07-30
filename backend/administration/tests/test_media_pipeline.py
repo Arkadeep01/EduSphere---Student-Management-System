@@ -117,7 +117,13 @@ class ImageValidationTests(TestCase):
 MEDIA_TEMP = tempfile.mkdtemp()
 
 
-@override_settings(MEDIA_ROOT=MEDIA_TEMP)
+_FILESYSTEM_STORAGE = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
+
+
+@override_settings(MEDIA_ROOT=MEDIA_TEMP, STORAGES=_FILESYSTEM_STORAGE)
 class MediaPipelineAuthTests(TestCase):
     """Authorization: unauthenticated and non-admin users rejected."""
 
@@ -171,7 +177,7 @@ class MediaPipelineAuthTests(TestCase):
                           (status.HTTP_405_METHOD_NOT_ALLOWED, status.HTTP_404_NOT_FOUND))
 
 
-@override_settings(MEDIA_ROOT=MEDIA_TEMP)
+@override_settings(MEDIA_ROOT=MEDIA_TEMP, STORAGES=_FILESYSTEM_STORAGE)
 class MediaPipelineUploadTests(TestCase):
     """Upload success and validation failure paths."""
 
@@ -247,7 +253,7 @@ class MediaPipelineUploadTests(TestCase):
         self.assertNotIn("etc", obj.image.name)
 
 
-@override_settings(MEDIA_ROOT=MEDIA_TEMP)
+@override_settings(MEDIA_ROOT=MEDIA_TEMP, STORAGES=_FILESYSTEM_STORAGE)
 class MediaPipelineReplacementTests(TestCase):
     """Safe replacement: old preserved on failure, cleaned on success."""
 
@@ -304,7 +310,7 @@ class MediaPipelineReplacementTests(TestCase):
         self.assertTrue(os.path.exists(original_path))
 
 
-@override_settings(MEDIA_ROOT=MEDIA_TEMP)
+@override_settings(MEDIA_ROOT=MEDIA_TEMP, STORAGES=_FILESYSTEM_STORAGE)
 class MediaPipelineDeactivateTests(TestCase):
     """Soft-deactivate preserves file; hard-delete removes file."""
 
