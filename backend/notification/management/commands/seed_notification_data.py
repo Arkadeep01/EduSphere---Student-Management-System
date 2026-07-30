@@ -3,21 +3,6 @@ from notification.models import EmailTemplate, InstitutionSettings
 
 
 DEFAULT_TEMPLATES = {
-    "otp_verification": {
-        "subject": "EduSphere - Your OTP Verification Code",
-        "body_html": """<p>Your OTP verification code is: <strong>{{ otp_code }}</strong></p>
-<p>This code is valid for <strong>{{ expiry_minutes }} minutes</strong>.</p>
-<p>If you did not request this code, please ignore this email.</p>""",
-        "body_text": "Your OTP verification code is: {{ otp_code }}. Valid for {{ expiry_minutes }} minutes.",
-    },
-    "password_reset": {
-        "subject": "EduSphere - Password Reset OTP",
-        "body_html": """<p>You requested a password reset for your EduSphere account.</p>
-<p>Your password reset code is: <strong>{{ otp_code }}</strong></p>
-<p>This code is valid for <strong>{{ expiry_minutes }} minutes</strong>.</p>
-<p>If you did not request this, please ignore this email.</p>""",
-        "body_text": "Your password reset code is: {{ otp_code }}. Valid for {{ expiry_minutes }} minutes.",
-    },
     "email_verification": {
         "subject": "EduSphere - Verify Your Email Address",
         "body_html": """<p>Welcome to EduSphere! Please verify your email address by clicking the link below:</p>
