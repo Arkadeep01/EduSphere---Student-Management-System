@@ -111,10 +111,6 @@ docker compose exec backend python manage.py migrate --noinput
 Services: PostgreSQL, Redis, Django (daphne ASGI), frontend (Nginx).
 The entrypoint script waits for PostgreSQL, runs migrations, then starts daphne.
 
-## **Video Links**
-Watch the videos to learn in proper way.
-https://youtu.be/mM6vMMLYJHY
-
 
 ## **Testing**
 You can run the unit tests with Django's built-in testing framework:
