@@ -3,7 +3,13 @@
 A comprehensive **Student Management System** built using **Django**, designed to manage student information, including enrollment, attendance, grades, and other administrative functionalities. This application is ideal for schools or educational institutions looking for a streamlined solution to manage student data.
 
 ## **Technologies Used**
+<p align="center">
+  <img src="https://skillicons.dev/icons?i=react,ts,vite,python,django,postgres,redis,docker,nginx,git,github,vercel" />
+</p>
 
+<p align="center">
+  <strong>React · TypeScript · Vite · Django · PostgreSQL · Redis · Docker · Nginx · Git · Vercel</strong>
+</p>
 ### Core Stack
 
 ### Core Stack
