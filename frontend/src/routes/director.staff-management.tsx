@@ -6,8 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Plus, UserX, UserCheck } from "lucide-react";
 import { toast } from "sonner";
-
-const API_BASE = "http://localhost:8000";
+import { API_BASE } from "@/services/request";
 
 export const Route = createFileRoute("/director/staff-management")({
   head: () => ({ meta: [{ title: "Staff Management — Director" }] }),
