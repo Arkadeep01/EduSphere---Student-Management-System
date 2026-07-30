@@ -14,7 +14,7 @@ build/
 # Django specific ignores
 *.sqlite3
 db.sqlite3
-/media
+ media/
 /staticfiles
 *.pot
 *.mo
@@ -23,6 +23,14 @@ db.sqlite3
 .env
 *.env
 secrets.json
+credentials.txt
+
+# Diagnostic scripts
+run_subject_workflow.py
+
+# Database backups
+*.sql
+backup_*.sql
 
 # Ignore migrations
 */migrations/*.py[cod]
