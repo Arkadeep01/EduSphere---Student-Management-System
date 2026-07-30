@@ -8,7 +8,7 @@ A comprehensive **Student Management System** built using **Django**, designed t
 - [Project Structure](#project-structure)
 - [Installation](#installation)
 - [Configuration](#configuration)
-- [Running the Project](#running-the-project)
+- [Running the Project](#running-with-docker)
 - [Screenshots](#screenshots)
 - [Testing](#testing)
 - [Contributing](#contributing)
@@ -110,6 +110,66 @@ docker compose exec backend python manage.py migrate --noinput
 
 Services: PostgreSQL, Redis, Django (daphne ASGI), frontend (Nginx).
 The entrypoint script waits for PostgreSQL, runs migrations, then starts daphne.
+
+## **Screenshots**
+
+The following screenshots show the deployed EduSphere role-based portals. Dashboard information is loaded from the backend database through the production API rather than static frontend records.
+
+### **Director Dashboard**
+
+**Screenshot:** `screenshots/director-dashboard.png`
+
+![EduSphere Director Dashboard](screenshots/director-dashboard.png)
+
+The Director portal provides institution-level oversight, including Admin Management, Staff Management, and Director Profile functionality.
+
+---
+
+### **Administrator Dashboard**
+
+**Screenshot:** `screenshots/admin-dashboard.png`
+
+![EduSphere Administrator Dashboard](screenshots/admin-dashboard.png)
+
+The Administrator portal provides academic and administrative management functionality, including students, teachers, classes, attendance, examinations, results, fees, notifications, events, and audit logs.
+
+---
+
+### **Staff Dashboard**
+
+**Screenshot:** `screenshots/staff-dashboard.png`
+
+![EduSphere Staff Dashboard](screenshots/staff-dashboard.png)
+
+The Staff portal supports operational workflows such as answer-script processing, upload management, student account creation, teacher account creation, and staff profile access.
+
+---
+
+### **Teacher Dashboard**
+
+**Screenshot:** `screenshots/teacher-dashboard.png`
+
+> **Teacher account setup:** Teacher accounts must first be created/provisioned through the authorized **Staff/Admin portal** before the teacher can sign in to the Teacher portal.
+
+![EduSphere Teacher Dashboard](screenshots/teacher-dashboard.png)
+
+The Teacher dashboard displays the teacher's assigned academic data, including assigned subjects, classes, students, assignments, attendance, examinations, timetable, resources, rechecking, and notifications.
+
+> **Database note:** The displayed teacher, class, subject, and student information is fetched directly from the backend database through the deployed API. The screenshot currently shows the provisioned validation records, which is why only one teacher/class/student relationship is visible.
+
+---
+
+### **Student Dashboard**
+
+**Screenshot:** `screenshots/student-dashboard.png`
+
+> **Student account setup:** Student accounts must first be created/provisioned through the authorized **Staff/Admin portal** before the student can sign in to the Student portal.
+
+![EduSphere Student Dashboard](screenshots/student-dashboard.png)
+
+The Student portal provides access to subjects, assignments, attendance, examination schedules, results, rechecking, fees, timetable, and profile information.
+
+> **Database note:** Student academic records shown here are fetched directly from the backend database through the deployed API. The screenshots currently reflect the provisioned validation data, which is why only the currently configured credential/account records are represented.
 
 
 ## **Testing**
