@@ -146,7 +146,7 @@ The Director portal provides institution-level oversight, including Admin Manage
 
 **Screenshot:** `screenshots/admin-dashboard.png`
 
-![EduSphere Administrator Dashboard](screenshots/admin-dashboard.png)
+![EduSphere Administrator Dashboard](screenshots/admin.png)
 
 The Administrator portal provides academic and administrative management functionality, including students, teachers, classes, attendance, examinations, results, fees, notifications, events, and audit logs.
 
@@ -156,7 +156,7 @@ The Administrator portal provides academic and administrative management functio
 
 **Screenshot:** `screenshots/staff-dashboard.png`
 
-![EduSphere Staff Dashboard](screenshots/staff-dashboard.png)
+![EduSphere Staff Dashboard](screenshots/staff.png)
 
 The Staff portal supports operational workflows such as answer-script processing, upload management, student account creation, teacher account creation, and staff profile access.
 
@@ -168,7 +168,7 @@ The Staff portal supports operational workflows such as answer-script processing
 
 > **Teacher account setup:** Teacher accounts must first be created/provisioned through the authorized **Staff/Admin portal** before the teacher can sign in to the Teacher portal.
 
-![EduSphere Teacher Dashboard](screenshots/teacher-dashboard.png)
+![EduSphere Teacher Dashboard](screenshots/teacher.png)
 
 The Teacher dashboard displays the teacher's assigned academic data, including assigned subjects, classes, students, assignments, attendance, examinations, timetable, resources, rechecking, and notifications.
 
@@ -182,7 +182,7 @@ The Teacher dashboard displays the teacher's assigned academic data, including a
 
 > **Student account setup:** Student accounts must first be created/provisioned through the authorized **Staff/Admin portal** before the student can sign in to the Student portal.
 
-![EduSphere Student Dashboard](screenshots/student-dashboard.png)
+![EduSphere Student Dashboard](screenshots/student.png)
 
 The Student portal provides access to subjects, assignments, attendance, examination schedules, results, rechecking, fees, timetable, and profile information.
 
